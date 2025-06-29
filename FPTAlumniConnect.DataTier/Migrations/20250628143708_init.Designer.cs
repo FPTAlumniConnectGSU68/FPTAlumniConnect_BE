@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FPTAlumniConnect.DataTier.Migrations
 {
     [DbContext(typeof(AlumniConnectContext))]
-    [Migration("20241112103802_ChangeStringToInt")]
-    partial class ChangeStringToInt
+    [Migration("20250628143708_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -210,6 +210,54 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.ToTable("CV", (string)null);
                 });
 
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Education", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Achievements")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LogoUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Major")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SchoolName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SchoolWebsite")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Educations");
+                });
+
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.EducationHistory", b =>
                 {
                     b.Property<int>("EduHistoryId")
@@ -287,7 +335,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("Img")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
@@ -318,6 +366,36 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.HasIndex("OrganizerId");
 
                     b.ToTable("Events");
+                });
+
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.EventTimeLine", b =>
+                {
+                    b.Property<int>("EventTimeLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EventTimeLineId"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("EventTimeLineId");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("EventTimeLines");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.GroupChat", b =>
@@ -1205,6 +1283,10 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
+                    b.Property<string>("Code")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
@@ -1252,9 +1334,9 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProfilePicture")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
-                    b.Property<int?>("RoleId")
+                    b.Property<int>("RoleId")
                         .HasColumnType("int")
                         .HasColumnName("RoleID");
 
@@ -1328,6 +1410,50 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.ToTable("UserJoinEvent", (string)null);
                 });
 
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.WorkExperience", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CompanyWebsite")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LogoUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("WorkExperiences");
+                });
+
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Comment", b =>
                 {
                     b.HasOne("FPTAlumniConnect.DataTier.Models.User", "Author")
@@ -1355,6 +1481,17 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Education", b =>
+                {
+                    b.HasOne("FPTAlumniConnect.DataTier.Models.User", "User")
+                        .WithMany("EducationRecords")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.EducationHistory", b =>
                 {
                     b.HasOne("FPTAlumniConnect.DataTier.Models.User", "IduserNavigation")
@@ -1373,6 +1510,17 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasConstraintName("FK__Events__Organize__02084FDA");
 
                     b.Navigation("Organizer");
+                });
+
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.EventTimeLine", b =>
+                {
+                    b.HasOne("FPTAlumniConnect.DataTier.Models.Event", "Event")
+                        .WithMany("EventTimeLines")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.GroupChat", b =>
@@ -1584,6 +1732,8 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.HasOne("FPTAlumniConnect.DataTier.Models.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("FK__Users__RoleID__5BE2A6F2");
 
                     b.Navigation("Major");
@@ -1608,6 +1758,17 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.WorkExperience", b =>
+                {
+                    b.HasOne("FPTAlumniConnect.DataTier.Models.User", "User")
+                        .WithMany("WorkExperiences")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Cv", b =>
                 {
                     b.Navigation("JobApplications");
@@ -1619,6 +1780,8 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Event", b =>
                 {
+                    b.Navigation("EventTimeLines");
+
                     b.Navigation("UserJoinEvents");
                 });
 
@@ -1673,6 +1836,8 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.Navigation("EducationHistories");
 
+                    b.Navigation("EducationRecords");
+
                     b.Navigation("Events");
 
                     b.Navigation("GroupChatMembers");
@@ -1696,6 +1861,8 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Navigation("SoicalLinks");
 
                     b.Navigation("UserJoinEvents");
+
+                    b.Navigation("WorkExperiences");
                 });
 #pragma warning restore 612, 618
         }

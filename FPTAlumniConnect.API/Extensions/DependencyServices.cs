@@ -24,19 +24,32 @@ namespace FPTAlumniConnect.API.Extensions
             return services;
         }
 
+        //public static IServiceCollection AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
+        //{
+        //    builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
+        //         .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+        //         .Build();
+
+        //    services.AddDbContext<AlumniConnectContext>(options =>
+        //    {
+        //        options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerDatabase"));
+        //    });
+
+        //    return services;
+        //}
+
         public static IServiceCollection AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
         {
-            builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
-                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                 .Build();
+            var connectionString = builder.Configuration.GetConnectionString("SQLServerDatabase");
 
             services.AddDbContext<AlumniConnectContext>(options =>
             {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServerDatabase"));
+                options.UseSqlServer(connectionString);
             });
 
             return services;
         }
+
 
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
@@ -103,7 +116,7 @@ namespace FPTAlumniConnect.API.Extensions
         {
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new OpenApiInfo() { Title = "HiCamping Together", Version = "v1" });
+                options.SwaggerDoc("v1", new OpenApiInfo() { Title = "FPT Alumni Connect API", Version = "v1" });
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
                 {
                     In = ParameterLocation.Header,

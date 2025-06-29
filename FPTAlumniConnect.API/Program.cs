@@ -36,18 +36,31 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+app.UseSwagger();
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "FPT Alumni Connect API V1");       
+    });
+}
+else
+{
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "FPT Alumni Connect API V1");
+        c.RoutePrefix = string.Empty; 
+    });
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Ensure CORS, Authentication, and Authorization middlewares are in correct order
 app.UseCors(CorsConstant.PolicyName);
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRouting();
