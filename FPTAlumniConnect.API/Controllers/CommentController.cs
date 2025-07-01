@@ -46,8 +46,8 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> UpdateCommentInfo(int id, [FromBody] CommentInfo request)
         {
             var isSuccessful = await _commentService.UpdateCommentInfo(id, request);
-            if (!isSuccessful) return Ok("UpdateStatusFailed");
-            return Ok("UpdateStatusSuccess");
+            if (!isSuccessful) return Ok("UpdateCommentFailed");
+            return Ok("UpdateCommentSuccess");
         }
     }
 }
