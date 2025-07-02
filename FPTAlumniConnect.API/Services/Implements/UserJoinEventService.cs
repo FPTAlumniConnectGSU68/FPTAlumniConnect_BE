@@ -17,41 +17,28 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<int> CreateNewUserJoinEvent(UserJoinEventInfo request)
         {
-            // Fetch user by UserId
-            User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                predicate: x => x.UserId.Equals(request.UserId)) ??
-                throw new BadHttpRequestException("UserNotFound");
+            // Validate User and Event
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(predicate: x => x.UserId == request.UserId)
+                ?? throw new BadHttpRequestException("UserNotFound");
 
-            // Fetch event by EventId
-            Event eventDetails = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
-                predicate: x => x.EventId.Equals(request.EventId)) ??
-                throw new BadHttpRequestException("EventNotFound");
-            // Check if the user has already joined the event
-            bool userHasJoinedEvent = await _unitOfWork.GetRepository<UserJoinEvent>().AnyAsync(
-                x => x.UserId.Equals(request.UserId) && x.EventId.Equals(request.EventId));
-            if (userHasJoinedEvent)
-            {
+            var eventDetails = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(predicate: x => x.EventId == request.EventId)
+                ?? throw new BadHttpRequestException("EventNotFound");
+
+            // Prevent duplicate join
+            bool alreadyJoined = await _unitOfWork.GetRepository<UserJoinEvent>().AnyAsync(
+                x => x.UserId == request.UserId && x.EventId == request.EventId);
+            if (alreadyJoined)
                 throw new BadHttpRequestException("This user already joined this event!");
-            }
-            // Map to UserJoinEvent and insert new join event
-            // Check if user has already joined the event
-            UserJoinEvent alreadyJoined = await _unitOfWork.GetRepository<UserJoinEvent>().SingleOrDefaultAsync(
-                predicate: x => x.UserId == request.UserId && x.EventId == request.EventId);
-            if (alreadyJoined != null)
-            {
-                throw new BadHttpRequestException("UserAlreadyJoinedEvent");
-            }
 
+            // Create record
             UserJoinEvent newJoinEvent = _mapper.Map<UserJoinEvent>(request);
-            //newJoinEvent.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            newJoinEvent.CreatedAt = DateTime.Now;
+            newJoinEvent.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<UserJoinEvent>().InsertAsync(newJoinEvent);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
-            if (!isSuccessful)
-            {
-                throw new BadHttpRequestException("CreateFailed");
-            }
+            if (!isSuccessful) throw new BadHttpRequestException("CreateFailed");
 
             return newJoinEvent.Id;
         }
@@ -70,13 +57,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             UserJoinEvent userJoinEventToUpdate = await _unitOfWork.GetRepository<UserJoinEvent>().SingleOrDefaultAsync(
                 predicate: x => x.Id.Equals(id)) ?? throw new BadHttpRequestException("UserJoinEventNotFound");
 
-            userJoinEventToUpdate.Content = string.IsNullOrEmpty(request.Content) ? userJoinEventToUpdate.Content : request.Content;
-            if (request.Rating.HasValue)
-            {
-                userJoinEventToUpdate.Rating = request.Rating.Value;
-            }
-            userJoinEventToUpdate.UpdatedAt = DateTime.Now;
-            userJoinEventToUpdate.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            // Phân quyền chỉnh sửa
+            //var currentUsername = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            //if (!string.Equals(userJoinEventToUpdate.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
+            //{
+            //    throw new UnauthorizedAccessException("You are not allowed to update this record.");
+            //}
+
+            UpdateUserJoinEventFields(userJoinEventToUpdate, request);
 
             _unitOfWork.GetRepository<UserJoinEvent>().UpdateAsync(userJoinEventToUpdate);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
@@ -96,5 +84,29 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return response;
         }
+
+        private void UpdateUserJoinEventFields(UserJoinEvent target, UserJoinEventInfo request)
+        {
+            if (request.Rating.HasValue && (request.Rating < 1 || request.Rating > 5))
+            {
+                throw new BadHttpRequestException("Rating must be between 1 and 5.");
+            }
+
+            target.Content = string.IsNullOrWhiteSpace(request.Content) ? target.Content : request.Content;
+            target.Rating = request.Rating ?? target.Rating;
+            target.UpdatedAt = DateTime.Now;
+            target.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+        }
+
+        public async Task<double> GetAverageRatingOfEvent(int eventId)
+        {
+            var ratings = await _unitOfWork.GetRepository<UserJoinEvent>().GetListAsync(
+                predicate: x => x.EventId == eventId && x.Rating.HasValue,
+                selector: x => x.Rating.Value);
+
+            return ratings.Count == 0 ? 0 : ratings.Average();
+        }
+
+
     }
 }
