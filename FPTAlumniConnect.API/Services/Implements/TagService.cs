@@ -5,6 +5,7 @@ using FPTAlumniConnect.BusinessTier.Payload.TagJob;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -20,16 +21,11 @@ namespace FPTAlumniConnect.API.Services.Implements
         public async Task<int> CreateNewTag(TagJobInfo request)
         {
             // Check CvId
-            Cv checkCvId = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
-            predicate: s => s.Id == request.CvID);
-            if (checkCvId == null)
-            {
-                throw new BadHttpRequestException("CvIdNotFound");
-            }
+            ValidateCvExists(request.CvID);
 
             // Check if the user already has this tag
             TagJob existingTagJob = await _unitOfWork.GetRepository<TagJob>().SingleOrDefaultAsync(
-                predicate: s => s.Tag == request.Tag && s.CvID == request.CvID);
+            predicate: s => s.Tag == request.Tag && s.CvID == request.CvID);
 
             if (existingTagJob != null)
             {
@@ -59,14 +55,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             return result;
         }
 
-        public async Task<TagJobReponse> GetTagByCvId(int id)
+        public async Task<IEnumerable<TagJobReponse>> GetTagsByCvId(int cvId)
         {
-            TagJob tag = await _unitOfWork.GetRepository<TagJob>().SingleOrDefaultAsync(
-                predicate: x => x.CvID.Equals(id)) ??
-                throw new BadHttpRequestException("TagNotFound");
+            var tags = await _unitOfWork.GetRepository<TagJob>().GetListAsync(
+                predicate: x => x.CvID == cvId,
+                selector: x => _mapper.Map<TagJobReponse>(x)
+            );
 
-            TagJobReponse result = _mapper.Map<TagJobReponse>(tag);
-            return result;
+            return tags;
         }
 
         public async Task<bool> UpdateTagInfo(int id, TagJobInfo request)
@@ -76,20 +72,17 @@ namespace FPTAlumniConnect.API.Services.Implements
             throw new BadHttpRequestException("TagNotFound");
 
             // Check CvId
-            Cv checkCvId = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
-            predicate: s => s.Id == request.CvID);
-            if (checkCvId == null)
-            {
-                throw new BadHttpRequestException("CvIdNotFound");
-            }
+            ValidateCvExists(request.CvID);
 
             // Check if the user already has this tag
             TagJob existingTagJob = await _unitOfWork.GetRepository<TagJob>().SingleOrDefaultAsync(
-                predicate: s => s.Tag == request.Tag && s.CvID == request.CvID);
+            predicate: s => s.Tag == request.Tag && s.CvID == request.CvID && s.TagJobId != id);
+
             if (existingTagJob != null)
             {
                 throw new BadHttpRequestException("Tag already exists.");
             }
+
 
             tag.Tag = string.IsNullOrEmpty(request.Tag) ? tag.Tag : request.Tag;
             tag.UpdatedAt = DateTime.Now;
@@ -111,5 +104,30 @@ namespace FPTAlumniConnect.API.Services.Implements
                 );
             return response;
         }
+
+        public async Task<bool> DeleteTag(int id)
+        {
+            var tag = await _unitOfWork.GetRepository<TagJob>().SingleOrDefaultAsync(
+                predicate: x => x.TagJobId == id) ?? throw new BadHttpRequestException("TagNotFound");
+
+            _unitOfWork.GetRepository<TagJob>().DeleteAsync(tag);
+            return await _unitOfWork.CommitAsync() > 0;
+        }
+
+        public async Task<int> CountTagsByCvId(int cvId)
+        {
+            return await _unitOfWork.GetRepository<TagJob>()
+                .GetQueryable()
+                .CountAsync(x => x.CvID == cvId);
+        }
+
+
+        private async Task ValidateCvExists(int cvId)
+        {
+            var exists = await _unitOfWork.GetRepository<Cv>().AnyAsync(x => x.Id == cvId);
+            if (!exists)
+                throw new BadHttpRequestException("CvIdNotFound");
+        }
+
     }
 }

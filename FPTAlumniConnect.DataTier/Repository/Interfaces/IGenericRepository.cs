@@ -55,6 +55,12 @@ namespace FPTAlumniConnect.DataTier.Repository.Interfaces
 
         #endregion
 
+        #region Queryable Access
+        IQueryable<T> GetQueryable();
+
+        Task<int> CountAsync(Expression<Func<T, bool>> predicate);
+        #endregion
+
         #region Insert
 
         Task InsertAsync(T entity);

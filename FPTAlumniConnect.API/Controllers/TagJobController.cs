@@ -29,7 +29,7 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(TagJobReponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTagByCvId(int id)
         {
-            var response = await _tagService.GetTagByCvId(id);
+            var response = await _tagService.GetTagsByCvId(id);
             return Ok(response);
         }
 
