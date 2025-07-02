@@ -38,6 +38,8 @@ namespace FPTAlumniConnect.API.Services.Implements
             newSocialLink.CreatedAt = DateTime.UtcNow;
             newSocialLink.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name
             /*?? throw new UnauthorizedAccessException("User not authenticated")*/;
+            //newSocialLink.IsApproved = false; // default chưa duyệt
+            //newSocialLink.ReportedCount = 0;
 
             // Insert the new link
             await _unitOfWork.GetRepository<SoicalLink>().InsertAsync(newSocialLink);
@@ -132,20 +134,22 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("SocialLinkNotFound");
 
             // Check if the user already has this link
-            SoicalLink existingLink = await _unitOfWork.GetRepository<SoicalLink>().SingleOrDefaultAsync(
-                predicate: s => s.UserId == request.UserId && s.Link == request.Link);
-
-            if (existingLink != null)
+            if (request.Link != socialLink.Link)
             {
-                throw new BadHttpRequestException("This link already exists!");
+                SoicalLink existingLink = await _unitOfWork.GetRepository<SoicalLink>().SingleOrDefaultAsync(
+                    predicate: s => s.UserId == request.UserId && s.Link == request.Link);
+
+                if (existingLink != null)
+                {
+                    throw new BadHttpRequestException("This link already exists!");
+                }
+
+                await ValidateSocialLinkAsync(request.Link);
+                socialLink.Link = request.Link;
+                //socialLink.IsApproved = false; // reset lại duyệt nếu link đổi
             }
 
-            //socialLink.UserId = request.UserId ?? socialLink.UserId;  // Tại sao lại cho thay đổi ???
-            // Validate link format and content
-            await ValidateSocialLinkAsync(request.Link);
-
-            socialLink.Link = request.Link ?? socialLink.Link;
-            socialLink.UpdatedAt = DateTime.Now;
+            socialLink.UpdatedAt = DateTime.UtcNow;
             socialLink.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name
             /*?? throw new UnauthorizedAccessException("User not authenticated")*/;
 
@@ -175,6 +179,39 @@ namespace FPTAlumniConnect.API.Services.Implements
             _unitOfWork.GetRepository<SoicalLink>().DeleteAsync(socialLink);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             return isSuccessful;
+        }
+
+        public async Task<ICollection<GetSocialLinkResponse>> GetLinksByUserId(int userId)
+        {
+            var links = await _unitOfWork.GetRepository<SoicalLink>().GetListAsync(
+                selector: x => _mapper.Map<GetSocialLinkResponse>(x),
+                predicate: x => x.UserId == userId
+            );
+            return links;
+        }
+
+        public async Task<bool> ApproveSocialLinkAsync(int id)
+        {
+            SoicalLink link = await _unitOfWork.GetRepository<SoicalLink>().SingleOrDefaultAsync(
+                predicate: x => x.Slid == id)
+                ?? throw new BadHttpRequestException("SocialLinkNotFound");
+
+            //link.IsApproved = true;
+            link.UpdatedAt = DateTime.UtcNow;
+            _unitOfWork.GetRepository<SoicalLink>().UpdateAsync(link);
+            return await _unitOfWork.CommitAsync() > 0;
+        }
+
+        public async Task<bool> ReportSocialLinkAsync(int id)
+        {
+            SoicalLink link = await _unitOfWork.GetRepository<SoicalLink>().SingleOrDefaultAsync(
+                predicate: x => x.Slid == id)
+                ?? throw new BadHttpRequestException("SocialLinkNotFound");
+
+            //link.ReportedCount += 1;
+            link.UpdatedAt = DateTime.UtcNow;
+            _unitOfWork.GetRepository<SoicalLink>().UpdateAsync(link);
+            return await _unitOfWork.CommitAsync() > 0;
         }
     }
 }
