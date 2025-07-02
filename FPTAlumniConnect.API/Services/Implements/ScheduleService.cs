@@ -56,22 +56,32 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<ScheduleReponse> GetScheduleById(int id)
         {
-            Schedule post = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
+            Schedule schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
                 predicate: x => x.ScheduleId.Equals(id)) ??
                 throw new BadHttpRequestException("ScheduleNotFound");
 
-            ScheduleReponse result = _mapper.Map<ScheduleReponse>(post);
+            ScheduleReponse result = _mapper.Map<ScheduleReponse>(schedule);
             return result;
         }
 
-        public async Task<ScheduleReponse> GetScheduleByMentorId(int id)
+        public async Task<ICollection<ScheduleReponse>> GetSchedulesByMentorId(int id)
         {
-            Schedule post = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
+            ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                selector: x => _mapper.Map<ScheduleReponse>(x),
                 predicate: x => x.MentorId.Equals(id)) ??
-                throw new BadHttpRequestException("ScheduleNotFound");
+                  throw new BadHttpRequestException("MentorNotFound");
+            return schedules;
+        }
 
-            ScheduleReponse result = _mapper.Map<ScheduleReponse>(post);
-            return result;
+        public async Task<double> GetAverageRatingByMentorId(int id)
+        {
+            ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                selector: x => _mapper.Map<ScheduleReponse>(x),
+                predicate: x => x.MentorId.Equals(id)) ??
+                  throw new BadHttpRequestException("MentorNotFound");
+            double averageRating = schedules.Average(s => s.Rating ?? 0);
+
+            return averageRating;
         }
 
         public async Task<bool> UpdateScheduleInfo(int id, ScheduleInfo request)

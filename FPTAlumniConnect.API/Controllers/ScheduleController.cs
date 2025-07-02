@@ -28,7 +28,15 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(ScheduleReponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetScheduleByMemtorId(int id)
         {
-            var response = await _scheduleService.GetScheduleByMentorId(id);
+            var response = await _scheduleService.GetSchedulesByMentorId(id);
+            return Ok(response);
+        }
+
+        [HttpGet(ApiEndPointConstant.Schedule.RatingMentorEndPoint)]
+        [ProducesResponseType(typeof(ScheduleReponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAverageRatingByMemtorId(int id)
+        {
+            var response = await _scheduleService.GetAverageRatingByMentorId(id);
             return Ok(response);
         }
 
