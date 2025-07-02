@@ -52,6 +52,7 @@ namespace FPTAlumniConnect.BusinessTier.Constants
             public const string SchedulesEndPoint = ApiEndpoint + "/schedules";
             public const string ScheduleEndPoint = SchedulesEndPoint + "/{id}";
             public const string ScheduleMentorEndPoint = SchedulesEndPoint + "/mentor/{id}";
+            public const string RatingMentorEndPoint = SchedulesEndPoint + "/rating/{id}";
         }
         public static class CV
         {

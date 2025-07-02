@@ -93,6 +93,15 @@ namespace FPTAlumniConnect.DataTier.Repository.Implement
             return await query.Select(selector).ToListAsync();
         }
 
+        public virtual async Task<ICollection<TResult>> GetListAsync<TResult>(Expression<Func<T, TResult>> selector, Expression<Func<T, bool>> predicate = null)
+        {
+            IQueryable<T> query = _dbSet;
+
+            if (predicate != null) query = query.Where(predicate);
+
+            return await query.Select(selector).ToListAsync();
+        }
+
         public Task<IPaginate<T>> GetPagingListAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null, int page = 1,
             int size = 10)
         {
