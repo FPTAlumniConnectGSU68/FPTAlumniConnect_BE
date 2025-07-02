@@ -71,9 +71,9 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("MajorIdNotFound");
             }
 
-            // Check if SpMajor already has this name
+            // Check if SpMajor already has this name (excluding current record)
             SpMajorCode existingMajorCode = await _unitOfWork.GetRepository<SpMajorCode>().SingleOrDefaultAsync(
-                predicate: s => s.MajorName == request.MajorName);
+                predicate: s => s.MajorName == request.MajorName && s.SpMajorId != id);
 
             if (existingMajorCode != null)
             {
@@ -100,6 +100,25 @@ namespace FPTAlumniConnect.API.Services.Implements
                 size: pagingModel.size
                 );
             return response;
+        }
+
+        public async Task<bool> DeleteSpMajorCode(int id)
+        {
+            SpMajorCode spMajorCode = await _unitOfWork.GetRepository<SpMajorCode>().SingleOrDefaultAsync(
+                predicate: x => x.SpMajorId.Equals(id)) ?? throw new BadHttpRequestException("SpMajorCodeNotFound");
+
+            _unitOfWork.GetRepository<SpMajorCode>().DeleteAsync(spMajorCode);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            return isSuccessful;
+        }
+
+        public async Task<ICollection<SpMajorCodeResponse>> GetSpMajorCodesByMajorId(int majorId)
+        {
+            var result = await _unitOfWork.GetRepository<SpMajorCode>().GetListAsync(
+                selector: x => _mapper.Map<SpMajorCodeResponse>(x),
+                predicate: x => x.MajorId == majorId
+            );
+            return result;
         }
     }
 }

@@ -32,6 +32,11 @@ namespace FPTAlumniConnect.DataTier.Repository.Implement
             return (IGenericRepository<TEntity>)repository;
         }
 
+        public IQueryable<TEntity> GetQueryable<TEntity>() where TEntity : class
+        {
+            return Context.Set<TEntity>().AsQueryable();
+        }
+
         public void Dispose()
         {
             Context?.Dispose();
