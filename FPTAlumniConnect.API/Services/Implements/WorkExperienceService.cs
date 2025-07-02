@@ -22,6 +22,11 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<int> CreateWorkExperienceAsync(WorkExperienceInfo request)
         {
+            if (request.EndDate.HasValue && request.StartDate > request.EndDate.Value)
+            {
+                throw new BadHttpRequestException("StartDate must be before EndDate");
+            }
+
             WorkExperience newWorkExperience = _mapper.Map<WorkExperience>(request);
             await _unitOfWork.GetRepository<WorkExperience>().InsertAsync(newWorkExperience);
 
@@ -47,15 +52,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 predicate: x => x.Id.Equals(id)) ??
                 throw new BadHttpRequestException("WorkExperienceNotFound");
 
-            workExperience.CompanyName = string.IsNullOrEmpty(request.CompanyName) ? workExperience.CompanyName : request.CompanyName;
-            workExperience.Position = string.IsNullOrEmpty(request.Position) ? workExperience.Position : request.Position;
-            workExperience.StartDate = request.StartDate == default ? workExperience.StartDate : request.StartDate;
-            workExperience.EndDate = request.EndDate ?? workExperience.EndDate;
-            workExperience.CompanyWebsite = string.IsNullOrEmpty(request.CompanyWebsite) ? workExperience.CompanyWebsite : request.CompanyWebsite;
-            workExperience.Location = string.IsNullOrEmpty(request.Location) ? workExperience.Location : request.Location;
-            workExperience.LogoUrl = request.LogoUrl ?? workExperience.LogoUrl;
-            workExperience.UserId = request.UserId;
-
+            UpdateWorkExperienceFields(workExperience, request);
 
             _unitOfWork.GetRepository<WorkExperience>().UpdateAsync(workExperience);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
@@ -83,6 +80,30 @@ namespace FPTAlumniConnect.API.Services.Implements
                 size: pagingModel.size
                 );
             return response;
+        }
+
+        public async Task<IEnumerable<WorkExperienceResponse>> SearchWorkExperienceAsync(string keyword)
+        {
+            var list = await _unitOfWork.GetRepository<WorkExperience>().GetListAsync(
+                predicate: x => (x.CompanyName.Contains(keyword) || x.Position.Contains(keyword)),
+                selector: x => _mapper.Map<WorkExperienceResponse>(x)
+            );
+
+            return list;
+        }
+
+        private void UpdateWorkExperienceFields(WorkExperience we, WorkExperienceInfo request)
+        {
+            we.CompanyName = string.IsNullOrEmpty(request.CompanyName) ? we.CompanyName : request.CompanyName;
+            we.Position = string.IsNullOrEmpty(request.Position) ? we.Position : request.Position;
+            we.StartDate = request.StartDate == default ? we.StartDate : request.StartDate;
+            we.EndDate = request.EndDate ?? we.EndDate;
+            we.CompanyWebsite = string.IsNullOrEmpty(request.CompanyWebsite) ? we.CompanyWebsite : request.CompanyWebsite;
+            we.Location = string.IsNullOrEmpty(request.Location) ? we.Location : request.Location;
+            we.LogoUrl = request.LogoUrl ?? we.LogoUrl;
+            we.UserId = request.UserId;
+            //we.UpdatedAt = DateTime.Now;
+            //we.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
         }
 
 
