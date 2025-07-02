@@ -24,6 +24,14 @@ namespace FPTAlumniConnect.API.Controllers
             return Ok(response);
         }
 
+        [HttpGet(ApiEndPointConstant.Schedule.ScheduleMentorEndPoint)]
+        [ProducesResponseType(typeof(ScheduleReponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetScheduleByMemtorId(int id)
+        {
+            var response = await _scheduleService.GetScheduleByMentorId(id);
+            return Ok(response);
+        }
+
         [HttpPost(ApiEndPointConstant.Schedule.SchedulesEndPoint)]
         [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateNewSchedule([FromBody] ScheduleInfo request)
