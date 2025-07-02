@@ -20,4 +20,7 @@ public partial class SoicalLink
     public string? UpdatedBy { get; set; }
 
     public virtual User? User { get; set; }
+
+    //public bool IsApproved { get; set; }
+    //public int ReportedCount { get; set; }
 }

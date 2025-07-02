@@ -118,7 +118,8 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             return await _unitOfWork.GetRepository<TagJob>()
                 .GetQueryable()
-                .CountAsync(x => x.CvID == cvId);
+                .Where(x => x.CvID == cvId)
+                .CountAsync();
         }
 
 

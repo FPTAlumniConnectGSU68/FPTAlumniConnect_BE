@@ -185,5 +185,14 @@ namespace FPTAlumniConnect.DataTier.Repository.Implement
             return await _dbSet.AnyAsync(predicate);
         }
 
+        public IQueryable<T> GetQueryable()
+        {
+            return _dbSet.AsQueryable();
+        }
+
+        public async Task<int> CountAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.CountAsync(predicate);
+        }
     }
 }
