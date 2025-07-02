@@ -64,6 +64,16 @@ namespace FPTAlumniConnect.API.Services.Implements
             return result;
         }
 
+        public async Task<ScheduleReponse> GetScheduleByMentorId(int id)
+        {
+            Schedule post = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
+                predicate: x => x.MentorId.Equals(id)) ??
+                throw new BadHttpRequestException("ScheduleNotFound");
+
+            ScheduleReponse result = _mapper.Map<ScheduleReponse>(post);
+            return result;
+        }
+
         public async Task<bool> UpdateScheduleInfo(int id, ScheduleInfo request)
         {
             Schedule schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
