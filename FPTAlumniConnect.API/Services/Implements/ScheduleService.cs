@@ -73,17 +73,6 @@ namespace FPTAlumniConnect.API.Services.Implements
             return schedules;
         }
 
-        public async Task<double> GetAverageRatingByMentorId(int id)
-        {
-            ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
-                selector: x => _mapper.Map<ScheduleReponse>(x),
-                predicate: x => x.MentorId.Equals(id)) ??
-                  throw new BadHttpRequestException("MentorNotFound");
-            double averageRating = schedules.Average(s => s.Rating ?? 0);
-
-            return averageRating;
-        }
-
         public async Task<bool> UpdateScheduleInfo(int id, ScheduleInfo request)
         {
             Schedule schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(

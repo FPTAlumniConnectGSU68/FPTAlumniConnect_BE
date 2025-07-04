@@ -13,6 +13,7 @@ using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -251,6 +252,34 @@ namespace FPTAlumniConnect.API.Services.Implements
             return response;
         }
 
+        public async Task<IPaginate<GetMentorResponse>> ViewAllMentor(MentorFilter filter, PagingModel pagingModel)
+        {
+            Func<IQueryable<User>, IIncludableQueryable<User, object>> include = q => q.Include(u => u.Role).Include(u => u.Major);
+            IPaginate<GetMentorResponse> mentorList = await _unitOfWork.GetRepository<User>().GetPagingListAsync(
+                selector: x => _mapper.Map<GetMentorResponse>(x),
+                predicate: x => x.IsMentor == true,
+                filter: filter,
+                include: include,
+                page: pagingModel.page,
+                size: pagingModel.size
+            );
+            foreach (var mentor in mentorList.Items)
+            {
+                mentor.Rating =  await GetAverageRatingByMentorId(mentor.UserId);
+            }
+            return mentorList;
+        }
+
+        public async Task<double> GetAverageRatingByMentorId(int id)
+        {
+            ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                selector: x => _mapper.Map<ScheduleReponse>(x),
+                predicate: x => x.MentorId.Equals(id)) ??
+                  throw new BadHttpRequestException("MentorNotFound");
+            double? averageRating = schedules.Average(s => s.Rating);
+
+            return averageRating ?? 0;
+        }
 
         public async Task<GoogleUserResponse> VerifyGoogleTokenAsync(string token)
         {
