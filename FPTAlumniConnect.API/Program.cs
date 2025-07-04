@@ -12,9 +12,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: CorsConstant.PolicyName,
         policy =>
         {
-            policy.WithOrigins("*")
+            policy.WithOrigins("http://localhost:3000",
+                    "https://fpt-allumni.vercel.app")
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials();
         });
 });
 builder.Services.AddControllers().AddJsonOptions(x =>
