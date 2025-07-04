@@ -8,6 +8,7 @@ using FPTAlumniConnect.DataTier.Repository.Interfaces;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
+    // Service to handle privacy setting-related business logic
     public class PrivacySettingService : BaseService<PrivacySettingService>, IPrivacySettingService
     {
         public PrivacySettingService(IUnitOfWork<AlumniConnectContext> unitOfWork, ILogger<PrivacySettingService> logger, IMapper mapper,
@@ -15,6 +16,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
         }
 
+        // Create a new privacy setting record
         public async Task<int> CreatePrivacySetting(PrivacySettingInfo request)
         {
             var newPrivacySetting = _mapper.Map<PrivacySetting>(request);
@@ -29,6 +31,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return newPrivacySetting.Id;
         }
 
+        // Get a specific privacy setting by ID
         public async Task<GetPrivacySettingResponse> GetPrivacySettingById(int id)
         {
             PrivacySetting privacySetting = await _unitOfWork.GetRepository<PrivacySetting>().SingleOrDefaultAsync(
@@ -39,11 +42,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             return result;
         }
 
+        // Update an existing privacy setting by ID
         public async Task<bool> UpdatePrivacySetting(int id, PrivacySettingInfo request)
         {
             PrivacySetting privacySetting = await _unitOfWork.GetRepository<PrivacySetting>().SingleOrDefaultAsync(
                 predicate: x => x.Id.Equals(id)) ??
                 throw new BadHttpRequestException("PrivacySettingNotFound");
+
+            // Update only non-null fields
             privacySetting.VisibleToEducationHistory = request.VisibleToEducationHistory ?? privacySetting.VisibleToEducationHistory;
             privacySetting.VisibleToMajor = request.VisibleToMajor ?? privacySetting.VisibleToMajor;
             privacySetting.VisibleToEmail = request.VisibleToEmail ?? privacySetting.VisibleToEmail;
@@ -56,6 +62,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return isSuccessful;
         }
 
+        // View paginated list of all privacy settings with filters
         public async Task<IPaginate<GetPrivacySettingResponse>> ViewAllPrivacySettings(PrivacySettingFilter filter, PagingModel pagingModel)
         {
             IPaginate<GetPrivacySettingResponse> response = await _unitOfWork.GetRepository<PrivacySetting>().GetPagingListAsync(

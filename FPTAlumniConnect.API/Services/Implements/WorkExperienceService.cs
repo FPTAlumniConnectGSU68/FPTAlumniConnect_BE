@@ -9,6 +9,7 @@ using FPTAlumniConnect.DataTier.Repository.Interfaces;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
+    // Service for managing user work experiences
     public class WorkExperienceService : BaseService<WorkExperienceService>, IWorkExperienceService
     {
         public WorkExperienceService(
@@ -20,6 +21,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
         }
 
+        // Create a new work experience record
         public async Task<int> CreateWorkExperienceAsync(WorkExperienceInfo request)
         {
             if (request.EndDate.HasValue && request.StartDate > request.EndDate.Value)
@@ -36,6 +38,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return newWorkExperience.Id;
         }
 
+        // Get a work experience record by ID
         public async Task<WorkExperienceResponse> GetWorkExperienceByIdAsync(int id)
         {
             WorkExperience workExperience = await _unitOfWork.GetRepository<WorkExperience>().SingleOrDefaultAsync(
@@ -46,6 +49,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return response;
         }
 
+        // Update an existing work experience record
         public async Task<bool> UpdateWorkExperienceAsync(int id, WorkExperienceInfo request)
         {
             WorkExperience workExperience = await _unitOfWork.GetRepository<WorkExperience>().SingleOrDefaultAsync(
@@ -59,6 +63,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return isSuccessful;
         }
 
+        // Delete a work experience record by ID
         public async Task<bool> DeleteWorkExperienceAsync(int id)
         {
             WorkExperience workExperience = await _unitOfWork.GetRepository<WorkExperience>().SingleOrDefaultAsync(
@@ -70,6 +75,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return isSuccessful;
         }
 
+        // View all work experiences with filter and pagination
         public async Task<IPaginate<WorkExperienceResponse>> ViewAllWorkExperiencesAsync(WorkExperienceFilter filter, PagingModel pagingModel)
         {
             IPaginate<WorkExperienceResponse> response = await _unitOfWork.GetRepository<WorkExperience>().GetPagingListAsync(
@@ -82,6 +88,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return response;
         }
 
+        // Search work experiences by keyword (company name or position)
         public async Task<IEnumerable<WorkExperienceResponse>> SearchWorkExperienceAsync(string keyword)
         {
             var list = await _unitOfWork.GetRepository<WorkExperience>().GetListAsync(
@@ -92,6 +99,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return list;
         }
 
+        // Helper method to update allowed fields
         private void UpdateWorkExperienceFields(WorkExperience we, WorkExperienceInfo request)
         {
             we.CompanyName = string.IsNullOrEmpty(request.CompanyName) ? we.CompanyName : request.CompanyName;
@@ -102,10 +110,10 @@ namespace FPTAlumniConnect.API.Services.Implements
             we.Location = string.IsNullOrEmpty(request.Location) ? we.Location : request.Location;
             we.LogoUrl = request.LogoUrl ?? we.LogoUrl;
             we.UserId = request.UserId;
-            //we.UpdatedAt = DateTime.Now;
-            //we.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+
+            // Optional: track update metadata
+            // we.UpdatedAt = DateTime.Now;
+            // we.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
         }
-
-
     }
 }
