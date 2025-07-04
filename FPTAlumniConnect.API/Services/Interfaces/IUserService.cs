@@ -16,5 +16,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<LoginResponse> Login(LoginRequest loginRequest);
         Task<RegisterResponse> Register(RegisterRequest request);
         Task<LoginResponse> LoginWithGoogle(LoginGoogleRequest request);
+        Task<IPaginate<GetMentorResponse>> ViewAllMentor(MentorFilter filter, PagingModel pagingModel);
+        Task<double> GetAverageRatingByMentorId(int id);
     }
 }

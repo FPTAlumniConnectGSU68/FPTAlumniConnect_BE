@@ -24,6 +24,8 @@ namespace FPTAlumniConnect.BusinessTier.Constants
         public static class User
         {
             public const string UsersEndPoint = ApiEndpoint + "/users";
+            public const string MentorsEndPoint = ApiEndpoint + "/mentors";
+            public const string MentorRatingEndPoint = ApiEndpoint + "/mentors/{id}";
             public const string UserEndPoint = UsersEndPoint + "/{id}";
             public const string UserLoginEndPoint = UsersEndPoint + "/login";
         }
@@ -52,7 +54,6 @@ namespace FPTAlumniConnect.BusinessTier.Constants
             public const string SchedulesEndPoint = ApiEndpoint + "/schedules";
             public const string ScheduleEndPoint = SchedulesEndPoint + "/{id}";
             public const string ScheduleMentorEndPoint = SchedulesEndPoint + "/mentor/{id}";
-            public const string RatingMentorEndPoint = SchedulesEndPoint + "/rating/{id}";
         }
         public static class CV
         {

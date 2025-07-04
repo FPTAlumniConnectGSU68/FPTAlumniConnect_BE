@@ -10,10 +10,13 @@ namespace FPTAlumniConnect.API.Mappers
         {
             CreateMap<User, GetUserResponse>()
                  .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name))
-                 .ForMember(dest => dest.MajorName, opt => opt.MapFrom(src => src.Major.MajorName));  // Assuming 'Name' is the property in the 'Role' entity
+                 .ForMember(dest => dest.MajorName, opt => opt.MapFrom(src => src.Major.MajorName));
+            CreateMap<User, GetMentorResponse>()
+                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name))
+                 .ForMember(dest => dest.MajorName, opt => opt.MapFrom(src => src.Major.MajorName)); // Assuming 'Name' is the property in the 'Role' entity
             CreateMap<RegisterRequest, User>()
-          .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
-          .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
         }
     }
 }
