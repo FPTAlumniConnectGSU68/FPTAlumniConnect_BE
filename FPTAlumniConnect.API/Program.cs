@@ -7,18 +7,24 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: CorsConstant.PolicyName,
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:3000",
-                    "https://fpt-allumni.vercel.app")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        });
-});
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy(name: CorsConstant.PolicyName,
+//        policy =>
+//        {
+//            policy.WithOrigins("http://localhost:3000",
+//                    "https://fpt-allumni.vercel.app")
+//                  .AllowAnyHeader()
+//                  .AllowAnyMethod()
+//                  .AllowCredentials();
+//        });
+//});
+builder.Services.AddCors(x => x.AddPolicy("AllowAll", p =>
+{ p.SetIsOriginAllowed(_ => true)
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowCredentials(); }));
+
 builder.Services.AddControllers().AddJsonOptions(x =>
 {
     x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -58,7 +64,8 @@ else
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Ensure CORS, Authentication, and Authorization middlewares are in correct order
-app.UseCors(CorsConstant.PolicyName);
+//app.UseCors(CorsConstant.PolicyName);
+app.UseCors("AllowAll");
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
