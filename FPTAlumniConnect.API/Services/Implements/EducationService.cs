@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
+    // Service class to manage education history of users
     public class EducationService : BaseService<EducationService>, IEducationService
     {
         public EducationService(
@@ -24,6 +25,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
         }
 
+        // Creates a new education entry
         public async Task<int> CreateEducationAsync(EducationInfo request)
         {
             Education newEducation = _mapper.Map<Education>(request);
@@ -35,22 +37,24 @@ namespace FPTAlumniConnect.API.Services.Implements
             return newEducation.Id;
         }
 
+        // Gets an education entry by ID
         public async Task<EducationResponse> GetEducationByIdAsync(int id)
         {
             Education education = await _unitOfWork.GetRepository<Education>().SingleOrDefaultAsync(
-                predicate: x => x.Id.Equals(id)) ??
-                throw new BadHttpRequestException("EducationNotFound");
+                predicate: x => x.Id.Equals(id))
+                ?? throw new BadHttpRequestException("EducationNotFound");
 
-            EducationResponse response = _mapper.Map<EducationResponse>(education);
-            return response;
+            return _mapper.Map<EducationResponse>(education);
         }
 
+        // Updates an existing education entry
         public async Task<bool> UpdateEducationAsync(int id, EducationInfo request)
         {
             Education education = await _unitOfWork.GetRepository<Education>().SingleOrDefaultAsync(
-                predicate: x => x.Id.Equals(id)) ??
-                throw new BadHttpRequestException("EducationNotFound");
+                predicate: x => x.Id.Equals(id))
+                ?? throw new BadHttpRequestException("EducationNotFound");
 
+            // Only update fields that are provided in the request
             education.SchoolName = string.IsNullOrEmpty(request.SchoolName) ? education.SchoolName : request.SchoolName;
             education.Major = string.IsNullOrEmpty(request.Major) ? education.Major : request.Major;
             education.StartDate = request.StartDate == default ? education.StartDate : request.StartDate;
@@ -62,24 +66,24 @@ namespace FPTAlumniConnect.API.Services.Implements
             education.UserId = request.UserId;
 
             _unitOfWork.GetRepository<Education>().UpdateAsync(education);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
+        // Deletes an education entry by ID
         public async Task<bool> DeleteEducationAsync(int id)
         {
             Education education = await _unitOfWork.GetRepository<Education>().SingleOrDefaultAsync(
-                predicate: x => x.Id.Equals(id)) ??
-                throw new BadHttpRequestException("EducationNotFound");
+                predicate: x => x.Id.Equals(id))
+                ?? throw new BadHttpRequestException("EducationNotFound");
 
             _unitOfWork.GetRepository<Education>().DeleteAsync(education);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
+        // Retrieves paginated list of education entries with optional filter
         public async Task<IPaginate<EducationResponse>> ViewAllEducationAsync(EducationFilter filter, PagingModel pagingModel)
         {
-            IPaginate<EducationResponse> response = await _unitOfWork.GetRepository<Education>().GetPagingListAsync(
+            var response = await _unitOfWork.GetRepository<Education>().GetPagingListAsync(
                 selector: x => _mapper.Map<EducationResponse>(x),
                 filter: filter,
                 orderBy: x => x.OrderBy(x => x.StartDate),
