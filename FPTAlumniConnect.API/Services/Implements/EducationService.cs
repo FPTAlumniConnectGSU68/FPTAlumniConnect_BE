@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
-    // Service class to manage education history of users
     public class EducationService : BaseService<EducationService>, IEducationService
     {
         public EducationService(
