@@ -64,6 +64,17 @@ namespace FPTAlumniConnect.API.Services.Implements
             return result;
         }
 
+        public async Task<List<SkillJobReponse>> GetSkillsByCvId(int cvId)
+        {
+            var skills = await _unitOfWork.GetRepository<SkillJob>().GetListAsync(
+                predicate: x => x.CvID == cvId,
+                orderBy: q => q.OrderBy(x => x.CreatedAt)
+            );
+
+            return skills.Select(s => _mapper.Map<SkillJobReponse>(s)).ToList();
+        }
+
+
         public async Task<bool> UpdateSkillInfo(int id, SkillJobInfo request)
         {
             SkillJob skill = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
@@ -78,11 +89,16 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("CvIdNotFound");
             }
 
-            SkillJob existingSkillJob = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
-            predicate: s => s.Skill == request.Skill && s.CvID == request.CvID);
-            if (existingSkillJob != null)
+            if (!string.IsNullOrEmpty(request.Skill))
             {
-                throw new BadHttpRequestException("Skill already exists.");
+                var duplicate = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
+                    predicate: s => s.Skill == request.Skill && s.CvID == request.CvID && s.SkillJobId != id);
+                if (duplicate != null)
+                {
+                    throw new BadHttpRequestException("Skill already exists.");
+                }
+
+                skill.Skill = request.Skill;
             }
 
             skill.Skill = string.IsNullOrEmpty(request.Skill) ? skill.Skill : request.Skill;
@@ -105,5 +121,21 @@ namespace FPTAlumniConnect.API.Services.Implements
                 );
             return response;
         }
+
+        public async Task<bool> DeleteSkill(int id)
+        {
+            SkillJob skill = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
+                predicate: x => x.SkillJobId.Equals(id)) ?? throw new BadHttpRequestException("SkillNotFound");
+
+            _unitOfWork.GetRepository<SkillJob>().DeleteAsync(skill);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            return isSuccessful;
+        }
+
+        public async Task<int> CountSkillByCvId(int cvId)
+        {
+            return await _unitOfWork.GetRepository<SkillJob>().CountAsync(x => x.CvID == cvId);
+        }
+
     }
 }

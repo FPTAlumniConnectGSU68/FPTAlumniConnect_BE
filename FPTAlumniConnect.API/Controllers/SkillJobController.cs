@@ -30,7 +30,7 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(SkillJobReponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSkillByCvId(int id)
         {
-            var response = await _skillService.GetSkillByCvId(id);
+            var response = await _skillService.GetSkillsByCvId(id);
             return Ok(response);
         }
 

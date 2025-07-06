@@ -11,5 +11,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IPaginate<SkillJobReponse>> ViewAllSkill(SkillJobFilter filter, PagingModel pagingModel);
         Task<SkillJobReponse> GetSkillById(int id);
         Task<SkillJobReponse> GetSkillByCvId(int id);
+        Task<List<SkillJobReponse>> GetSkillsByCvId(int id);
     }
 }
