@@ -46,6 +46,9 @@ namespace FPTAlumniConnect.BusinessTier.Constants
         {
             public const string MentorshipsEndPoint = ApiEndpoint + "/mentorships";
             public const string MentorshipEndPoint = MentorshipsEndPoint + "/{id}";
+            public const string MentorshipAlumniIdEndPoint = MentorshipsEndPoint + "/alumni/{id}";
+            public const string MentorshipStatisticsEndPoint = MentorshipsEndPoint + "/statistics";
+            public const string MentorshipAutoCancelEndPoint = MentorshipsEndPoint + "/autocancel";
         }
         public static class Schedule
         {

@@ -10,5 +10,11 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IPaginate<MentorshipReponse>> ViewAllMentorship(MentorshipFilter filter, PagingModel pagingModel);
         Task<bool> UpdateMentorshipInfo(int id, MentorshipInfo request);
         Task<MentorshipReponse> GetMentorshipById(int id);
+
+        Task<List<MentorshipReponse>> GetMentorshipsByAlumniId(int alumniId);
+
+        Task<Dictionary<string, int>> GetMentorshipStatusStatistics();
+
+        Task<int> AutoCancelExpiredMentorships();
     }
 }
