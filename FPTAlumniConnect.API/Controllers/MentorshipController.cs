@@ -25,6 +25,14 @@ namespace FPTAlumniConnect.API.Controllers
             return Ok(response);
         }
 
+        [HttpGet(ApiEndPointConstant.Mentorship.MentorshipAlumniIdEndPoint)]
+        [ProducesResponseType(typeof(MentorshipReponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetMentorshipsByAlumniId(int id)
+        {
+            var response = await _mentorshipService.GetMentorshipsByAlumniId(id);
+            return Ok(response);
+        }
+
         [HttpPost(ApiEndPointConstant.Mentorship.MentorshipsEndPoint)]
         [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateNewMentorship([FromBody] MentorshipInfo request)
@@ -48,6 +56,22 @@ namespace FPTAlumniConnect.API.Controllers
             var isSuccessful = await _mentorshipService.UpdateMentorshipInfo(id, request);
             if (!isSuccessful) return Ok("UpdateStatusFailed");
             return Ok("UpdateStatusSuccess");
+        }
+
+        [HttpGet(ApiEndPointConstant.Mentorship.MentorshipStatisticsEndPoint)]
+        [ProducesResponseType(typeof(Dictionary<string, int>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetMentorshipStatistics()
+        {
+            var result = await _mentorshipService.GetMentorshipStatusStatistics();
+            return Ok(result);
+        }
+
+        [HttpPost(ApiEndPointConstant.Mentorship.MentorshipAutoCancelEndPoint)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        public async Task<IActionResult> AutoCancelExpiredMentorships()
+        {
+            var affectedRows = await _mentorshipService.AutoCancelExpiredMentorships();
+            return Ok($"{affectedRows} mentorships were auto-cancelled.");
         }
     }
 }

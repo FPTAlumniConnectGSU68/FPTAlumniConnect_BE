@@ -19,33 +19,17 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<int> CreateNewSchedule(ScheduleInfo request)
         {
-            Mentorship mentorShipId = await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
-                predicate: x => x.Id.Equals(request.MentorShipId)) ??
-                throw new BadHttpRequestException("MentorshipNotFound");
+            await EnsureMentorshipExists(request.MentorShipId ?? 0);
+            await EnsureUserExists(request.MentorId ?? 0);
 
-            User userId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                predicate: x => x.UserId.Equals(request.MentorId)) ??
-                throw new BadHttpRequestException("UserNotFound");
+            if (request.StartTime.HasValue && request.StartTime.Value < DateTime.UtcNow)
+                throw new BadHttpRequestException("StartTime cannot be in the past.");
 
-            // Kiểm tra điều kiện thời gian
-            if (request.StartTime.HasValue)
-            {
-                if (request.StartTime.Value < DateTime.UtcNow)
-                {
-                    throw new BadHttpRequestException("StartTime cannot be in the past.");
-                }
-            }
+            if (request.StartTime.HasValue && request.EndTime.HasValue &&
+                request.EndTime.Value < request.StartTime.Value)
+                throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
 
-            if (request.EndTime.HasValue)
-            {
-                if (request.StartTime.HasValue && request.EndTime.Value < request.StartTime.Value)
-                {
-                    throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
-                }
-            }
-
-            Schedule newSchedule = _mapper.Map<Schedule>(request);
-
+            var newSchedule = _mapper.Map<Schedule>(request);
             await _unitOfWork.GetRepository<Schedule>().InsertAsync(newSchedule);
 
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
@@ -75,74 +59,56 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<bool> UpdateScheduleInfo(int id, ScheduleInfo request)
         {
-            Schedule schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
                 predicate: x => x.ScheduleId.Equals(id)) ??
                 throw new BadHttpRequestException("ScheduleNotFound");
 
             if (request.MentorShipId.HasValue)
             {
-                Mentorship mentorShipId = await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
-                    predicate: x => x.Id.Equals(request.MentorShipId)) ??
-                    throw new BadHttpRequestException("MentorshipNotFound");
+                await EnsureMentorshipExists(request.MentorShipId.Value);
                 schedule.MentorShipId = request.MentorShipId.Value;
             }
 
             if (request.MentorId.HasValue)
             {
-                User userId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                    predicate: x => x.UserId.Equals(request.MentorId)) ??
-                    throw new BadHttpRequestException("UserNotFound");
+                await EnsureUserExists(request.MentorId.Value);
                 schedule.MentorId = request.MentorId.Value;
             }
 
-            // Validate ngày tháng
-            if (request.StartTime.HasValue && request.EndTime.HasValue)
-            {
-                // Validate khi cả StartTime và EndTime đều được cập nhật
-                if (request.EndTime.Value < request.StartTime.Value)
-                {
-                    throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
-                }
-            }
-            else if (request.EndTime.HasValue)
-            {
-                // Validate khi chỉ EndTime được cập nhật
-                // Nếu StartTime cũ không thay đổi, EndTime mới không được là ngày quá khứ so với StartTime cũ
-                if (request.EndTime.Value < schedule.StartTime)
-                {
-                    throw new BadHttpRequestException("New EndTime cannot be earlier than the existing StartTime.");
-                }
-            }
-
-            schedule.Content = string.IsNullOrEmpty(request.Content) ? schedule.Content : request.Content;
             if (request.StartTime.HasValue)
             {
+                if (request.StartTime.Value < DateTime.UtcNow)
+                    throw new BadHttpRequestException("StartTime cannot be in the past.");
+
                 schedule.StartTime = request.StartTime.Value;
             }
+
             if (request.EndTime.HasValue)
             {
+                DateTime compareStart = request.StartTime ?? schedule.StartTime;
+                if (request.EndTime.Value < compareStart)
+                    throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
+
                 schedule.EndTime = request.EndTime.Value;
             }
-            schedule.Status = string.IsNullOrEmpty(request.Status) ? schedule.Status : request.Status;
 
-            // Nếu muốn validate
+            if (!string.IsNullOrEmpty(request.Content)) schedule.Content = request.Content;
+            if (!string.IsNullOrEmpty(request.Status)) schedule.Status = request.Status;
+
             if (request.Rating.HasValue)
             {
-                // Validate rating
                 if (request.Rating.Value < 0 || request.Rating.Value > 5)
                     throw new BadHttpRequestException("Rating must be between 0 and 5.");
-
                 schedule.Rating = request.Rating;
             }
 
             schedule.UpdatedAt = DateTime.Now;
             schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
-            /*?? throw new UnauthorizedAccessException("User not authenticated")*/
 
             _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
-            bool isSuccesful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccesful;
+            return await _unitOfWork.CommitAsync() > 0;
         }
+
 
         public async Task<IPaginate<ScheduleReponse>> ViewAllSchedule(ScheduleFilter filter, PagingModel pagingModel)
         {
@@ -155,5 +121,18 @@ namespace FPTAlumniConnect.API.Services.Implements
                 );
             return response;
         }
+
+        private async Task<Mentorship> EnsureMentorshipExists(int id)
+        {
+            return await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
+                predicate: x => x.Id.Equals(id)) ?? throw new BadHttpRequestException("MentorshipNotFound");
+        }
+
+        private async Task<User> EnsureUserExists(int userId)
+        {
+            return await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: x => x.UserId.Equals(userId)) ?? throw new BadHttpRequestException("UserNotFound");
+        }
+
     }
 }

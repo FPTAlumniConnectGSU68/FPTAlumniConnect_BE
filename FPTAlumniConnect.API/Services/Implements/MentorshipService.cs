@@ -5,6 +5,7 @@ using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -19,15 +20,9 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<int> CreateNewMentorship(MentorshipInfo request)
         {
-            // Check AlumniId
-            User checkAlumniId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-            predicate: s => s.UserId == request.AlumniId && s.RoleId == 2);
-            if (checkAlumniId == null)
-            {
-                throw new BadHttpRequestException("AlumniIdNotFound");
-            }
+            await EnsureAlumniExists(request.AlumniId);
 
-            Mentorship newMentorship = _mapper.Map<Mentorship>(request);
+            var newMentorship = _mapper.Map<Mentorship>(request);
 
             await _unitOfWork.GetRepository<Mentorship>().InsertAsync(newMentorship);
 
@@ -39,35 +34,52 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<MentorshipReponse> GetMentorshipById(int id)
         {
-            Mentorship post = await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
+            var mentorship = await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
                 predicate: x => x.Id.Equals(id)) ??
                 throw new BadHttpRequestException("MentorshipNotFound");
 
-            MentorshipReponse result = _mapper.Map<MentorshipReponse>(post);
-            return result;
+            return _mapper.Map<MentorshipReponse>(mentorship);
+        }
+
+        public async Task<List<MentorshipReponse>> GetMentorshipsByAlumniId(int alumniId)
+        {
+            var mentorships = await _unitOfWork.GetRepository<Mentorship>().GetListAsync(
+                predicate: x => x.AumniId == alumniId,
+                orderBy: q => q.OrderByDescending(x => x.CreatedAt)
+            );
+
+            return mentorships.Select(x => _mapper.Map<MentorshipReponse>(x)).ToList();
         }
 
         public async Task<bool> UpdateMentorshipInfo(int id, MentorshipInfo request)
         {
-            Mentorship mentorship = await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
+            var mentorship = await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
                 predicate: x => x.Id.Equals(id)) ??
                 throw new BadHttpRequestException("MentorshipNotFound");
 
-            // Check AlumniId
-            User checkAlumniId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-            predicate: s => s.UserId == request.AlumniId && s.RoleId == 2);
-            if (checkAlumniId == null)
+            if (request.AlumniId != mentorship.AumniId)
             {
-                throw new BadHttpRequestException("AlumniIdNotFound");
+                await EnsureAlumniExists(request.AlumniId);
+                mentorship.AumniId = request.AlumniId;
             }
 
-            mentorship.RequestMessage = string.IsNullOrEmpty(request.RequestMessage) ? mentorship.RequestMessage : request.RequestMessage;
-            mentorship.Type = string.IsNullOrEmpty(request.Type) ? mentorship.Type : request.Type;
+            mentorship.RequestMessage = string.IsNullOrEmpty(request.RequestMessage)
+                ? mentorship.RequestMessage
+                : request.RequestMessage;
+
+            mentorship.Type = string.IsNullOrEmpty(request.Type)
+                ? mentorship.Type
+                : request.Type;
+
+            mentorship.Status = string.IsNullOrEmpty(request.Status)
+                ? mentorship.Status
+                : request.Status;
+
+            //mentorship.UpdatedAt = DateTime.Now;
             mentorship.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<Mentorship>().UpdateAsync(mentorship);
-            bool isSuccesful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccesful;
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
         public async Task<IPaginate<MentorshipReponse>> ViewAllMentorship(MentorshipFilter filter, PagingModel pagingModel)
@@ -80,6 +92,47 @@ namespace FPTAlumniConnect.API.Services.Implements
                 size: pagingModel.size
                 );
             return response;
+        }
+
+        public async Task<Dictionary<string, int>> GetMentorshipStatusStatistics()
+        {
+            var query = _unitOfWork.GetRepository<Mentorship>().GetQueryable();
+
+            var result = await query
+                .GroupBy(x => x.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Status ?? "Unknown", x => x.Count);
+
+            return result;
+        }
+
+        public async Task<int> AutoCancelExpiredMentorships()
+        {
+            var now = DateTime.UtcNow;
+            var expiredMentorships = await _unitOfWork.GetRepository<Mentorship>().FindAllAsync(
+                predicate: x => x.Status == "Pending" && x.CreatedAt.HasValue && x.CreatedAt.Value.AddDays(7) < now
+            );
+
+
+            foreach (var item in expiredMentorships)
+            {
+                item.Status = "Cancelled";
+                //item.UpdatedAt = now;
+                item.UpdatedBy = "System";
+                _unitOfWork.GetRepository<Mentorship>().UpdateAsync(item);
+            }
+
+            return await _unitOfWork.CommitAsync();
+        }
+
+        private async Task<User> EnsureAlumniExists(int? alumniId)
+        {
+            if (!alumniId.HasValue)
+                throw new BadHttpRequestException("AlumniId is required");
+
+            return await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: s => s.UserId == alumniId.Value && s.RoleId == 2
+            ) ?? throw new BadHttpRequestException("AlumniIdNotFound");
         }
     }
 }
