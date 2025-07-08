@@ -103,6 +103,8 @@ namespace FPTAlumniConnect.BusinessTier.Constants
         {
             public const string MajorCodesEndPoint = ApiEndpoint + "/majorcodes";
             public const string MajorCodeEndPoint = MajorCodesEndPoint + "/{id}";
+            public const string CountEndpoint = MajorCodesEndPoint + "/counts";
+            public const string NamesEndpoint = MajorCodesEndPoint + "/names";
         }
         public static class SpMajorCode
         {

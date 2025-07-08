@@ -10,5 +10,9 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IPaginate<MajorCodeReponse>> ViewAllMajorCode(MajorCodeFilter filter, PagingModel pagingModel);
         Task<bool> UpdateMajorCodeInfo(int id, MajorCodeInfo request);
         Task<MajorCodeReponse> GetMajorCodeById(int id);
+
+        Task<bool> DeleteMajorCodeAsync(int id);
+        Task<List<string>> GetAllMajorNames();
+        Task<int> CountMajorCodesAsync();
     }
 }
