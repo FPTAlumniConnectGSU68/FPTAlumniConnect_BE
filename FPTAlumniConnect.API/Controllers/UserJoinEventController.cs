@@ -53,7 +53,7 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> UpdateUserJoinEvent(int id, [FromBody] UserJoinEventInfo request)
         {
             await _userJoinEventService.UpdateUserJoinEvent(id, request);
-            return Ok("UpdateStatusSuccess");
+            return Ok("UpdateSuccess");
         }
     }
 }

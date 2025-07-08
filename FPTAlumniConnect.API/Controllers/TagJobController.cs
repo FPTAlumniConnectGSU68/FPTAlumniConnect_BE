@@ -54,8 +54,8 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> UpdateTagInfo(int id, [FromBody] TagJobInfo request)
         {
             var isSuccessful = await _tagService.UpdateTagInfo(id, request);
-            if (!isSuccessful) return Ok("UpdateStatusFailed");
-            return Ok("UpdateStatusSuccess");
+            if (!isSuccessful) return Ok("UpdateTagFailed");
+            return Ok("UpdateTagSuccess");
         }
     }
 }
