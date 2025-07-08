@@ -104,6 +104,47 @@ namespace FPTAlumniConnect.API.Services.Implements
                 );
             return response;
         }
-    }
 
+        public async Task<List<JobApplicationResponse>> GetJobApplicationsByJobPostId(int jobPostId)
+        {
+            var list = await _unitOfWork.GetRepository<JobApplication>().GetListAsync(
+                selector: x => _mapper.Map<JobApplicationResponse>(x),
+                predicate: x => x.JobPostId == jobPostId
+            );
+            return list.ToList();
+        }
+
+        public async Task<List<JobApplicationResponse>> GetJobApplicationsByCvId(int cvId)
+        {
+            var list = await _unitOfWork.GetRepository<JobApplication>().GetListAsync(
+                selector: x => _mapper.Map<JobApplicationResponse>(x),
+                predicate: x => x.Cvid == cvId
+            );
+            return list.ToList();
+        }
+
+        //public async Task<bool> DeleteJobApplication(int id)
+        //{
+        //    var application = await _unitOfWork.GetRepository<JobApplication>().SingleOrDefaultAsync(
+        //        predicate: x => x.ApplicationId == id
+        //    ) ?? throw new BadHttpRequestException("JobApplicationNotFound");
+
+        //    _unitOfWork.GetRepository<JobApplication>().DeleteAsync(application);
+        //    return await _unitOfWork.CommitAsync() > 0;
+        //}
+
+        public async Task<int> CountAllJobApplications()
+        {
+            return await _unitOfWork.GetRepository<JobApplication>().CountAsync(x => true);
+        }
+
+        public async Task<bool> HasAlreadyApplied(int jobPostId, int cvId)
+        {
+            return await _unitOfWork.GetRepository<JobApplication>().AnyAsync(
+                predicate: x => x.JobPostId == jobPostId && x.Cvid == cvId
+            );
+        }
+
+
+    }
 }
