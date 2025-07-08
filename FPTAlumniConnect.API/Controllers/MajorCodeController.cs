@@ -50,5 +50,22 @@ namespace FPTAlumniConnect.API.Controllers
             if (!isSuccessful) return Ok("UpdateStatusFailed");
             return Ok("UpdateStatusSuccess");
         }
+
+        [HttpGet(ApiEndPointConstant.MajorCode.NamesEndpoint)]
+        [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllMajorNames()
+        {
+            var names = await _majorCodeService.GetAllMajorNames();
+            return Ok(names);
+        }
+
+        // ✅ NEW: Count all major codes
+        [HttpGet(ApiEndPointConstant.MajorCode.CountEndpoint)]
+        [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+        public async Task<IActionResult> CountAllMajorCodes()
+        {
+            int count = await _majorCodeService.CountMajorCodesAsync();
+            return Ok(count);
+        }
     }
 }
