@@ -139,6 +139,12 @@ namespace FPTAlumniConnect.BusinessTier.Constants
         {
             public const string GroupChatsEndPoint = ApiEndpoint + "/groupchats";
             public const string GroupChatEndPoint = GroupChatsEndPoint + "/{id}";
+            public const string AddUserToGroupEndPoint = GroupChatsEndPoint + "/add-user";
+            public const string LeaveGroupEndPoint = GroupChatsEndPoint + "/leave-group";
+            public const string UserGroupsEndPoint = GroupChatsEndPoint + "/user-groups";
+            public const string GroupMembersEndPoint = GroupChatsEndPoint + "/members";
+            public const string SearchGroupsEndPoint = GroupChatsEndPoint + "/search";
+
         }
         public static class PhoBert
         {
