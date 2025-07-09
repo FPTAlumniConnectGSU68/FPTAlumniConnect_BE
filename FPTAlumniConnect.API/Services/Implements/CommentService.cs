@@ -9,6 +9,7 @@ using FPTAlumniConnect.DataTier.Repository.Interfaces;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
+    // Service for managing comment-related actions
     public class CommentService : BaseService<CommentService>, ICommentService
     {
         private readonly IPostService _postService;
@@ -33,41 +34,43 @@ namespace FPTAlumniConnect.API.Services.Implements
             _perspectiveService = perspectiveService;
         }
 
+        // Create a new comment
         public async Task<int> CreateNewComment(CommentInfo request)
         {
-            // Validate input
+            // Validate the comment info
             ValidateCommentInfo(request);
 
-            // Kiểm tra nội dung bình luận
+            // Check content appropriateness using perspective API
             if (!await _perspectiveService.IsContentAppropriate(request.Content))
             {
-                throw new BadHttpRequestException("Bình luận chứa nội dung không phù hợp.");
+                throw new BadHttpRequestException("Comment contains inappropriate content.");
             }
 
-            // Map to entity and save comment
+            // Map to entity and insert into database
             Comment newComment = _mapper.Map<Comment>(request);
             await _unitOfWork.GetRepository<Comment>().InsertAsync(newComment);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             if (!isSuccessful) throw new BadHttpRequestException("CreateFailed");
 
-            // Find post
+            // Get the target post
             var post = await _postService.GetPostById(request.PostId);
             if (post == null || post.AuthorId == null)
-                throw new BadHttpRequestException("find post failed");
+                throw new BadHttpRequestException("Post not found");
 
-            //find user
+            // Get the commenting user
             var user = await _userService.GetUserById(request.AuthorId);
             if (user == null)
-            throw new BadHttpRequestException("find user failed");
+                throw new BadHttpRequestException("User not found");
 
-            //Prepare notifcation
+            // Prepare notification for the post author
             var commenter = await _userService.GetUserById(request.AuthorId);
             if (commenter == null)
-                throw new BadHttpRequestException("prepare notification failed");
+                throw new BadHttpRequestException("Notification preparation failed");
+
             var notificationPayload = new NotificationPayload
             {
-                UserId = post.AuthorId.Value, // Tác giả bài viết
-                Message = $"{commenter.FirstName} đã bình luận vào bài viết của bạn: {post.Title}",
+                UserId = post.AuthorId.Value,
+                Message = $"{commenter.FirstName} commented on your post: {post.Title}",
                 IsRead = false
             };
 
@@ -77,6 +80,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return newComment.CommentId;
         }
 
+        // Validate comment data
         private void ValidateCommentInfo(CommentInfo request)
         {
             List<string> errors = new List<string>();
@@ -95,38 +99,36 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
         }
 
-
+        // Get comment by ID
         public async Task<CommentReponse> GetCommentById(int id)
         {
             Comment comment = await _unitOfWork.GetRepository<Comment>().SingleOrDefaultAsync(
-                predicate: x => x.CommentId.Equals(id)) ??
-                throw new BadHttpRequestException("CommentNotFound");
+                predicate: x => x.CommentId.Equals(id))
+                ?? throw new BadHttpRequestException("CommentNotFound");
 
-            CommentReponse result = _mapper.Map<CommentReponse>(comment);
-            return result;
+            return _mapper.Map<CommentReponse>(comment);
         }
 
+        // Update existing comment
         public async Task<bool> UpdateCommentInfo(int id, CommentInfo request)
         {
             Comment comment = await _unitOfWork.GetRepository<Comment>().SingleOrDefaultAsync(
-                predicate: x => x.CommentId.Equals(id)) ??
-                throw new BadHttpRequestException("CommentNotFound");
+                predicate: x => x.CommentId.Equals(id))
+                ?? throw new BadHttpRequestException("CommentNotFound");
 
-            // Không được thay đổi PostId, AuthorId, ParentCommentId
-
+            // PostId, AuthorId, and ParentCommentId should not be changed
             comment.Content = string.IsNullOrEmpty(request.Content) ? comment.Content : request.Content;
             comment.Type = string.IsNullOrEmpty(request.Type) ? comment.Type : request.Type;
             comment.UpdatedAt = DateTime.Now;
             comment.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<Comment>().UpdateAsync(comment);
-            bool isSuccesful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccesful;
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
+        // View paginated comments with validation of parent-child relationship
         public async Task<IPaginate<CommentReponse>> ViewAllComment(CommentFilter filter, PagingModel pagingModel)
         {
-            // Lấy danh sách comment từ repository
             var comments = await _unitOfWork.GetRepository<Comment>().GetPagingListAsync(
                 selector: x => _mapper.Map<CommentReponse>(x),
                 filter: filter,
@@ -139,38 +141,35 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             foreach (var commentResponse in comments.Items)
             {
-                // Kiểm tra parentCommentId cho mỗi comment
+                // If comment has a parent, validate its existence and PostId
                 if (commentResponse.ParentCommentId.HasValue)
                 {
-                    // Tìm comment cha dựa trên parentCommentId
                     var parentComment = await _unitOfWork.GetRepository<Comment>()
                         .FindAsync(x => x.CommentId == commentResponse.ParentCommentId.Value);
 
-                    // Kiểm tra xem comment cha có tồn tại không
                     if (parentComment == null)
                     {
-                        errorMessages.Add($"Không tìm thấy comment cha cho CommentId = {commentResponse.CommentId} với ParentCommentId = {commentResponse.ParentCommentId}");
-                        continue; // Bỏ qua comment hiện tại và tiếp tục với comment tiếp theo
+                        errorMessages.Add($"Parent comment not found for CommentId = {commentResponse.CommentId} (ParentCommentId = {commentResponse.ParentCommentId})");
+                        continue;
                     }
 
-                    // Kiểm tra postId của comment cha và con
                     if (parentComment.PostId != commentResponse.PostId)
                     {
-                        errorMessages.Add($"postId của CommentId = {commentResponse.CommentId} (postId: {commentResponse.PostId}) không khớp với postId của comment cha (CommentId = {parentComment.CommentId}, postId: {parentComment.PostId})");
-                        continue; // Bỏ qua comment hiện tại và tiếp tục với comment tiếp theo
+                        errorMessages.Add($"PostId mismatch between comment (ID = {commentResponse.CommentId}, PostId = {commentResponse.PostId}) and its parent (ID = {parentComment.CommentId}, PostId = {parentComment.PostId})");
+                        continue;
                     }
                 }
             }
 
-            // Trả về dữ liệu bao gồm danh sách comment hợp lệ và thông báo lỗi
+            // Optional: Log the validation errors
             if (errorMessages.Any())
             {
-                // Thêm thông báo lỗi vào response nếu cần thiết
                 foreach (var message in errorMessages)
                 {
-                    Console.WriteLine(message); // Hoặc ghi lại lỗi vào log
+                    Console.WriteLine(message); // Or use logger
                 }
             }
+
             return comments;
         }
     }
