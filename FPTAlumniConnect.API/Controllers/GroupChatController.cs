@@ -5,6 +5,7 @@ using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.DataTier.Paginate;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using FPTAlumniConnect.BusinessTier.Payload.User;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -55,6 +56,57 @@ namespace FPTAlumniConnect.API.Controllers
         {
             var groupChats = await _groupChatService.ViewAllMessagesInGroupChat(filter, pagingModel);
             return Ok(groupChats);
+        }
+
+        //[HttpDelete(ApiEndPointConstant.GroupChat.GroupChatEndPoint)]
+        //[ProducesResponseType(StatusCodes.Status204NoContent)]
+        //public async Task<IActionResult> DeleteGroupChat(int id)
+        //{
+        //    var result = await _groupChatService.DeleteGroupChat(id);
+        //    if (!result) return NotFound();
+        //    return NoContent();
+        //}
+
+        [HttpPost(ApiEndPointConstant.GroupChat.AddUserToGroupEndPoint)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> AddUserToGroup(int groupId, int userId)
+        {
+            var result = await _groupChatService.AddUserToGroup(groupId, userId);
+            if (!result) return BadRequest("AddUserFailed");
+            return Ok("UserAddedToGroup");
+        }
+
+        [HttpDelete(ApiEndPointConstant.GroupChat.LeaveGroupEndPoint)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> LeaveGroup(int groupId, int userId)
+        {
+            var result = await _groupChatService.LeaveGroup(groupId, userId);
+            if (!result) return BadRequest("LeaveFailed");
+            return Ok("UserLeftGroup");
+        }
+
+        [HttpGet(ApiEndPointConstant.GroupChat.UserGroupsEndPoint)]
+        [ProducesResponseType(typeof(List<GroupChatReponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetGroupsByUserId(int userId)
+        {
+            var groups = await _groupChatService.GetGroupsByUserId(userId);
+            return Ok(groups);
+        }
+
+        [HttpGet(ApiEndPointConstant.GroupChat.GroupMembersEndPoint)]
+        [ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetMembersInGroup(int groupId)
+        {
+            var members = await _groupChatService.GetMembersInGroup(groupId);
+            return Ok(members);
+        }
+
+        [HttpGet(ApiEndPointConstant.GroupChat.SearchGroupsEndPoint)]
+        [ProducesResponseType(typeof(List<GroupChatReponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> SearchGroupsByName([FromQuery] string keyword)
+        {
+            var results = await _groupChatService.SearchGroupsByName(keyword);
+            return Ok(results);
         }
     }
 }

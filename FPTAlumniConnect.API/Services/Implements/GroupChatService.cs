@@ -9,6 +9,8 @@ using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using FPTAlumniConnect.BusinessTier.Payload.MessageGroupChat;
+using FPTAlumniConnect.BusinessTier.Payload.User;
+using Microsoft.EntityFrameworkCore;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -62,5 +64,85 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return response;
         }
+
+        public async Task<bool> DeleteGroupChat(int id)
+        {
+            GroupChat groupChat = await _unitOfWork.GetRepository<GroupChat>().SingleOrDefaultAsync(
+                predicate: x => x.Id == id) ?? throw new BadHttpRequestException("GroupChatNotFound");
+
+            _unitOfWork.GetRepository<GroupChat>().DeleteAsync(groupChat);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            return isSuccessful;
+        }
+
+        public async Task<bool> AddUserToGroup(int groupId, int userId)
+        {
+            var groupExists = await _unitOfWork.GetRepository<GroupChat>().AnyAsync(x => x.Id == groupId);
+            var userExists = await _unitOfWork.GetRepository<User>().AnyAsync(x => x.UserId == userId);
+
+            if (!groupExists) throw new BadHttpRequestException("GroupChatNotFound");
+            if (!userExists) throw new BadHttpRequestException("UserNotFound");
+
+            var isAlreadyInGroup = await _unitOfWork.GetRepository<GroupChatMember>().AnyAsync(
+                x => x.GroupChatId == groupId && x.UserId == userId);
+
+            if (isAlreadyInGroup) throw new BadHttpRequestException("UserAlreadyInGroup");
+
+            var member = new GroupChatMember
+            {
+                GroupChatId = groupId,
+                UserId = userId,
+                //JoinedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.GetRepository<GroupChatMember>().InsertAsync(member);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            return isSuccessful;
+        }
+
+        public async Task<bool> LeaveGroup(int groupId, int userId)
+        {
+            var member = await _unitOfWork.GetRepository<GroupChatMember>().SingleOrDefaultAsync(
+                predicate: x => x.GroupChatId == groupId && x.UserId == userId);
+
+            if (member == null) throw new BadHttpRequestException("UserNotInGroup");
+
+            _unitOfWork.GetRepository<GroupChatMember>().DeleteAsync(member);
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+
+            return isSuccessful;
+        }
+
+        public async Task<List<GroupChatReponse>> GetGroupsByUserId(int userId)
+        {
+            var groupIds = await _unitOfWork.GetRepository<GroupChatMember>()
+                .FindAllAsync(x => x.UserId == userId);
+
+            var ids = groupIds.Select(x => x.GroupChatId).ToList();
+
+            var groups = await _unitOfWork.GetRepository<GroupChat>()
+                .GetListAsync(predicate: x => ids.Contains(x.Id));
+
+            return groups.Select(_mapper.Map<GroupChatReponse>).ToList();
+        }
+
+        public async Task<List<UserResponse>> GetMembersInGroup(int groupId)
+        {
+            var members = await _unitOfWork.GetRepository<GroupChatMember>()
+                .GetListAsync(predicate: x => x.GroupChatId == groupId, include: x => x.Include(y => y.User));
+
+            return members.Select(x => _mapper.Map<UserResponse>(x.User)).ToList();
+        }
+
+        public async Task<List<GroupChatReponse>> SearchGroupsByName(string keyword)
+        {
+            var groups = await _unitOfWork.GetRepository<GroupChat>()
+                .GetListAsync(predicate: x => x.RoomName.Contains(keyword));
+
+            return groups.Select(_mapper.Map<GroupChatReponse>).ToList();
+        }
+
     }
 }

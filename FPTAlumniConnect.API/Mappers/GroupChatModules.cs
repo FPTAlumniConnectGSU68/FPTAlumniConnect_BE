@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.BusinessTier.Payload.GroupChat;
+using FPTAlumniConnect.BusinessTier.Payload.User;
 using FPTAlumniConnect.DataTier.Models;
 
 namespace FPTAlumniConnect.API.Mappers
@@ -10,6 +11,8 @@ namespace FPTAlumniConnect.API.Mappers
         { 
             CreateMap<GroupChat, GroupChatReponse>();
             CreateMap<GroupChatInfo, GroupChat>();
+
+            CreateMap<User, UserResponse>();
         }
     }
 }
