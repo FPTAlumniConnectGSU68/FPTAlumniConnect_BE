@@ -42,7 +42,7 @@ namespace FPTAlumniConnect.API.Controllers
                     return NotFound();
                 }
 
-                return Ok("UpdateStatusSuccess"); 
+                return Ok("UpdateEventSuccess"); 
             }
 
             [HttpGet(ApiEndPointConstant.Event.EventsEndPoint)]
