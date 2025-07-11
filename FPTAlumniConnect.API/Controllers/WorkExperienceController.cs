@@ -69,23 +69,13 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateWorkExperience(int id, [FromBody] WorkExperienceInfo request)
         {
-            try
-            {
-                bool isUpdated = await _workExperienceService.UpdateWorkExperienceAsync(id, request);
-                if (isUpdated)
+                bool isSuccessful = await _workExperienceService.UpdateWorkExperienceAsync(id, request);
+                if (!isSuccessful)
                 {
-                    return Ok("Work experience updated successfully.");
+                    return Ok(new { status = "error", message = "Update failed" });
                 }
-                else
-                {
-                    return NotFound("Work experience not found.");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating work experience.");
-                return BadRequest("An error occurred while updating the work experience.");
-            }
+
+                return Ok(new { status = "success", message = "Update successful" });            
         }
 
         [HttpDelete(ApiEndPointConstant.WorkExperience.WorkExperienceEndPoint)]

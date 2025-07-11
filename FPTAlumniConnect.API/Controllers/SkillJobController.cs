@@ -55,8 +55,12 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> UpdateSkillInfo(int id, [FromBody] SkillJobInfo request)
         {
             var isSuccessful = await _skillService.UpdateSkillInfo(id, request);
-            if (!isSuccessful) return Ok("UpdateSkillFailed");
-            return Ok("UpdateSkillSuccess");
+            if (!isSuccessful)
+            {
+                return Ok(new { status = "error", message = "Update failed" });
+            }
+
+            return Ok(new { status = "success", message = "Update successful" });
         }
     }
 }

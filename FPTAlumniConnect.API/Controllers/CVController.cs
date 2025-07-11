@@ -54,8 +54,12 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> UpdateCVInfo(int id, [FromBody] CVInfo request)
         {
             var isSuccessful = await _cVService.UpdateCVInfo(id, request);
-            if (!isSuccessful) return Ok("UpdateStatusFailed");
-            return Ok("UpdateStatusSuccess");
+            if (!isSuccessful)
+            {
+                return Ok(new { status = "error", message = "Update failed" });
+            }
+
+            return Ok(new { status = "success", message = "Update successful" });
         }
     }
 }

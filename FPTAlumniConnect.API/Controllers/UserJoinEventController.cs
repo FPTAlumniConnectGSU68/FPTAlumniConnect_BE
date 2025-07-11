@@ -52,8 +52,13 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateUserJoinEvent(int id, [FromBody] UserJoinEventInfo request)
         {
-            await _userJoinEventService.UpdateUserJoinEvent(id, request);
-            return Ok("UpdateSuccess");
+            var isSuccessful = await _userJoinEventService.UpdateUserJoinEvent(id, request);
+            if (!isSuccessful)
+            {
+                return Ok(new { status = "error", message = "Update failed" });
+            }
+
+            return Ok(new { status = "success", message = "Update successful" });
         }
     }
 }
