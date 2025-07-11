@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fptalumni-config
+  namespace: fptalumni
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ConnectionStrings__SQLServerDatabase: "Server=fptalumni-sqlserver;Database=AlumniConnect;Persist Security Info=True;Uid=sa;Pwd=YourStrong@Passw0rd;TrustServerCertificate=True"
+  PerspectiveAPI__Endpoint: "https://commentmoderationservice.openai.azure.com/" 

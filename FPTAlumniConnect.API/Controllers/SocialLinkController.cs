@@ -55,8 +55,12 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> DeleteSocialLink(int id)
         {
             var isSuccessful = await _socialLinkService.DeleteSocialLink(id);
-            if (!isSuccessful) return Ok("DeleteFailed");
-            return Ok("DeleteSuccess");
+            if (!isSuccessful)
+            {
+                return Ok(new { status = "error", message = "Update failed" });
+            }
+
+            return Ok(new { status = "success", message = "Update successful" });
         }
     }
 }
