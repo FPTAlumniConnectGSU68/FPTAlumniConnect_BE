@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - fptalumni-network
+
+  # One-time DB init script runner
+  db-init:
+    image: mcr.microsoft.com/mssql-tools
+    depends_on:
+      - sqlserver
+    volumes:
+      - ./scripts:/scripts
+    entrypoint: >
+      bash -c "
+        sleep 20 &&
+        /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P YourStrong@Passw0rd -i /scripts/database.sql
+      "
+    networks:
+      - fptalumni-network
+
+  # FPT Alumni Connect API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:80"
+      - "5001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__SQLServerDatabase=Server=sqlserver;Database=AlumniConnect;User ID=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
+    depends_on:
+      - sqlserver
+    networks:
+      - fptalumni-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+
+networks:
+  fptalumni-network:
+    driver: bridge 
