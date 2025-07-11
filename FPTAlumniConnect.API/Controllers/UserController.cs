@@ -54,8 +54,12 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> UpdateUserInfo(int id, UserInfo request)
         {
             var isSuccessful = await _userService.UpdateUserInfo(id, request);
-            if (!isSuccessful) return Ok("UpdateUserFailed");
-            return Ok("UpdateUserSuccess");
+            if (!isSuccessful)
+            {
+                return Ok(new { status = "error", message = "Update failed" });
+            }
+
+            return Ok(new { status = "success", message = "Update successful" });
         }
 
 

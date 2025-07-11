@@ -40,13 +40,13 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateMessage(int id, [FromBody] MessageGroupChatInfo request)
         {
-            bool isUpdated = await _messageGroupChatService.UpdateMessageGroupChat(id, request);
-            if (!isUpdated)
+            var isSuccessful = await _messageGroupChatService.UpdateMessageGroupChat(id, request);
+            if (!isSuccessful)
             {
-                return NotFound();
+                return Ok(new { status = "error", message = "Update failed" });
             }
 
-            return NoContent();
+            return Ok(new { status = "success", message = "Update successful" });
         }
 
         [HttpGet(ApiEndPointConstant.MessageGroupChat.MessagesEndPoint)]

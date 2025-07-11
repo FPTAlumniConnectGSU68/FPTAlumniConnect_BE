@@ -33,17 +33,16 @@ namespace FPTAlumniConnect.API.Controllers
             }
             [HttpPut(ApiEndPointConstant.Event.EventEndPoint)]
             [ProducesResponseType(StatusCodes.Status200OK)]
-            [ProducesResponseType(StatusCodes.Status404NotFound)]
             public async Task<IActionResult> UpdateEventInfo(int id, [FromBody] EventInfo request)
             {
-                bool isUpdated = await _eventService.UpdateEventInfo(id, request);
-                if (!isUpdated)
-                {
-                    return NotFound();
-                }
-
-                return Ok("UpdateEventSuccess"); 
+                var isSuccessful = await _eventService.UpdateEventInfo(id, request);
+            if (!isSuccessful)
+            {
+                return Ok(new { status = "error", message = "Update failed" });
             }
+
+            return Ok(new { status = "success", message = "Update successful" });
+        }
 
             [HttpGet(ApiEndPointConstant.Event.EventsEndPoint)]
             [ProducesResponseType(typeof(IPaginate<GetEventResponse>), StatusCodes.Status200OK)]

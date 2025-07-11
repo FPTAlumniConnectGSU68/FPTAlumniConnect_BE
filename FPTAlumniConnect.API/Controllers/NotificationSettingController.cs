@@ -46,8 +46,12 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> UpdateNotificationSetting(int id, [FromBody] NotificationSettingInfo request)
         {
             var isSuccessful = await _notificationSettingService.UpdateNotificationSetting(id, request);
-            if (!isSuccessful) return Ok("UpdateStatusFailed");
-            return Ok("UpdateStatusSuccess");
+            if (!isSuccessful)
+            {
+                return Ok(new { status = "error", message = "Update failed" });
+            }
+
+            return Ok(new { status = "success", message = "Update successful" });
         }
     }
 }

@@ -54,8 +54,12 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> UpdateScheduleInfo(int id, [FromBody] ScheduleInfo request)
         {
             var isSuccessful = await _scheduleService.UpdateScheduleInfo(id, request);
-            if (!isSuccessful) return Ok("UpdateScheduleFailed");
-            return Ok("UpdateScheduleSuccess");
+            if (!isSuccessful)
+            {
+                return Ok(new { status = "error", message = "Update failed" });
+            }
+
+            return Ok(new { status = "success", message = "Update successful" });
         }
     }
 }

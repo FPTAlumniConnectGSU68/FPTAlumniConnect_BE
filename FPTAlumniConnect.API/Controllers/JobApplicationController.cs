@@ -39,8 +39,12 @@ namespace FPTAlumniConnect.API.Controllers
         public async Task<IActionResult> UpdateJobApplicationInfo(int id, [FromBody] JobApplicationInfo request)
         {
             var isSuccessful = await _jobApplicationService.UpdateJobApplicationInfo(id, request);
-            if (!isSuccessful) return Ok("UpdateStatusFailed");
-            return Ok("UpdateStatusSuccess");
+            if (!isSuccessful)
+            {
+                return Ok(new { status = "error", message = "Update failed" });
+            }
+
+            return Ok(new { status = "success", message = "Update successful" });
         }
 
         [HttpGet(ApiEndPointConstant.JobApplication.JobApplicationsEndPoint)]
