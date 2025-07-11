@@ -23,28 +23,31 @@ namespace FPTAlumniConnect.API.Controllers
 
         // POST api/education
         [HttpPost(ApiEndPointConstant.Education.EducationsEndPoint)]
-        [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateEducation([FromBody] EducationInfo request)
         {
             if (request == null)
-            {
-                return BadRequest("Invalid education data.");
-            }
+                return BadRequest(new { status = "error", message = "Invalid education data." });
 
             try
             {
                 int educationId = await _educationService.CreateEducationAsync(request);
-                return CreatedAtAction(nameof(GetEducationById), new { id = educationId }, null);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Education created successfully.",
+                    data = new { id = educationId }
+                });
             }
             catch (BadHttpRequestException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { status = "error", message = ex.Message });
             }
         }
 
         // GET api/education/{id}
-        [HttpGet(ApiEndPointConstant.Education.EducationEndPoint)] // Specify route here
+        [HttpGet(ApiEndPointConstant.Education.EducationEndPoint)]
         [ProducesResponseType(typeof(EducationResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetEducationById(int id)
@@ -52,44 +55,42 @@ namespace FPTAlumniConnect.API.Controllers
             try
             {
                 EducationResponse response = await _educationService.GetEducationByIdAsync(id);
-                return Ok(response);
+                return Ok(new { status = "success", message = "Fetch successful", data = response });
             }
             catch (BadHttpRequestException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(new { status = "error", message = ex.Message });
             }
         }
 
         // PUT api/education/{id}
         [HttpPut(ApiEndPointConstant.Education.EducationEndPoint)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateEducation(int id, [FromBody] EducationInfo request)
         {
             if (request == null)
-            {
-                return BadRequest("Invalid education data.");
-            }
+                return BadRequest(new { status = "error", message = "Invalid education data." });
 
             try
             {
                 bool isUpdated = await _educationService.UpdateEducationAsync(id, request);
                 if (isUpdated)
                 {
-                    return NoContent();
+                    return Ok(new { status = "success", message = "Update successful" });
                 }
-                return NotFound("Education record not found.");
+                return NotFound(new { status = "error", message = "Education record not found." });
             }
             catch (BadHttpRequestException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { status = "error", message = ex.Message });
             }
         }
 
         // DELETE api/education/{id}
         [HttpDelete(ApiEndPointConstant.Education.EducationEndPoint)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteEducation(int id)
         {
@@ -98,30 +99,30 @@ namespace FPTAlumniConnect.API.Controllers
                 bool isDeleted = await _educationService.DeleteEducationAsync(id);
                 if (isDeleted)
                 {
-                    return NoContent();
+                    return Ok(new { status = "success", message = "Delete successful" });
                 }
-                return NotFound("Education record not found.");
+                return NotFound(new { status = "error", message = "Education record not found." });
             }
             catch (BadHttpRequestException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { status = "error", message = ex.Message });
             }
         }
 
         // GET api/education
         [HttpGet(ApiEndPointConstant.Education.EducationsEndPoint)]
-        [ProducesResponseType(typeof(IPaginate<EducationResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAllEducation([FromQuery] EducationFilter filter, [FromQuery] PagingModel pagingModel)
         {
             try
             {
                 var result = await _educationService.ViewAllEducationAsync(filter, pagingModel);
-                return Ok(result);
+                return Ok(new { status = "success", message = "Fetch successful", data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest($"Error fetching data: {ex.Message}");
+                return BadRequest(new { status = "error", message = $"Error fetching data: {ex.Message}" });
             }
         }
     }
