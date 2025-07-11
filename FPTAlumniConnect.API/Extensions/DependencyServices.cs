@@ -44,7 +44,10 @@ namespace FPTAlumniConnect.API.Extensions
 
             services.AddDbContext<AlumniConnectContext>(options =>
             {
-                options.UseSqlServer(connectionString);
+                options.UseSqlServer(connectionString, sqlOptions =>
+                {
+                    sqlOptions.EnableRetryOnFailure();
+                });
             });
 
             return services;
