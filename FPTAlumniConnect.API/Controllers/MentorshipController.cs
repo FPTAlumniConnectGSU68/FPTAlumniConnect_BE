@@ -1,9 +1,8 @@
-﻿using Azure.Messaging;
-using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
-using Microsoft.AspNetCore.Mvc;
 using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -18,56 +17,153 @@ namespace FPTAlumniConnect.API.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.Mentorship.MentorshipEndPoint)]
-        [ProducesResponseType(typeof(MentorshipReponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetMentorshipById(int id)
         {
-            var response = await _mentorshipService.GetMentorshipById(id);
-            return Ok(response);
+            try
+            {
+                var response = await _mentorshipService.GetMentorshipById(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch mentorship");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.Mentorship.MentorshipAlumniIdEndPoint)]
-        [ProducesResponseType(typeof(MentorshipReponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetMentorshipsByAlumniId(int id)
         {
-            var response = await _mentorshipService.GetMentorshipsByAlumniId(id);
-            return Ok(response);
+            try
+            {
+                var response = await _mentorshipService.GetMentorshipsByAlumniId(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch mentorship");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPost(ApiEndPointConstant.Mentorship.MentorshipsEndPoint)]
-        [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateNewMentorship([FromBody] MentorshipInfo request)
         {
-            var id = await _mentorshipService.CreateNewMentorship(request);
-            return CreatedAtAction(nameof(GetMentorshipById), new { id }, id);
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
+            try
+            {
+                var id = await _mentorshipService.CreateNewMentorship(request);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Resource created successfully",
+                    data = new { id }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create mentorship");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.Mentorship.MentorshipsEndPoint)]
-        [ProducesResponseType(typeof(MentorshipReponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ViewAllMentorship([FromQuery] MentorshipFilter filter, [FromQuery] PagingModel pagingModel)
         {
-            var response = await _mentorshipService.ViewAllMentorship(filter, pagingModel);
-            return Ok(response);
+            try
+            {
+                var response = await _mentorshipService.ViewAllMentorship(filter, pagingModel);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch mentorship");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPatch(ApiEndPointConstant.Mentorship.MentorshipEndPoint)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateMentorshipInfo(int id, [FromBody] MentorshipInfo request)
         {
-            var isSuccessful = await _mentorshipService.UpdateMentorshipInfo(id, request);
-            if (!isSuccessful)
+            if (request == null)
             {
-                return Ok(new { status = "error", message = "Update failed" });
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
             }
+            try
+            {
+                var isSuccessful = await _mentorshipService.UpdateMentorshipInfo(id, request);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
 
-            return Ok(new { status = "success", message = "Update successful" });
+                return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update mentorship");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.Mentorship.MentorshipStatisticsEndPoint)]
-        [ProducesResponseType(typeof(Dictionary<string, int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetMentorshipStatistics()
         {
-            var result = await _mentorshipService.GetMentorshipStatusStatistics();
-            return Ok(result);
+            try
+            {
+                var response = await _mentorshipService.GetMentorshipStatusStatistics();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch mentorship");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPost(ApiEndPointConstant.Mentorship.MentorshipAutoCancelEndPoint)]

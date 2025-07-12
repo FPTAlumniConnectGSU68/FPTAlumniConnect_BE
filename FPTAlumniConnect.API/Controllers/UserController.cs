@@ -1,8 +1,7 @@
-﻿using Azure.Messaging;
-using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
-using FPTAlumniConnect.BusinessTier.Payload.User;
 using FPTAlumniConnect.BusinessTier.Payload;
+using FPTAlumniConnect.BusinessTier.Payload.User;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
@@ -18,48 +17,122 @@ namespace FPTAlumniConnect.API.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.User.UserEndPoint)]
-        [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetUser(int id)
         {
-            var response = await _userService.GetUserById(id);
-            return Ok(response);
+            try
+            {
+                var response = await _userService.GetUserById(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch user");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.User.UsersEndPoint)]
-        [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ViewAllUser([FromQuery] UserFilter filter, [FromQuery] PagingModel pagingModel)
         {
-            var response = await _userService.ViewAllUser(filter, pagingModel);
-            return Ok(response);
+            try
+            {
+                var response = await _userService.ViewAllUser(filter, pagingModel);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch user");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.User.MentorsEndPoint)]
-        [ProducesResponseType(typeof(GetMentorResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ViewAllMentor([FromQuery] MentorFilter filter, [FromQuery] PagingModel pagingModel)
         {
-            var response = await _userService.ViewAllMentor(filter, pagingModel);
-            return Ok(response);
+            try
+            {
+                var response = await _userService.ViewAllMentor(filter, pagingModel);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch user");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.User.MentorRatingEndPoint)]
-        [ProducesResponseType(typeof(GetMentorResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(int), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAverageRatingByMentorId(int id)
         {
-            var response = await _userService.GetAverageRatingByMentorId(id);
-            return Ok(response);
+            try
+            {
+                var response = await _userService.GetAverageRatingByMentorId(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch user");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPatch(ApiEndPointConstant.User.UserEndPoint)]
-        [ProducesResponseType(typeof(GetUserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateUserInfo(int id, UserInfo request)
         {
-            var isSuccessful = await _userService.UpdateUserInfo(id, request);
-            if (!isSuccessful)
+            if (request == null)
             {
-                return Ok(new { status = "error", message = "Update failed" });
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
             }
+            try
+            {
+                var isSuccessful = await _userService.UpdateUserInfo(id, request);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
 
-            return Ok(new { status = "success", message = "Update successful" });
+                return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update user");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
 

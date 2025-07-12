@@ -1,9 +1,8 @@
 ﻿using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
-using Microsoft.AspNetCore.Mvc;
 using FPTAlumniConnect.BusinessTier.Payload.JobApplication;
-using FPTAlumniConnect.DataTier.Paginate;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -19,85 +18,201 @@ namespace FPTAlumniConnect.API.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.JobApplication.JobApplicationEndPoint)]
-        [ProducesResponseType(typeof(JobApplicationResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetJobApplicationById(int id)
         {
-            var response = await _jobApplicationService.GetJobApplicationById(id);
-            return Ok(response);
+            try
+            {
+                var response = await _jobApplicationService.GetJobApplicationById(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch job application");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPost(ApiEndPointConstant.JobApplication.JobApplicationsEndPoint)]
-        [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateNewJobApplication([FromBody] JobApplicationInfo request)
         {
-            var id = await _jobApplicationService.CreateNewJobApplication(request);
-            return CreatedAtAction(nameof(GetJobApplicationById), new { id }, id);
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
+            try
+            {
+                var id = await _jobApplicationService.CreateNewJobApplication(request);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Resource created successfully",
+                    data = new { id }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create job application");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPatch(ApiEndPointConstant.JobApplication.JobApplicationEndPoint)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateJobApplicationInfo(int id, [FromBody] JobApplicationInfo request)
         {
-            var isSuccessful = await _jobApplicationService.UpdateJobApplicationInfo(id, request);
-            if (!isSuccessful)
+            if (request == null)
             {
-                return Ok(new { status = "error", message = "Update failed" });
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
             }
+            try
+            {
+                var isSuccessful = await _jobApplicationService.UpdateJobApplicationInfo(id, request);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
 
-            return Ok(new { status = "success", message = "Update successful" });
+                return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update job application");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.JobApplication.JobApplicationsEndPoint)]
-        [ProducesResponseType(typeof(JobApplicationResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ViewAllJobApplications([FromQuery] JobApplicationFilter filter, [FromQuery] PagingModel pagingModel)
         {
-            var response = await _jobApplicationService.ViewAllJobApplications(filter, pagingModel);
-            return Ok(response);
+            try
+            {
+                var response = await _jobApplicationService.ViewAllJobApplications(filter, pagingModel);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch job application");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         // Lấy danh sách đơn ứng tuyển theo JobPostId
         [HttpGet(ApiEndPointConstant.JobApplication.JobApplicationJPIdEndPoint)]
-        [ProducesResponseType(typeof(List<JobApplicationResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetApplicationsByJobPostId(int jobPostId)
         {
-            var response = await _jobApplicationService.GetJobApplicationsByJobPostId(jobPostId);
-            return Ok(response);
+            try
+            {
+                var response = await _jobApplicationService.GetJobApplicationsByJobPostId(jobPostId);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch job application");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         // Lấy danh sách đơn ứng tuyển theo CV
         [HttpGet(ApiEndPointConstant.JobApplication.JobApplicationCVIdEndPoint)]
-        [ProducesResponseType(typeof(List<JobApplicationResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetApplicationsByCvId(int cvId)
         {
-            var response = await _jobApplicationService.GetJobApplicationsByCvId(cvId);
-            return Ok(response);
+            try
+            {
+                var response = await _jobApplicationService.GetJobApplicationsByCvId(cvId);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch job application");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
-
-        // Xoá đơn ứng tuyển
-        //[HttpDelete(ApiEndPointConstant.JobApplication.JobApplicationEndPoint)]
-        //[ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        //public async Task<IActionResult> DeleteJobApplication(int id)
-        //{
-        //    var success = await _jobApplicationService.DeleteJobApplication(id);
-        //    return Ok(success ? "DeleteSuccess" : "DeleteFailed");
-        //}
 
         // Kiểm tra đã nộp đơn hay chưa
         [HttpGet(ApiEndPointConstant.JobApplication.JobApplicationCheckAppliedEndPoint)]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> HasAlreadyApplied([FromQuery] int jobPostId, [FromQuery] int cvId)
         {
-            var result = await _jobApplicationService.HasAlreadyApplied(jobPostId, cvId);
-            return Ok(result);
+            try
+            {
+                var response = await _jobApplicationService.HasAlreadyApplied(jobPostId, cvId);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch job application");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         // Đếm tổng số đơn ứng tuyển
         [HttpGet(ApiEndPointConstant.JobApplication.JobApplicationCountEndPoint)]
         [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(int), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CountAllApplications()
         {
-            var count = await _jobApplicationService.CountAllJobApplications();
-            return Ok(count);
+            try
+            {
+                var response = await _jobApplicationService.CountAllJobApplications();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch job application");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
     }
 }

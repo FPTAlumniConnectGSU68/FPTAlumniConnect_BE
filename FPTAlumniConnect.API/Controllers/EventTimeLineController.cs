@@ -1,9 +1,8 @@
 ﻿using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
-using FPTAlumniConnect.DataTier.Paginate;
-using Microsoft.AspNetCore.Mvc;
 using FPTAlumniConnect.BusinessTier.Payload.EventTimeLine;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -18,40 +17,109 @@ namespace FPTAlumniConnect.API.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.TimeLine.TimeLineEndPoint)]
-        [ProducesResponseType(typeof(TimeLineReponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetTimeLineById(int id)
         {
-            var response = await _Service.GetTimeLineById(id);
-            return Ok(response);
+            try
+            {
+                var response = await _Service.GetTimeLineById(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch timeline");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPost(ApiEndPointConstant.TimeLine.TimeLinesEndPoint)]
-        [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateNewTimeLine([FromBody] TimeLineInfo request)
         {
-            var id = await _Service.CreateTimeLine(request);
-            return CreatedAtAction(nameof(GetTimeLineById), new { id }, id);
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
+            try
+            {
+                var id = await _Service.CreateTimeLine(request);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Resource created successfully",
+                    data = new { id }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create timeline");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.TimeLine.TimeLinesEndPoint)]
-        [ProducesResponseType(typeof(IPaginate<TimeLineReponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ViewAllTimeLine([FromQuery] TimeLineFilter filter, [FromQuery] PagingModel pagingModel)
         {
-            var response = await _Service.ViewAllTimeLine(filter, pagingModel);
-            return Ok(response);
+            try
+            {
+                var response = await _Service.ViewAllTimeLine(filter, pagingModel);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch timeline");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPatch(ApiEndPointConstant.TimeLine.TimeLineEndPoint)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateTimeLine(int id, [FromBody] TimeLineInfo request)
         {
-            var isSuccessful = await _Service.UpdateTimeLine(id, request);
-            if (!isSuccessful)
+            if (request == null)
             {
-                return Ok(new { status = "error", message = "Update failed" });
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
             }
+            try
+            {
+                var isSuccessful = await _Service.UpdateTimeLine(id, request);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
 
-            return Ok(new { status = "success", message = "Update successful" });
+                return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update timeline");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
     }
 }
