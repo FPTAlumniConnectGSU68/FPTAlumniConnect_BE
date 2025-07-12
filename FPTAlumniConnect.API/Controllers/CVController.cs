@@ -1,9 +1,8 @@
 ﻿using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
-using Microsoft.AspNetCore.Mvc;
 using FPTAlumniConnect.BusinessTier.Payload.CV;
-using FPTAlumniConnect.DataTier.Paginate;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -18,48 +17,131 @@ namespace FPTAlumniConnect.API.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.CV.CVEndPoint)]
-        [ProducesResponseType(typeof(CVReponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCVById(int id)
         {
-            var response = await _cVService.GetCVById(id);
-            return Ok(response);
+            try
+            {
+                var response = await _cVService.GetCVById(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch CV");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.CV.CVUserEndPoint)]
-        [ProducesResponseType(typeof(CVReponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCVByUserId(int id)
         {
-            var response = await _cVService.GetCVByUserId(id);
-            return Ok(response);
+            try
+            {
+                var response = await _cVService.GetCVByUserId(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch CV");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPost(ApiEndPointConstant.CV.CVsEndPoint)]
-        [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateNewCV([FromBody] CVInfo request)
         {
-            var id = await _cVService.CreateNewCV(request);
-            return CreatedAtAction(nameof(GetCVById), new { id }, id);
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
+            try
+            {
+                var id = await _cVService.CreateNewCV(request);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Resource created successfully",
+                    data = new { id }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create CV");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.CV.CVsEndPoint)]
-        [ProducesResponseType(typeof(IPaginate<CVReponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ViewAllCV([FromQuery] CVFilter filter, [FromQuery] PagingModel pagingModel)
         {
-            var response = await _cVService.ViewAllCV(filter, pagingModel);
-            return Ok(response);
+            try
+            {
+                var response = await _cVService.ViewAllCV(filter, pagingModel);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch CV");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPatch(ApiEndPointConstant.CV.CVEndPoint)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateCVInfo(int id, [FromBody] CVInfo request)
         {
-            var isSuccessful = await _cVService.UpdateCVInfo(id, request);
-            if (!isSuccessful)
+            if (request == null)
             {
-                return Ok(new { status = "error", message = "Update failed" });
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
             }
+            try
+            {
+                var isSuccessful = await _cVService.UpdateCVInfo(id, request);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
 
-            return Ok(new { status = "success", message = "Update successful" });
+                return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update CV");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
     }
 }
