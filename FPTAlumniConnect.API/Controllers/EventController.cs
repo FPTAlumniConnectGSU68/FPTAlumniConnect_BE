@@ -19,6 +19,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.Event.EventsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateNewEvent([FromBody] EventInfo request)
         {
             if (request == null)
@@ -71,6 +72,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPut(ApiEndPointConstant.Event.EventEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateEventInfo(int id, [FromBody] EventInfo request)
         {
             if (request == null)
