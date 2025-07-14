@@ -41,6 +41,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.TimeLine.TimeLinesEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateNewTimeLine([FromBody] TimeLineInfo request)
         {
             if (request == null)
@@ -94,6 +95,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPatch(ApiEndPointConstant.TimeLine.TimeLineEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateTimeLine(int id, [FromBody] TimeLineInfo request)
         {
             if (request == null)
