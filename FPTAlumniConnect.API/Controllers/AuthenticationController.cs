@@ -23,27 +23,39 @@ namespace FPTAlumniConnect.API.Controllers
         //    return Ok(response);
         //}
         [HttpPost(ApiEndPointConstant.Authentication.Login)]
-        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Login(LoginRequest request)
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            if (request == null)
+            if (request == null || !ModelState.IsValid)
             {
                 return BadRequest(new
                 {
                     status = "error",
                     message = "Bad request",
-                    errors = new[] { "Request body is null or malformed" }
+                    errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray()
                 });
             }
+
             try
             {
-                var id = await _userService.Login(request);
-                return StatusCode(201, new
+                var response = await _userService.Login(request);
+
+                if (response.AccessToken == null)
+                {
+                    return BadRequest(new
+                    {
+                        status = "error",
+                        message = response.Message
+                    });
+                }
+
+                return Ok(new
                 {
                     status = "success",
-                    message = "Resource created successfully",
-                    data = new { id }
+                    message = response.Message,
+                    data = response
                 });
             }
             catch (Exception ex)
@@ -52,6 +64,7 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
         [HttpPost(ApiEndPointConstant.Authentication.Register)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
