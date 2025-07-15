@@ -9,6 +9,7 @@ namespace FPTAlumniConnect.BusinessTier.Payload.User
     public class GetUserResponse
     {
         public int UserId { get; set; }
+        public string? Code { get; set; }
 
         public string FirstName { get; set; } = null!;
 

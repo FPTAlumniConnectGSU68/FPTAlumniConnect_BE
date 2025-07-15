@@ -13,7 +13,7 @@ namespace FPTAlumniConnect.BusinessTier.Payload.User
         public string? LastName { get; set; }
 
         public string? Email { get; set; }
-
+        public string? Code { get; set; }
         public bool? EmailVerified { get; set; }
         public string? ProfilePicture { get; set; }
 
