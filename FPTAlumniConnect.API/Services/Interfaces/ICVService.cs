@@ -11,5 +11,8 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<bool> UpdateCVInfo(int id, CVInfo request);
         Task<CVReponse> GetCVById(int id);
         Task<CVReponse> GetCVByUserId(int id);
+
+        Task<bool> ToggleIsLookingForJobAsync(int cvId);
+        Task<byte[]> ExportCvToPdfAsync(int cvId);
     }
 }
