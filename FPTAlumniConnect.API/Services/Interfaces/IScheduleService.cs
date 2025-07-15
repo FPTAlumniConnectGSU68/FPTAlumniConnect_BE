@@ -10,5 +10,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IPaginate<ScheduleReponse>> ViewAllSchedule(ScheduleFilter filter, PagingModel pagingModel);
         Task<bool> UpdateScheduleInfo(int id, ScheduleInfo request);
         Task<ScheduleReponse> GetScheduleById(int id);
+        Task<ICollection<ScheduleReponse>> GetSchedulesByMentorId(int id);
     }
 }

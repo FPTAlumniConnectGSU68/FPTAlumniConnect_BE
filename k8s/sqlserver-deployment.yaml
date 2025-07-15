@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fptalumni-sqlserver
+  namespace: fptalumni
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fptalumni-sqlserver
+  template:
+    metadata:
+      labels:
+        app: fptalumni-sqlserver
+    spec:
+      containers:
+      - name: sqlserver
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+        - containerPort: 1433
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: fptalumni-secrets
+              key: SA_PASSWORD
+        - name: MSSQL_PID
+          value: "Express"
+        volumeMounts:
+        - name: sqlserver-data
+          mountPath: /var/opt/mssql
+      volumes:
+      - name: sqlserver-data
+        persistentVolumeClaim:
+          claimName: sqlserver-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fptalumni-sqlserver
+  namespace: fptalumni
+spec:
+  selector:
+    app: fptalumni-sqlserver
+  ports:
+  - port: 1433
+    targetPort: 1433
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sqlserver-pvc
+  namespace: fptalumni
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi 

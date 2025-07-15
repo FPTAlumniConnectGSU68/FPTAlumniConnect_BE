@@ -10,6 +10,7 @@ using System.Linq.Expressions;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
+    // Service class to manage Education History records for users
     public class EducationHistoryService : BaseService<EducationHistoryService>, IEducationHistoryService
     {
         public EducationHistoryService(IUnitOfWork<AlumniConnectContext> unitOfWork, ILogger<EducationHistoryService> logger, IMapper mapper,
@@ -17,46 +18,38 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
         }
 
+        // Creates a new education history record
         public async Task<int> CreateNewEducationHistory(EducationHistoryInfo request)
         {
-            // Kiểm tra xem Iduser có tồn tại trong bảng User không
+            // Ensure user exists
             User userId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                    predicate: x => x.UserId.Equals(request.Iduser)) ??
-                    throw new BadHttpRequestException("UserNotFound");
+                predicate: x => x.UserId.Equals(request.Iduser))
+                ?? throw new BadHttpRequestException("UserNotFound");
 
-            if (request.Name != null)
+            // Validate Name (optional)
+            if (request.Name != null && (request.Name.Length < 2 || request.Name.Length > 200))
             {
-                // Optional: Add name validation
-                if (request.Name.Length < 2 || request.Name.Length > 200)
-                {
-                    throw new BadHttpRequestException("Name must be between 2 and 200 characters.");
-                }
+                throw new BadHttpRequestException("Name must be between 2 and 200 characters.");
             }
 
-            // Kiểm tra điều kiện thời gian
-            if (request.ReceivedAt.HasValue)
+            // Validate ReceivedAt is not a future date
+            if (request.ReceivedAt.HasValue && request.ReceivedAt.Value > DateTime.UtcNow)
             {
-                if (request.ReceivedAt.Value > DateTime.UtcNow)
-                {
-                    throw new BadHttpRequestException("ReceivedAt cannot be in the future.");
-                }
+                throw new BadHttpRequestException("ReceivedAt cannot be in the future.");
             }
 
-            // Kiểm tra Người dùng đã có EduHis này
+            // Prevent duplicate entry for the same user and education history
             EducationHistory alreadyHad = await _unitOfWork.GetRepository<EducationHistory>().SingleOrDefaultAsync(
                 predicate: x => x.Iduser == request.Iduser &&
-                            x.Name == request.Name &&
-                            x.ReceivedAt == request.ReceivedAt);
+                                x.Name == request.Name &&
+                                x.ReceivedAt == request.ReceivedAt);
             if (alreadyHad != null)
             {
                 throw new BadHttpRequestException("UserAlreadyHadThisEduHis");
             }
 
-            // Ánh xạ request sang EducationHistory
+            // Map and insert to DB
             EducationHistory newEducationHistory = _mapper.Map<EducationHistory>(request);
-            //newEducationHistory.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
-
-            // Thêm EducationHistory vào database
             await _unitOfWork.GetRepository<EducationHistory>().InsertAsync(newEducationHistory);
 
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
@@ -65,27 +58,26 @@ namespace FPTAlumniConnect.API.Services.Implements
             return newEducationHistory.EduHistoryId;
         }
 
-
+        // Gets education history record by ID
         public async Task<GetEducationHistoryResponse> GetEducationHistoryById(int id)
         {
             EducationHistory educationHistory = await _unitOfWork.GetRepository<EducationHistory>().SingleOrDefaultAsync(
-                predicate: x => x.EduHistoryId.Equals(id)) ??
-                throw new BadHttpRequestException("EducationHistoryNotFound");
+                predicate: x => x.EduHistoryId.Equals(id))
+                ?? throw new BadHttpRequestException("EducationHistoryNotFound");
 
-            GetEducationHistoryResponse result = _mapper.Map<GetEducationHistoryResponse>(educationHistory);
-            return result;
+            return _mapper.Map<GetEducationHistoryResponse>(educationHistory);
         }
 
+        // Updates an existing education history record
         public async Task<bool> UpdateEducationHistory(int id, EducationHistoryInfo request)
         {
             EducationHistory educationHistory = await _unitOfWork.GetRepository<EducationHistory>().SingleOrDefaultAsync(
-                predicate: x => x.EduHistoryId.Equals(id)) ??
-                throw new BadHttpRequestException("EducationHistoryNotFound");
+                predicate: x => x.EduHistoryId.Equals(id))
+                ?? throw new BadHttpRequestException("EducationHistoryNotFound");
 
-            // Update Name
+            // Update Name with validation
             if (!string.IsNullOrWhiteSpace(request.Name))
             {
-                // Optional: Add name validation
                 if (request.Name.Length < 2 || request.Name.Length > 200)
                 {
                     throw new BadHttpRequestException("Name must be between 2 and 200 characters.");
@@ -93,10 +85,9 @@ namespace FPTAlumniConnect.API.Services.Implements
                 educationHistory.Name = request.Name;
             }
 
-            // Update ReceivedAt
+            // Update ReceivedAt with validation
             if (request.ReceivedAt.HasValue)
             {
-                // Optional: Add date validation
                 if (request.ReceivedAt.Value > DateTime.UtcNow)
                 {
                     throw new BadHttpRequestException("ReceivedAt cannot be a future date.");
@@ -106,13 +97,12 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             educationHistory.UpdatedAt = DateTime.Now;
             educationHistory.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
-                //?? throw new UnauthorizedAccessException("User not authenticated");
 
             _unitOfWork.GetRepository<EducationHistory>().UpdateAsync(educationHistory);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
+        // Views paginated list of education history with filters
         public async Task<IPaginate<GetEducationHistoryResponse>> ViewAllEducationHistory(EducationHistoryFilter filter, PagingModel pagingModel)
         {
             // Validate date ranges
@@ -126,7 +116,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("ReceivedAtTo cannot be earlier than ReceivedAtFrom.");
             }
 
-            // Build filter expression
+            // Build filtering expression
             Expression<Func<EducationHistory, bool>> predicate = x =>
                 (filter.Iduser == null || x.Iduser == filter.Iduser) &&
                 (string.IsNullOrEmpty(filter.Name) || x.Name.Contains(filter.Name)) &&
@@ -135,7 +125,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 (!filter.CreatedAtFrom.HasValue || x.CreatedAt >= filter.CreatedAtFrom.Value) &&
                 (!filter.CreatedAtTo.HasValue || x.CreatedAt <= filter.CreatedAtTo.Value);
 
-            IPaginate<GetEducationHistoryResponse> response = await _unitOfWork.GetRepository<EducationHistory>().GetPagingListAsync(
+            // Execute paged query
+            var response = await _unitOfWork.GetRepository<EducationHistory>().GetPagingListAsync(
                 selector: x => _mapper.Map<GetEducationHistoryResponse>(x),
                 predicate: predicate,
                 orderBy: x => x.OrderBy(x => x.ReceivedAt),

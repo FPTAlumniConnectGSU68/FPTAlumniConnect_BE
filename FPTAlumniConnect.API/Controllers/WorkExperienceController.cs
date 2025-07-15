@@ -3,8 +3,6 @@ using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.WorkExperience;
-using FPTAlumniConnect.DataTier.Paginate;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
@@ -28,103 +26,110 @@ namespace FPTAlumniConnect.API.Controllers
 
 
         [HttpPost(ApiEndPointConstant.WorkExperience.WorkExperiencesEndPoint)]
-        [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateWorkExperience([FromBody] WorkExperienceInfo request)
         {
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
             try
             {
-                int workExperienceId = await _workExperienceService.CreateWorkExperienceAsync(request);
-                return CreatedAtAction(nameof(GetWorkExperienceById), new { id = workExperienceId }, workExperienceId);
+                var id = await _workExperienceService.CreateWorkExperienceAsync(request);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Resource created successfully",
+                    data = new { id }
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating work experience.");
-                return BadRequest("An error occurred while creating the work experience.");
+                _logger.LogError(ex, "Failed to create work experience");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
 
 
         [HttpGet(ApiEndPointConstant.WorkExperience.WorkExperienceEndPoint)]
-        [ProducesResponseType(typeof(WorkExperienceResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetWorkExperienceById(int id)
         {
             try
             {
-                WorkExperienceResponse workExperience = await _workExperienceService.GetWorkExperienceByIdAsync(id);
-                return Ok(workExperience);
+                var response = await _workExperienceService.GetWorkExperienceByIdAsync(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Work experience not found.");
-                return NotFound("Work experience not found.");
+                _logger.LogError(ex, "Failed to fetch work experience");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
 
 
         [HttpPut(ApiEndPointConstant.WorkExperience.WorkExperienceEndPoint)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateWorkExperience(int id, [FromBody] WorkExperienceInfo request)
         {
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
             try
             {
-                bool isUpdated = await _workExperienceService.UpdateWorkExperienceAsync(id, request);
-                if (isUpdated)
+                var isSuccessful = await _workExperienceService.UpdateWorkExperienceAsync(id, request);
+                if (!isSuccessful)
                 {
-                    return Ok("Work experience updated successfully.");
+                    return Ok(new { status = "error", message = "Update failed" });
                 }
-                else
-                {
-                    return NotFound("Work experience not found.");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating work experience.");
-                return BadRequest("An error occurred while updating the work experience.");
-            }
-        }
 
-        [HttpDelete(ApiEndPointConstant.WorkExperience.WorkExperienceEndPoint)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteWorkExperience(int id)
-        {
-            try
-            {
-                bool isDeleted = await _workExperienceService.DeleteWorkExperienceAsync(id);
-                if (isDeleted)
-                {
-                    return Ok("Work experience deleted successfully.");
-                }
-                else
-                {
-                    return NotFound("Work experience not found.");
-                }
+                return Ok(new { status = "success", message = "Update successful" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting work experience.");
-                return BadRequest("An error occurred while deleting the work experience.");
+                _logger.LogError(ex, "Failed to update work experience");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
 
         [HttpGet(ApiEndPointConstant.WorkExperience.WorkExperiencesEndPoint)]
-        [ProducesResponseType(typeof(IPaginate<WorkExperienceResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllWorkExperiences([FromQuery] WorkExperienceFilter filter, [FromQuery] PagingModel pagingModel)
         {
             try
             {
-                IPaginate<WorkExperienceResponse> workExperiences = await _workExperienceService.ViewAllWorkExperiencesAsync(filter, pagingModel);
-                return Ok(workExperiences);
+                var response = await _workExperienceService.ViewAllWorkExperiencesAsync(filter, pagingModel);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching work experiences.");
-                return BadRequest("An error occurred while fetching the work experiences.");
+                _logger.LogError(ex, "Failed to fetch work experience");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
     }

@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=12345
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - fptalumni-network
+    restart: unless-stopped
+
+  # FPT Alumni Connect API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__SQLServerDatabase=Server=sqlserver;Database=AlumniConnect;Persist Security Info=True;Uid=sa;Pwd=${SA_PASSWORD:12345};TrustServerCertificate=True
+      - PerspectiveAPI__ApiKey=${PERSPECTIVE_API_KEY}
+      - PerspectiveAPI__Endpoint=${PERSPECTIVE_API_ENDPOINT}
+    depends_on:
+      - sqlserver
+    networks:
+      - fptalumni-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  sqlserver_data:
+
+networks:
+  fptalumni-network:
+    driver: bridge 

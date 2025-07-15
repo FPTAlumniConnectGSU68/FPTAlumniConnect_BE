@@ -1,11 +1,8 @@
 ﻿using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
-using FPTAlumniConnect.BusinessTier.Payload.GroupChat;
 using FPTAlumniConnect.BusinessTier.Payload;
-using FPTAlumniConnect.DataTier.Paginate;
+using FPTAlumniConnect.BusinessTier.Payload.GroupChat;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using FPTAlumniConnect.BusinessTier.Payload.User;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -23,17 +20,52 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(int), StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateGroupChat([FromBody] GroupChatInfo request)
         {
-            var groupId = await _groupChatService.CreateGroupChat(request);
-            return CreatedAtAction(nameof(GetGroupChatById), new { id = groupId }, groupId);
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
+            try
+            {
+                var id = await _groupChatService.CreateGroupChat(request);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Resource created successfully",
+                    data = new { id }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create group chat");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.GroupChat.GroupChatEndPoint)]
-        [ProducesResponseType(typeof(GroupChatReponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetGroupChatById(int id)
         {
-            var groupChatResponse = await _groupChatService.GetGroupChatById(id);
-            return Ok(groupChatResponse);
+            try
+            {
+                var response = await _groupChatService.GetGroupChatById(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch group chat");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpPut(ApiEndPointConstant.GroupChat.GroupChatEndPoint)]
@@ -41,34 +73,57 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateGroupChat(int id, [FromBody] GroupChatInfo request)
         {
-            bool isUpdated = await _groupChatService.UpdateGroupChat(id, request);
-            if (!isUpdated)
+            if (request == null)
             {
-                return NotFound();
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
             }
+            try
+            {
+                var isSuccessful = await _groupChatService.UpdateGroupChat(id, request);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
 
-            return NoContent();
+                return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update group chat");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.GroupChat.GroupChatsEndPoint)]
-        [ProducesResponseType(typeof(IPaginate<GroupChatReponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ViewAllGroupChats([FromQuery] GroupChatFilter filter, [FromQuery] PagingModel pagingModel)
         {
-            var groupChats = await _groupChatService.ViewAllMessagesInGroupChat(filter, pagingModel);
-            return Ok(groupChats);
+            try
+            {
+                var response = await _groupChatService.ViewAllMessagesInGroupChat(filter, pagingModel);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch group chat");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
-        //[HttpDelete(ApiEndPointConstant.GroupChat.GroupChatEndPoint)]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
-        //public async Task<IActionResult> DeleteGroupChat(int id)
-        //{
-        //    var result = await _groupChatService.DeleteGroupChat(id);
-        //    if (!result) return NotFound();
-        //    return NoContent();
-        //}
-
         [HttpPost(ApiEndPointConstant.GroupChat.AddUserToGroupEndPoint)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AddUserToGroup(int groupId, int userId)
         {
             var result = await _groupChatService.AddUserToGroup(groupId, userId);
@@ -77,7 +132,8 @@ namespace FPTAlumniConnect.API.Controllers
         }
 
         [HttpDelete(ApiEndPointConstant.GroupChat.LeaveGroupEndPoint)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> LeaveGroup(int groupId, int userId)
         {
             var result = await _groupChatService.LeaveGroup(groupId, userId);
@@ -86,27 +142,69 @@ namespace FPTAlumniConnect.API.Controllers
         }
 
         [HttpGet(ApiEndPointConstant.GroupChat.UserGroupsEndPoint)]
-        [ProducesResponseType(typeof(List<GroupChatReponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetGroupsByUserId(int userId)
         {
-            var groups = await _groupChatService.GetGroupsByUserId(userId);
-            return Ok(groups);
+            try
+            {
+                var response = await _groupChatService.GetGroupsByUserId(userId);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch group chat");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.GroupChat.GroupMembersEndPoint)]
-        [ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetMembersInGroup(int groupId)
         {
-            var members = await _groupChatService.GetMembersInGroup(groupId);
-            return Ok(members);
+            try
+            {
+                var response = await _groupChatService.GetMembersInGroup(groupId);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch group chat");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
 
         [HttpGet(ApiEndPointConstant.GroupChat.SearchGroupsEndPoint)]
-        [ProducesResponseType(typeof(List<GroupChatReponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SearchGroupsByName([FromQuery] string keyword)
         {
-            var results = await _groupChatService.SearchGroupsByName(keyword);
-            return Ok(results);
+            try
+            {
+                var response = await _groupChatService.SearchGroupsByName(keyword);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch group chat");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
         }
     }
 }
