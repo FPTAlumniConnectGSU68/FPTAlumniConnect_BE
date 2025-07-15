@@ -63,6 +63,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.Tag.TagsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateNewTag([FromBody] TagJobInfo request)
         {
             if (request == null)
@@ -116,6 +117,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPatch(ApiEndPointConstant.Tag.TagEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateTagInfo(int id, [FromBody] TagJobInfo request)
         {
             if (request == null)
