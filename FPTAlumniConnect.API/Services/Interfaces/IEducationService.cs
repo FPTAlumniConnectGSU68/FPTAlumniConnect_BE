@@ -13,5 +13,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<bool> UpdateEducationAsync(int id, EducationInfo request);
         Task<bool> DeleteEducationAsync(int id);
         Task<IPaginate<EducationResponse>> ViewAllEducationAsync(EducationFilter filter, PagingModel pagingModel);
+
+        Task<List<EducationStatisticsDto>> GetEducationStatsByUser(int userId, string groupBy);
     }
 }

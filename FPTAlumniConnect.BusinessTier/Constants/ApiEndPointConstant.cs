@@ -156,6 +156,7 @@ namespace FPTAlumniConnect.BusinessTier.Constants
             public const string EducationsEndPoint = ApiEndpoint + "/educations";
             public const string EducationEndPoint = EducationsEndPoint + "/{id}";
             public const string EducationUserEndPoint = EducationsEndPoint + "/user/{id}";
+            public const string EducationStatsByUserEndPoint = EducationsEndPoint + "/users/{userId}/statistics";
         }
 
         public static class WorkExperience

@@ -26,6 +26,17 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<int> CreateEducationAsync(EducationInfo request)
         {
+            var isDuplicate = await _unitOfWork.GetRepository<Education>().AnyAsync(
+                predicate: x => x.UserId == request.UserId &&
+                    x.SchoolName == request.SchoolName &&
+                    x.Major == request.Major &&
+                    x.StartDate == request.StartDate);
+
+            if (isDuplicate)
+            {
+                throw new BadHttpRequestException("DuplicateEducationEntry");
+            }
+
             Education newEducation = _mapper.Map<Education>(request);
             await _unitOfWork.GetRepository<Education>().InsertAsync(newEducation);
 
@@ -89,5 +100,52 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return response;
         }
+
+        public async Task<List<EducationStatisticsDto>> GetEducationStatsByUser(int userId, string groupBy = "SchoolName")
+        {
+            var educations = await _unitOfWork.GetRepository<Education>().GetListAsync(
+                predicate: x => x.UserId == userId
+                //, disableTracking: true
+            );
+
+            if (educations == null || !educations.Any())
+                return new List<EducationStatisticsDto>();
+
+            List<EducationStatisticsDto> stats;
+
+            switch (groupBy.ToLower())
+            {
+                case "major":
+                    stats = educations.GroupBy(x => x.Major)
+                        .Select(g => new EducationStatisticsDto
+                        {
+                            GroupByField = g.Key,
+                            TotalCount = g.Count()
+                        }).ToList();
+                    break;
+
+                case "location":
+                    stats = educations.GroupBy(x => x.Location)
+                        .Select(g => new EducationStatisticsDto
+                        {
+                            GroupByField = g.Key,
+                            TotalCount = g.Count()
+                        }).ToList();
+                    break;
+
+                default: // SchoolName
+                    stats = educations.GroupBy(x => x.SchoolName)
+                        .Select(g => new EducationStatisticsDto
+                        {
+                            GroupByField = g.Key,
+                            TotalCount = g.Count()
+                        }).ToList();
+                    break;
+            }
+
+            return stats;
+        }
+
+
     }
 }

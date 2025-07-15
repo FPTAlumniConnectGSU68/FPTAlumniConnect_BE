@@ -21,32 +21,29 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<int> CreateNewEvent(EventInfo request)
         {
-            // Kiểm tra điều kiện thời gian
-            if (request.StartDate.HasValue)
+            if (request.StartDate.HasValue && request.StartDate.Value < DateTime.UtcNow)
+                throw new BadHttpRequestException("StartDate cannot be in the past.");
+
+            if (request.EndDate.HasValue && request.StartDate.HasValue &&
+                request.EndDate.Value < request.StartDate.Value)
+                throw new BadHttpRequestException("EndDate cannot be earlier than StartDate.");
+
+            // Nếu không truyền OrganizerId thì lấy từ người dùng đăng nhập
+            if (!request.OrganizerId.HasValue)
             {
-                if (request.StartDate.Value < DateTime.UtcNow)
-                {
-                    throw new BadHttpRequestException("StartDate cannot be in the past.");
-                }
+                var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("UserId");
+                if (userIdClaim == null)
+                    throw new UnauthorizedAccessException("User not authenticated");
+
+                request.OrganizerId = int.Parse(userIdClaim.Value);
             }
 
-            if (request.EndDate.HasValue)
-            {
-                if (request.StartDate.HasValue && request.EndDate.Value < request.StartDate.Value)
-                {
-                    throw new BadHttpRequestException("EndDate cannot be earlier than StartDate.");
-                }
-            }
+            // Kiểm tra OrganizerId hợp lệ
+            User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: x => x.UserId == request.OrganizerId)
+                ?? throw new BadHttpRequestException("UserNotFound");
 
-            // Lấy tên của người đang đăng nhập (người tạo / session)
-            //request.OrganizerId = ;
-
-            User userId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                    predicate: x => x.UserId.Equals(request.OrganizerId)) ??
-                    throw new BadHttpRequestException("UserNotFound");
-
-            Event newEvent = _mapper.Map<Event>(request);
-
+            var newEvent = _mapper.Map<Event>(request);
             await _unitOfWork.GetRepository<Event>().InsertAsync(newEvent);
 
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
@@ -171,6 +168,16 @@ namespace FPTAlumniConnect.API.Services.Implements
             );
 
             return response;
+        }
+
+        public async Task<bool> DeleteEvent(int id)
+        {
+            var ev = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
+                predicate: x => x.EventId == id) ??
+                throw new BadHttpRequestException("EventNotFound");
+
+            _unitOfWork.GetRepository<Event>().DeleteAsync(ev);
+            return await _unitOfWork.CommitAsync() > 0;
         }
     }
 }
