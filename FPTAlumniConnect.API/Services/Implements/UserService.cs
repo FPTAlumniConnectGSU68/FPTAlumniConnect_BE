@@ -218,10 +218,12 @@ namespace FPTAlumniConnect.API.Services.Implements
             //}
 
             // Update other fields
+            user.Code = string.IsNullOrEmpty(request.Code) ? user.Code : request.Code;
             user.FirstName = string.IsNullOrEmpty(request.FirstName) ? user.FirstName : request.FirstName;
             user.Email = string.IsNullOrEmpty(request.Email) ? user.Email : request.Email;
             user.LastName = string.IsNullOrEmpty(request.LastName) ? user.LastName : request.LastName;
             user.ProfilePicture = string.IsNullOrEmpty(request.ProfilePicture) ? user.ProfilePicture : request.ProfilePicture;
+            user.IsMentor = request.IsMentor;
             user.UpdatedAt = DateTime.Now;
             user.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
