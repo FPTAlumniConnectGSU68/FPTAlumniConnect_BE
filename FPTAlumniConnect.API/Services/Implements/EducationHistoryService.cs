@@ -145,5 +145,23 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return response;
         }
+
+        public async Task<bool> DeleteEducationHistory(int id)
+        {
+            EducationHistory educationHistory = await _unitOfWork.GetRepository<EducationHistory>().SingleOrDefaultAsync(
+                predicate: x => x.EduHistoryId.Equals(id)) ?? throw new BadHttpRequestException("EducationHistoryNotFound");
+
+            _unitOfWork.GetRepository<EducationHistory>().DeleteAsync(educationHistory);
+            return await _unitOfWork.CommitAsync() > 0;
+        }
+
+        public async Task<int> GetEducationHistoryCountByUser(int userId)
+        {
+            var count = await _unitOfWork.GetRepository<EducationHistory>().CountAsync(
+                predicate: x => x.Iduser == userId
+            );
+
+            return count;
+        }
     }
 }
