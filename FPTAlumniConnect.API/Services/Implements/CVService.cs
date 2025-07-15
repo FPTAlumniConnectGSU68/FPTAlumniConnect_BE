@@ -190,5 +190,44 @@ namespace FPTAlumniConnect.API.Services.Implements
             );
             return response;
         }
+
+        //public async Task<bool> ShareCvByEmailAsync(ShareCvRequest request)
+        //{
+        //    var cv = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
+        //        predicate: x => x.Id == request.CvId)
+        //             ?? throw new BadHttpRequestException("CVNotFound");
+
+        //    string cvLink = $"https://yourdomain.com{cv.FileUrl}";
+        //    string body = $"{request.Message}\n\nCV Link: {cvLink}";
+
+        //    // Implement mail sending logic (e.g., using SMTP or a service)
+        //    await _mailService.SendAsync(request.RecipientEmail, "Shared CV", body);
+        //    return true;
+        //}
+
+        public async Task<bool> ToggleIsLookingForJobAsync(int cvId)
+        {
+            var cv = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
+                predicate: x => x.Id == cvId)
+                     ?? throw new BadHttpRequestException("CVNotFound");
+
+            cv.IsDeal = !cv.IsDeal;
+            _unitOfWork.GetRepository<Cv>().UpdateAsync(cv);
+            return await _unitOfWork.CommitAsync() > 0;
+        }
+
+        public async Task<byte[]> ExportCvToPdfAsync(int cvId)
+        {
+            var cv = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
+                predicate: x => x.Id == cvId)
+                     ?? throw new BadHttpRequestException("CVNotFound");
+
+            string content = $"Name: {cv.FullName}\nEmail: {cv.Email}\nPhone: {cv.Phone}\nExperience: {cv.PrimaryDuties}";
+
+            // Use a PDF library (e.g. iTextSharp, DinkToPdf, or QuestPDF)
+            //byte[] pdfBytes = _pdfService.GeneratePdf(content);
+            return null;
+        }
+
     }
 }

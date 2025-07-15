@@ -4,6 +4,7 @@ using FPTAlumniConnect.BusinessTier.Payload;
 using Microsoft.AspNetCore.Mvc;
 using FPTAlumniConnect.BusinessTier.Payload.CV;
 using FPTAlumniConnect.DataTier.Paginate;
+using FPTAlumniConnect.API.Services.Implements;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -57,5 +58,27 @@ namespace FPTAlumniConnect.API.Controllers
             if (!isSuccessful) return Ok("UpdateStatusFailed");
             return Ok("UpdateStatusSuccess");
         }
+
+        //[HttpPost("share")]
+        //public async Task<IActionResult> ShareCvByEmail([FromBody] ShareCvRequest request)
+        //{
+        //    await _cVService.ShareCvByEmailAsync(request);
+        //    return Ok(new { status = "success", message = "CV shared successfully." });
+        //}
+
+        [HttpPatch("{cvId}/toggle-job-looking")]
+        public async Task<IActionResult> ToggleJobLooking(int cvId)
+        {
+            var result = await _cVService.ToggleIsLookingForJobAsync(cvId);
+            return Ok(new { status = "success", isLooking = result });
+        }
+
+        //[HttpGet("{cvId}/export")]
+        //public async Task<IActionResult> ExportCvToPdf(int cvId)
+        //{
+        //    var pdfBytes = await _cVService.ExportCvToPdfAsync(cvId);
+        //    return File(pdfBytes, "application/pdf", "cv.pdf");
+        //}
+
     }
 }
