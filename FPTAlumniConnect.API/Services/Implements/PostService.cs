@@ -43,7 +43,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             _logger.LogInformation("Getting post by ID: {PostId}", id);
 
-            Func<IQueryable<Post>, IIncludableQueryable<Post, object>> include = q => q.Include(u => u.Major);
+            Func<IQueryable<Post>, IIncludableQueryable<Post, object>> include = q => q.Include(u => u.Major).Include(u => u.Author);
 
             Post post = await _unitOfWork.GetRepository<Post>().SingleOrDefaultAsync(
                 predicate: x => x.PostId.Equals(id), include: include) ??
@@ -78,7 +78,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             _logger.LogInformation("Viewing all posts with filter and paging.");
 
-            Func<IQueryable<Post>, IIncludableQueryable<Post, object>> include = q => q.Include(u => u.Major);
+            Func<IQueryable<Post>, IIncludableQueryable<Post, object>> include = q => q.Include(u => u.Major).Include(u => u.Author);
 
             IPaginate<PostReponse> response = await _unitOfWork.GetRepository<Post>().GetPagingListAsync(
                 selector: x => _mapper.Map<PostReponse>(x),
