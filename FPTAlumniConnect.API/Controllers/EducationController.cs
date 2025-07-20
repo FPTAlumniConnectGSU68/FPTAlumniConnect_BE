@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
 {
-    [Route("api/[controller]")]
+    //[Route("api/[controller]")]
     [ApiController]
-    public class EducationController : ControllerBase
+    public class EducationController : BaseController<EducationController>
     {
         private readonly IEducationService _educationService;
 
-        public EducationController(IEducationService educationService)
+        public EducationController(ILogger<EducationController> logger, IEducationService educationService) : base(logger)
         {
             _educationService = educationService;
         }
@@ -187,5 +187,42 @@ namespace FPTAlumniConnect.API.Controllers
                 });
             }
         }
+
+        // GET api/education/users/{userId}/statistics
+        [HttpGet(ApiEndPointConstant.Education.EducationStatsByUserEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetEducationStatsByUser(int userId, [FromQuery] string groupBy = "SchoolName")
+        {
+            try
+            {
+                var stats = await _educationService.GetEducationStatsByUser(userId, groupBy);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = stats
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { ex.Message }
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
+            }
+        }
+
     }
 }
