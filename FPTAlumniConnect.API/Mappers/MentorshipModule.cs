@@ -8,7 +8,13 @@ namespace FPTAlumniConnect.API.Mappers
     {
         public MentorshipModule()
         {
-            CreateMap<Mentorship, MentorshipReponse>();
+            CreateMap<Mentorship, MentorshipReponse>()
+                .ForMember(dest => dest.AlumniName, opt => opt.MapFrom(
+                    src => src.Aumni != null
+                        ? $"{src.Aumni.FirstName} {src.Aumni.LastName}"
+                        : null
+                ));
+
             CreateMap<MentorshipInfo, Mentorship>();
         }
     }
