@@ -5,16 +5,19 @@ using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
     public class ScheduleService : BaseService<ScheduleService>, IScheduleService
     {
-
-        public ScheduleService(IUnitOfWork<AlumniConnectContext> unitOfWork, ILogger<ScheduleService> logger, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+        public ScheduleService(
+            IUnitOfWork<AlumniConnectContext> unitOfWork,
+            ILogger<ScheduleService> logger,
+            IMapper mapper,
+            IHttpContextAccessor httpContextAccessor)
+            : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
-
         }
 
         public async Task<int> CreateNewSchedule(ScheduleInfo request)
@@ -33,7 +36,8 @@ namespace FPTAlumniConnect.API.Services.Implements
             await _unitOfWork.GetRepository<Schedule>().InsertAsync(newSchedule);
 
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessful) throw new BadHttpRequestException("CreateFailed");
+            if (!isSuccessful)
+                throw new BadHttpRequestException("CreateFailed");
 
             return newSchedule.ScheduleId;
         }
@@ -41,27 +45,33 @@ namespace FPTAlumniConnect.API.Services.Implements
         public async Task<ScheduleReponse> GetScheduleById(int id)
         {
             Schedule schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
-                predicate: x => x.ScheduleId.Equals(id)) ??
-                throw new BadHttpRequestException("ScheduleNotFound");
+                predicate: x => x.ScheduleId == id,
+                include: q => q.Include(x => x.Mentor)
+                              .Include(x => x.MentorShip)
+                              .ThenInclude(m => m.Aumni))
+                ?? throw new BadHttpRequestException("ScheduleNotFound");
 
-            ScheduleReponse result = _mapper.Map<ScheduleReponse>(schedule);
-            return result;
+            return _mapper.Map<ScheduleReponse>(schedule);
         }
 
         public async Task<ICollection<ScheduleReponse>> GetSchedulesByMentorId(int id)
         {
             ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
                 selector: x => _mapper.Map<ScheduleReponse>(x),
-                predicate: x => x.MentorId.Equals(id)) ??
-                  throw new BadHttpRequestException("MentorNotFound");
+                predicate: x => x.MentorId == id,
+                include: q => q.Include(x => x.Mentor)
+                              .Include(x => x.MentorShip)
+                              .ThenInclude(m => m.Aumni))
+                ?? throw new BadHttpRequestException("MentorNotFound");
+
             return schedules;
         }
 
         public async Task<bool> UpdateScheduleInfo(int id, ScheduleInfo request)
         {
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
-                predicate: x => x.ScheduleId.Equals(id)) ??
-                throw new BadHttpRequestException("ScheduleNotFound");
+                predicate: x => x.ScheduleId == id)
+                ?? throw new BadHttpRequestException("ScheduleNotFound");
 
             if (request.MentorShipId.HasValue)
             {
@@ -92,13 +102,17 @@ namespace FPTAlumniConnect.API.Services.Implements
                 schedule.EndTime = request.EndTime.Value;
             }
 
-            if (!string.IsNullOrEmpty(request.Content)) schedule.Content = request.Content;
-            if (!string.IsNullOrEmpty(request.Status)) schedule.Status = request.Status;
+            if (!string.IsNullOrEmpty(request.Content))
+                schedule.Content = request.Content;
+
+            if (!string.IsNullOrEmpty(request.Status))
+                schedule.Status = request.Status;
 
             if (request.Rating.HasValue)
             {
                 if (request.Rating.Value < 0 || request.Rating.Value > 5)
                     throw new BadHttpRequestException("Rating must be between 0 and 5.");
+
                 schedule.Rating = request.Rating;
             }
 
@@ -109,30 +123,31 @@ namespace FPTAlumniConnect.API.Services.Implements
             return await _unitOfWork.CommitAsync() > 0;
         }
 
-
         public async Task<IPaginate<ScheduleReponse>> ViewAllSchedule(ScheduleFilter filter, PagingModel pagingModel)
         {
-            IPaginate<ScheduleReponse> response = await _unitOfWork.GetRepository<Schedule>().GetPagingListAsync(
+            return await _unitOfWork.GetRepository<Schedule>().GetPagingListAsync(
                 selector: x => _mapper.Map<ScheduleReponse>(x),
+                include: q => q.Include(x => x.Mentor)
+                              .Include(x => x.MentorShip)
+                              .ThenInclude(m => m.Aumni),
                 filter: filter,
                 orderBy: x => x.OrderBy(x => x.CreatedAt),
                 page: pagingModel.page,
-                size: pagingModel.size
-                );
-            return response;
+                size: pagingModel.size);
         }
 
         private async Task<Mentorship> EnsureMentorshipExists(int id)
         {
             return await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
-                predicate: x => x.Id.Equals(id)) ?? throw new BadHttpRequestException("MentorshipNotFound");
+                predicate: x => x.Id == id)
+                ?? throw new BadHttpRequestException("MentorshipNotFound");
         }
 
         private async Task<User> EnsureUserExists(int userId)
         {
             return await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                predicate: x => x.UserId.Equals(userId)) ?? throw new BadHttpRequestException("UserNotFound");
+                predicate: x => x.UserId == userId)
+                ?? throw new BadHttpRequestException("UserNotFound");
         }
-
     }
 }

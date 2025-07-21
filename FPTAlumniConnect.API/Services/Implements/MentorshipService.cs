@@ -35,7 +35,8 @@ namespace FPTAlumniConnect.API.Services.Implements
         public async Task<MentorshipReponse> GetMentorshipById(int id)
         {
             var mentorship = await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
-                predicate: x => x.Id.Equals(id)) ??
+                predicate: x => x.Id.Equals(id),
+                include: q => q.Include(x => x.Aumni)) ??
                 throw new BadHttpRequestException("MentorshipNotFound");
 
             return _mapper.Map<MentorshipReponse>(mentorship);
@@ -45,6 +46,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             var mentorships = await _unitOfWork.GetRepository<Mentorship>().GetListAsync(
                 predicate: x => x.AumniId == alumniId,
+                include: q => q.Include(x => x.Aumni),
                 orderBy: q => q.OrderByDescending(x => x.CreatedAt)
             );
 
@@ -86,6 +88,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             IPaginate<MentorshipReponse> response = await _unitOfWork.GetRepository<Mentorship>().GetPagingListAsync(
                 selector: x => _mapper.Map<MentorshipReponse>(x),
+                include: q => q.Include(x => x.Aumni),
                 filter: filter,
                 orderBy: x => x.OrderBy(x => x.CreatedAt),
                 page: pagingModel.page,
@@ -110,7 +113,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             var now = DateTime.UtcNow;
             var expiredMentorships = await _unitOfWork.GetRepository<Mentorship>().FindAllAsync(
-                predicate: x => x.Status == "Pending" && x.CreatedAt.HasValue && x.CreatedAt.Value.AddDays(7) < now
+                predicate: x => x.Status == "Pending" && x.CreatedAt.HasValue && x.CreatedAt.Value.AddDays(2) < now
             );
 
 
