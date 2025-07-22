@@ -20,11 +20,13 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
         }
 
+        // Create a new schedule
         public async Task<int> CreateNewSchedule(ScheduleInfo request)
         {
             await EnsureMentorshipExists(request.MentorShipId ?? 0);
             await EnsureUserExists(request.MentorId ?? 0);
 
+            // Validate StartTime and EndTime
             if (request.StartTime.HasValue && request.StartTime.Value < DateTime.UtcNow)
                 throw new BadHttpRequestException("StartTime cannot be in the past.");
 
@@ -42,6 +44,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return newSchedule.ScheduleId;
         }
 
+        // Get schedule details by ID
         public async Task<ScheduleReponse> GetScheduleById(int id)
         {
             Schedule schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
@@ -54,6 +57,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return _mapper.Map<ScheduleReponse>(schedule);
         }
 
+        // Get all schedules for a given mentor
         public async Task<ICollection<ScheduleReponse>> GetSchedulesByMentorId(int id)
         {
             ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
@@ -67,12 +71,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             return schedules;
         }
 
+        // Update a schedule by ID
         public async Task<bool> UpdateScheduleInfo(int id, ScheduleInfo request)
         {
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
                 predicate: x => x.ScheduleId == id)
                 ?? throw new BadHttpRequestException("ScheduleNotFound");
 
+            // Update mentorship and mentor if provided
             if (request.MentorShipId.HasValue)
             {
                 await EnsureMentorshipExists(request.MentorShipId.Value);
@@ -85,6 +91,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 schedule.MentorId = request.MentorId.Value;
             }
 
+            // Validate and update time range
             if (request.StartTime.HasValue)
             {
                 if (request.StartTime.Value < DateTime.UtcNow)
@@ -102,12 +109,14 @@ namespace FPTAlumniConnect.API.Services.Implements
                 schedule.EndTime = request.EndTime.Value;
             }
 
+            // Update content and status if available
             if (!string.IsNullOrEmpty(request.Content))
                 schedule.Content = request.Content;
 
             if (!string.IsNullOrEmpty(request.Status))
                 schedule.Status = request.Status;
 
+            // Update rating with validation
             if (request.Rating.HasValue)
             {
                 if (request.Rating.Value < 0 || request.Rating.Value > 5)
@@ -116,6 +125,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 schedule.Rating = request.Rating;
             }
 
+            // Update audit info
             schedule.UpdatedAt = DateTime.Now;
             schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
@@ -123,6 +133,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return await _unitOfWork.CommitAsync() > 0;
         }
 
+        // View paginated list of schedules
         public async Task<IPaginate<ScheduleReponse>> ViewAllSchedule(ScheduleFilter filter, PagingModel pagingModel)
         {
             return await _unitOfWork.GetRepository<Schedule>().GetPagingListAsync(
@@ -136,6 +147,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 size: pagingModel.size);
         }
 
+        // Ensure mentorship exists
         private async Task<Mentorship> EnsureMentorshipExists(int id)
         {
             return await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
@@ -143,6 +155,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 ?? throw new BadHttpRequestException("MentorshipNotFound");
         }
 
+        // Ensure user exists
         private async Task<User> EnsureUserExists(int userId)
         {
             return await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
