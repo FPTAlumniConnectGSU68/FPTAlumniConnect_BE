@@ -1154,12 +1154,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime");
 
-                    b.Property<int?>("JobPostID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Skill")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1170,9 +1164,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasKey("SkillId");
 
-                    b.HasIndex("JobPostID");
-
-                    b.ToTable("SkillJob", (string)null);
                     b.ToTable("Skills");
                 });
 
@@ -1860,8 +1851,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.JobPost", b =>
                 {
                     b.Navigation("JobApplications");
-
-                    b.Navigation("SkillJobs");
 
                     b.Navigation("JobPostSkills");
                 });

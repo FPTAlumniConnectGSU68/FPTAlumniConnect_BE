@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FPTAlumniConnect.DataTier.Migrations
 {
     [DbContext(typeof(AlumniConnectContext))]
-    [Migration("20250723164843_Init")]
+    [Migration("20250723165604_Init")]
     partial class Init
     {
         /// <inheritdoc />
