@@ -49,7 +49,12 @@ public partial class AlumniConnectContext : DbContext
 
     public virtual DbSet<Schedule> Schedules { get; set; }
 
-    public virtual DbSet<SkillJob> SkillJobs { get; set; }
+    public virtual DbSet<Skill> Skills { get; set; }
+
+    public virtual DbSet<CvSkill> CvSkills { get; set; }
+
+    public virtual DbSet<JobPostSkill> JobPostSkills { get; set; }
+
 
     public virtual DbSet<SoicalLink> SoicalLinks { get; set; }
 
@@ -80,7 +85,6 @@ public partial class AlumniConnectContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.PostId).HasColumnName("PostID");
-            entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -264,7 +268,6 @@ public partial class AlumniConnectContext : DbContext
             entity.Property(e => e.Cvid).HasColumnName("CVID");
             entity.Property(e => e.JobPostId).HasColumnName("JobPostID");
             entity.Property(e => e.Status).HasMaxLength(255);
-            entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -344,7 +347,6 @@ public partial class AlumniConnectContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
-            entity.Property(e => e.Type).HasMaxLength(255);
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
 
             entity.HasOne(d => d.Aumni).WithMany(p => p.Mentorships)
@@ -644,27 +646,50 @@ public partial class AlumniConnectContext : DbContext
                 .HasForeignKey(d => d.CvID);
         });
 
-        modelBuilder.Entity<SkillJob>(entity =>
+        modelBuilder.Entity<Skill>(entity =>
         {
-            entity.HasKey(e => e.SkillJobId);
-
-            entity.ToTable("SkillJob");
-            entity.Property(e => e.SkillJobId);
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.CreatedBy).HasMaxLength(255);
-            entity.Property(e => e.Skill).HasMaxLength(255);
-            entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.UpdatedBy).HasMaxLength(255);
-
-            entity.HasOne(d => d.Cv).WithMany(p => p.SkillJobs)
-                .HasForeignKey(d => d.CvID);
-            entity.HasOne(d => d.JobPost).WithMany(p => p.SkillJobs)
-                .HasForeignKey(d => d.JobPostID);
+            entity.HasKey(e => e.SkillId);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
         });
+
+        modelBuilder.Entity<CvSkill>(entity =>
+        {
+            entity.HasKey(e => new { e.CvId, e.SkillId });
+
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(e => e.Cv)
+                .WithMany(c => c.CvSkills)
+                .HasForeignKey(e => e.CvId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Skill)
+                .WithMany(s => s.CvSkills)
+                .HasForeignKey(e => e.SkillId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<JobPostSkill>(entity =>
+        {
+            entity.HasKey(e => new { e.JobPostId, e.SkillId });
+
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(e => e.JobPost)
+                .WithMany(j => j.JobPostSkills)
+                .HasForeignKey(e => e.JobPostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Skill)
+                .WithMany(s => s.JobPostSkills)
+                .HasForeignKey(e => e.SkillId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
 
         OnModelCreatingPartial(modelBuilder);
     }

@@ -38,7 +38,7 @@ public partial class JobPost
 
     public virtual ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
 
-    public virtual ICollection<SkillJob> SkillJobs { get; set; } = new List<SkillJob>();
+    public virtual ICollection<JobPostSkill> JobPostSkills { get; set; } = new List<JobPostSkill>();
 
     public virtual MajorCode? Major { get; set; }
 
