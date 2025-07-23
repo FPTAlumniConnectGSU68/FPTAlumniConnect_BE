@@ -24,4 +24,6 @@ public partial class MajorCode
     public virtual ICollection<SpMajorCode> SpMajorCodes { get; set; } = new List<SpMajorCode>();
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();
+
+    public virtual ICollection<Event> Events { get; set; } = new List<Event>();
 }
