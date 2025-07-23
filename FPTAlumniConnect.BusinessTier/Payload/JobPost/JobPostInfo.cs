@@ -17,6 +17,8 @@ namespace FPTAlumniConnect.BusinessTier.Payload.JobPost
 
         public string? Location { get; set; }
 
+        public string? City { get; set; }
+
         public string? Requirements { get; set; }
 
         public string? Benefits { get; set; }

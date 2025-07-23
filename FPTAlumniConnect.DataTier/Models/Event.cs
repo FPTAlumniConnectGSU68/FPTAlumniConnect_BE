@@ -12,6 +12,7 @@ public partial class Event
     public string? Img { get; set; }
 
     public string? Description { get; set; }
+
     public string? Status { get; set; }
 
     public DateTime StartDate { get; set; }
