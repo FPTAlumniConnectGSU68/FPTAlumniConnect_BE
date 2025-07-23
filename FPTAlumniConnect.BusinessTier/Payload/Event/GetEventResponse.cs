@@ -24,8 +24,12 @@ namespace FPTAlumniConnect.BusinessTier.Payload.Event
 
         public int? OrganizerId { get; set; }
 
+        public int? MajorId { get; set; }
+
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        public string? Status { get; set; }
     }
 }

@@ -23,5 +23,9 @@ namespace FPTAlumniConnect.DataTier.Models
         public int? CvID { get; set; }
 
         public virtual Cv? Cv { get; set; }
+
+        public int? JobPostID { get; set; }
+
+        public virtual JobPost? JobPost { get; set; }
     }
 }

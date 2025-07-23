@@ -13,6 +13,8 @@ namespace FPTAlumniConnect.BusinessTier.Payload.JobPost
 
         public string? Location { get; set; }
 
+        public string? City { get; set; }
+
         public int? MinSalary { get; set; }
 
         public int? MaxSalary { get; set; }
@@ -32,6 +34,7 @@ namespace FPTAlumniConnect.BusinessTier.Payload.JobPost
         public int? UserId { get; set; }
 
         public int? MajorId { get; set; }
+
         public string? MajorName { get; set; }
 
         public DateTime? CreatedAt { get; set; }
