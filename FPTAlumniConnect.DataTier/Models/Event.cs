@@ -12,7 +12,8 @@ public partial class Event
     public string? Img { get; set; }
 
     public string? Description { get; set; }
-    public bool? Status { get; set; }
+
+    public string? Status { get; set; }
 
     public DateTime StartDate { get; set; }
 
@@ -29,6 +30,8 @@ public partial class Event
     public string? UpdatedBy { get; set; }
     public int? OrganizerId { get; set; }
     public virtual User? Organizer { get; set; }
+    public int? MajorId { get; set; }
+    public virtual MajorCode? Major { get; set; }
     public virtual ICollection<UserJoinEvent> UserJoinEvents { get; set; } = new List<UserJoinEvent>();
     public virtual ICollection<EventTimeLine> EventTimeLines { get; set; } = new List<EventTimeLine>();
 }

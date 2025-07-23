@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -202,12 +202,12 @@ public partial class AlumniConnectContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.Img).HasColumnType("TEXT");
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
-            entity.Property(e => e.Status)
-    .HasDefaultValue(false);
-
+            entity.Property(e => e.Status).HasMaxLength(255);
             entity.HasOne(d => d.Organizer).WithMany(p => p.Events)
                 .HasForeignKey(d => d.OrganizerId)
                 .HasConstraintName("FK__Events__Organize__02084FDA");
+            entity.HasOne(d => d.Major).WithMany(p => p.Events)
+                .HasForeignKey(d => d.MajorId);
 
         });
 
