@@ -66,9 +66,10 @@ namespace FPTAlumniConnect.BusinessTier.Constants
         }
         public static class Skill
         {
-            public const string SkillsEndPoint = ApiEndpoint + "/skills";
-            public const string SkillEndPoint = SkillsEndPoint + "/{id}";
-            public const string SkillCVEndPoint = SkillsEndPoint + "/cv/{id}";
+            public const string SkillsEndPoint = "api/skills"; // POST
+            public const string SkillCVEndPoint = "api/skills/by-cv"; // GET? id={cvId}
+            public const string SkillEndPoint = "api/skills"; // DELETE?skillId=1&cvId=2
+            public const string SkillCountEndPoint = "api/skills/count"; // GET?cvId=1
         }
         public static class Tag
         {

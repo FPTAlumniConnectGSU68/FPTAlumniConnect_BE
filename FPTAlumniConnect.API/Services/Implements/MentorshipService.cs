@@ -71,10 +71,6 @@ namespace FPTAlumniConnect.API.Services.Implements
                 ? mentorship.RequestMessage
                 : request.RequestMessage;
 
-            mentorship.Type = string.IsNullOrEmpty(request.Type)
-                ? mentorship.Type
-                : request.Type;
-
             mentorship.Status = string.IsNullOrEmpty(request.Status)
                 ? mentorship.Status
                 : request.Status;

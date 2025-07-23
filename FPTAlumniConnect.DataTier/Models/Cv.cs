@@ -55,7 +55,7 @@ public partial class Cv
 
     public virtual ICollection<TagJob> TagJobs { get; set; } = new List<TagJob>();
 
-    public virtual ICollection<SkillJob> SkillJobs { get; set; } = new List<SkillJob>();
+    public virtual ICollection<CvSkill> CvSkills { get; set; } = new List<CvSkill>();
 
     public virtual User? User { get; set; }
 }
