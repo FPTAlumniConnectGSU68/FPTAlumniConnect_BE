@@ -216,7 +216,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     EventName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Img = table.Column<string>(type: "TEXT", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<bool>(type: "bit", nullable: true, defaultValue: false),
+                    Status = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     StartDate = table.Column<DateTime>(type: "datetime", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime", nullable: false),
                     Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -224,11 +224,17 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    OrganizerId = table.Column<int>(type: "int", nullable: true)
+                    OrganizerId = table.Column<int>(type: "int", nullable: true),
+                    MajorId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__Events__7944C870B1F118B4", x => x.EventID);
+                    table.ForeignKey(
+                        name: "FK_Events_MajorCode_MajorId",
+                        column: x => x.MajorId,
+                        principalTable: "MajorCode",
+                        principalColumn: "MajorId");
                     table.ForeignKey(
                         name: "FK__Events__Organize__02084FDA",
                         column: x => x.OrganizerId,
@@ -267,6 +273,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     JobDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     JobTitle = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Location = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MinSalary = table.Column<int>(type: "int", nullable: true, defaultValueSql: "((0))"),
                     MaxSalary = table.Column<int>(type: "int", nullable: true, defaultValueSql: "((0))"),
                     IsDeal = table.Column<bool>(type: "bit", nullable: false),
@@ -809,6 +816,11 @@ namespace FPTAlumniConnect.DataTier.Migrations
                 name: "IX_Educations_UserId",
                 table: "Educations",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Events_MajorId",
+                table: "Events",
+                column: "MajorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Events_OrganizerId",

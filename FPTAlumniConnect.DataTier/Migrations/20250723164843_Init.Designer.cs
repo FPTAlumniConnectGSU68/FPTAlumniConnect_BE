@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FPTAlumniConnect.DataTier.Migrations
 {
     [DbContext(typeof(AlumniConnectContext))]
-    [Migration("20250723085457_Init")]
+    [Migration("20250723164843_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -357,16 +357,18 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("MajorId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("OrganizerId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime");
 
-                    b.Property<bool?>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                    b.Property<string>("Status")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -379,6 +381,8 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasKey("EventId")
                         .HasName("PK__Events__7944C870B1F118B4");
+
+                    b.HasIndex("MajorId");
 
                     b.HasIndex("OrganizerId");
 
@@ -564,6 +568,9 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JobPostId"));
 
                     b.Property<string>("Benefits")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -1537,10 +1544,16 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Event", b =>
                 {
+                    b.HasOne("FPTAlumniConnect.DataTier.Models.MajorCode", "Major")
+                        .WithMany("Events")
+                        .HasForeignKey("MajorId");
+
                     b.HasOne("FPTAlumniConnect.DataTier.Models.User", "Organizer")
                         .WithMany("Events")
                         .HasForeignKey("OrganizerId")
                         .HasConstraintName("FK__Events__Organize__02084FDA");
+
+                    b.Navigation("Major");
 
                     b.Navigation("Organizer");
                 });
@@ -1847,6 +1860,8 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.MajorCode", b =>
                 {
+                    b.Navigation("Events");
+
                     b.Navigation("JobPosts");
 
                     b.Navigation("Posts");
