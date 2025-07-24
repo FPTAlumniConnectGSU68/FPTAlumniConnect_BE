@@ -169,6 +169,13 @@
             public const string TimeLineEndPoint = "timelines/{id}";
         }
 
+        public static class RecruiterInfo
+        {
+            public const string RecruiterInfosEndPoint = ApiEndpoint + "/recruiterinfos";
+            public const string RecruiterInfoEndPoint = RecruiterInfosEndPoint + "/{id}";
+            public const string RecruiterInfoUserEndPoint = RecruiterInfosEndPoint + "/user/{id}";
+        }
+      
         public static class CvSkill
         {
             public const string CvSkillsEndPoint = ApiEndpoint + "/cvskills";

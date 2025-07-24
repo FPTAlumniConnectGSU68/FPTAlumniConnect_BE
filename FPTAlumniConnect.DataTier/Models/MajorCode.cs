@@ -5,7 +5,7 @@ namespace FPTAlumniConnect.DataTier.Models;
 
 public partial class MajorCode
 {
-    public int MajorId { get; set; }
+    public int MajorId { get; set; }    // PK
 
     public string MajorName { get; set; } = null!;
 

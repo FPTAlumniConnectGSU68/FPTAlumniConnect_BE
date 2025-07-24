@@ -12,5 +12,6 @@ namespace FPTAlumniConnect.DataTier.Models
 
         public virtual ICollection<CvSkill> CvSkills { get; set; } = new List<CvSkill>();
         public virtual ICollection<JobPostSkill> JobPostSkills { get; set; } = new List<JobPostSkill>();
+
     }
 }

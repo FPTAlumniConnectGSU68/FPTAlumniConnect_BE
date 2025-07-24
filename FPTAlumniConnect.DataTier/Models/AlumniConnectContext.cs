@@ -159,6 +159,11 @@ public partial class AlumniConnectContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Cvs)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__CV__UserID__3D2915A8");
+
+            entity.Property(e => e.Status)
+                .HasConversion<string>()  // Lưu enum dưới dạng string
+                .HasMaxLength(50);
+
         });
 
         modelBuilder.Entity<EducationHistory>(entity =>
@@ -672,6 +677,16 @@ public partial class AlumniConnectContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<RecruiterInfo>(entity =>
+        {
+            entity.HasKey(e => e.RecruiterInfoId);
+            entity.ToTable("RecruiterInfo");
+
+            entity.HasOne(r => r.User)
+            .WithOne(u => u.RecruiterInfos)
+            .HasForeignKey<RecruiterInfo>(r => r.UserId);
+        });
+
         modelBuilder.Entity<JobPostSkill>(entity =>
         {
             entity.HasKey(e => new { e.JobPostId, e.SkillId });
@@ -689,7 +704,6 @@ public partial class AlumniConnectContext : DbContext
                 .HasForeignKey(e => e.SkillId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-
 
         OnModelCreatingPartial(modelBuilder);
     }

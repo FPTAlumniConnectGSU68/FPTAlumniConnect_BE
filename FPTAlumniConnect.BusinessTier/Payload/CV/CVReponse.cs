@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FPTAlumniConnect.DataTier.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace FPTAlumniConnect.BusinessTier.Payload.CV
@@ -37,10 +38,20 @@ namespace FPTAlumniConnect.BusinessTier.Payload.CV
 
         public string LanguageLevel { get; set; } = null!;
 
-        public int MinSalary { get; set; } 
+        public int MinSalary { get; set; }
 
         public int MaxSalary { get; set; }
 
         public bool? IsDeal { get; set; }
+
+        public string? DesiredJob { get; set; }
+
+        public string? Position { get; set; }
+
+        public int? MajorId { get; set; }
+
+        public string? AdditionalContent { get; set; }
+
+        public string? Status { get; set; }   // Enum (Public, Private, Deleted)
     }
 }
