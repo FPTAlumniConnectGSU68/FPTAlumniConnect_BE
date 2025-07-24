@@ -173,5 +173,12 @@ namespace FPTAlumniConnect.BusinessTier.Constants
             public const string TimeLinesEndPoint = "timelines";
             public const string TimeLineEndPoint = "timelines/{id}";
         }
+
+        public static class RecruiterInfo
+        {
+            public const string RecruiterInfosEndPoint = ApiEndpoint + "/recruiterinfos";
+            public const string RecruiterInfoEndPoint = RecruiterInfosEndPoint + "/{id}";
+            public const string RecruiterInfoUserEndPoint = RecruiterInfosEndPoint + "/user/{id}";
+        }
     }
 }

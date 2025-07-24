@@ -94,7 +94,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AdditionalInfo")
+                    b.Property<string>("AdditionalContent")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Address")

@@ -89,6 +89,7 @@ namespace FPTAlumniConnect.API.Extensions
             services.AddScoped<IWorkExperienceService, WorkExperienceService>();
             services.AddScoped<IPerspectiveService, PerspectiveService>();
             services.AddScoped<IPhoBertService, PhoBertService>();
+            services.AddScoped<IRecruiterInfoService, RecruiterInfoService>();
             return services;
         }
 

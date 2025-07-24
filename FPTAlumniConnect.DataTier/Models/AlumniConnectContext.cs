@@ -669,6 +669,16 @@ public partial class AlumniConnectContext : DbContext
                 .HasForeignKey(d => d.CvID);
         });
 
+        modelBuilder.Entity<RecruiterInfo>(entity =>
+        {
+            entity.HasKey(e => e.RecruiterInfoId);
+            entity.ToTable("RecruiterInfo");
+
+            entity.HasOne(r => r.User)
+            .WithOne(u => u.RecruiterInfos)
+            .HasForeignKey<RecruiterInfo>(r => r.UserId);
+        });
+
         OnModelCreatingPartial(modelBuilder);
     }
 
