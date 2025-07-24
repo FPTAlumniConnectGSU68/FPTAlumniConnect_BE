@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FPTAlumniConnect.BusinessTier.Constants
+﻿namespace FPTAlumniConnect.BusinessTier.Constants
 {
     public static class ApiEndPointConstant
     {
@@ -66,9 +59,10 @@ namespace FPTAlumniConnect.BusinessTier.Constants
         }
         public static class Skill
         {
-            public const string SkillsEndPoint = ApiEndpoint + "/skills";
-            public const string SkillEndPoint = SkillsEndPoint + "/{id}";
-            public const string SkillCVEndPoint = SkillsEndPoint + "/cv/{id}";
+            public const string SkillsEndPoint = "api/skills"; // POST
+            public const string SkillCVEndPoint = "api/skills/by-cv"; // GET? id={cvId}
+            public const string SkillEndPoint = "api/skills"; // DELETE?skillId=1&cvId=2
+            public const string SkillCountEndPoint = "api/skills/count"; // GET?cvId=1
         }
         public static class Tag
         {
@@ -168,6 +162,7 @@ namespace FPTAlumniConnect.BusinessTier.Constants
             public const string WorkExperienceEndPoint = WorkExperiencesEndPoint + "/{id}";
             public const string WorkExperienceUserEndPoint = WorkExperiencesEndPoint + "/user/{id}";
         }
+
         public static class TimeLine
         {
             public const string TimeLinesEndPoint = "timelines";
@@ -179,6 +174,18 @@ namespace FPTAlumniConnect.BusinessTier.Constants
             public const string RecruiterInfosEndPoint = ApiEndpoint + "/recruiterinfos";
             public const string RecruiterInfoEndPoint = RecruiterInfosEndPoint + "/{id}";
             public const string RecruiterInfoUserEndPoint = RecruiterInfosEndPoint + "/user/{id}";
+        }
+      
+        public static class CvSkill
+        {
+            public const string CvSkillsEndPoint = ApiEndpoint + "/cvskills";
+            public const string CvSkillEndPoint = CvSkillsEndPoint + "/{cvId}/{skillId}";
+        }
+
+        public static class JobPostSkill
+        {
+            public const string JobPostSkillsEndPoint = ApiEndpoint + "/jobpostskills";
+            public const string JobPostSkillEndPoint = JobPostSkillsEndPoint + "/{jobPostId}/{skillId}";
         }
     }
 }

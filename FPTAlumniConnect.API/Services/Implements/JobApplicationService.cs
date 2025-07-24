@@ -79,7 +79,6 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             jobApplication.LetterCover = string.IsNullOrEmpty(request.LetterCover) ? jobApplication.LetterCover : request.LetterCover;
             jobApplication.Status = string.IsNullOrEmpty(request.Status) ? jobApplication.Status : request.Status;
-            jobApplication.Type = string.IsNullOrEmpty(request.Type) ? jobApplication.Type : request.Type;
 
             // Additional validation for specific fields if needed
             if (!string.IsNullOrEmpty(jobApplication.LetterCover) && jobApplication.LetterCover.Length > 2000)

@@ -10,6 +10,7 @@ public partial class JobPost
     public string JobDescription { get; set; } = null!;
     public string JobTitle {  get; set; } = null!;
     public string? Location { get; set; }
+    public string? City { get; set; }
     public int? MinSalary { get; set; }
     public int? MaxSalary { get; set; }
     public Boolean IsDeal { get; set; }
@@ -36,6 +37,8 @@ public partial class JobPost
     public string? UpdatedBy { get; set; }
 
     public virtual ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
+
+    public virtual ICollection<JobPostSkill> JobPostSkills { get; set; } = new List<JobPostSkill>();
 
     public virtual MajorCode? Major { get; set; }
 

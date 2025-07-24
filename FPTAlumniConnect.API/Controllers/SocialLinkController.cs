@@ -63,6 +63,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.SocialLink.SocialLinksEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateSocialLink([FromBody] SocialLinkInfo request)
         {
             if (request == null)
@@ -94,6 +95,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPatch(ApiEndPointConstant.SocialLink.SocialLinkEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateSocialLink(int id, [FromBody] SocialLinkInfo request)
         {
             if (request == null)

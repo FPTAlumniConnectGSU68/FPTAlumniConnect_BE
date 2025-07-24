@@ -41,6 +41,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.PostReport.PostReportsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateNewReport([FromBody] PostReportInfo request)
         {
             if (request == null)
@@ -94,6 +95,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPatch(ApiEndPointConstant.PostReport.PostReportEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateReportInfo(int id, [FromBody] PostReportInfo request)
         {
             if (request == null)

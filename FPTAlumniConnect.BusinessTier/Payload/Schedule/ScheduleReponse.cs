@@ -10,6 +10,9 @@ public class ScheduleReponse
     public int? MentorShipId { get; set; }
 
     public int? MentorId { get; set; }
+    public int? AlumniId { get; set; }
+    public string? MentorName { get; set; }
+    public string? AlumniName { get; set; }
 
     public DateTime StartTime { get; set; }
 

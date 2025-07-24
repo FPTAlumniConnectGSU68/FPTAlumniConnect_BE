@@ -117,11 +117,11 @@ namespace FPTAlumniConnect.API.Services.Implements
             double languageScore = cv.Language.Equals(job.Requirements, StringComparison.OrdinalIgnoreCase) ? 1.0 : 0.5;
             score += languageScore;
 
-            var matchingSkills = cv.SkillJobs.Select(s => s.Skill)
-                                             .Intersect(job.Requirements?.Split(',') ?? new string[0], StringComparer.OrdinalIgnoreCase)
-                                             .Count();
-            double skillScore = (double)matchingSkills / Math.Max(1, cv.SkillJobs.Count);
-            score += skillScore;
+            //var matchingSkills = cv.SkillJobs.Select(s => s.Skill)
+            //                                 .Intersect(job.Requirements?.Split(',') ?? new string[0], StringComparer.OrdinalIgnoreCase)
+            //                                 .Count();
+            //double skillScore = (double)matchingSkills / Math.Max(1, cv.SkillJobs.Count);
+            //score += skillScore;
 
             double majorScore = (cv.User?.MajorId == job.MajorId) ? 1.0 : 0.0;
             score += majorScore;

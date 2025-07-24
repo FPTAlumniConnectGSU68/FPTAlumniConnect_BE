@@ -6,6 +6,8 @@ using FPTAlumniConnect.BusinessTier.Payload.Notification;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -118,7 +120,6 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // PostId, AuthorId, and ParentCommentId should not be changed
             comment.Content = string.IsNullOrEmpty(request.Content) ? comment.Content : request.Content;
-            comment.Type = string.IsNullOrEmpty(request.Type) ? comment.Type : request.Type;
             comment.UpdatedAt = DateTime.Now;
             comment.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
@@ -129,13 +130,55 @@ namespace FPTAlumniConnect.API.Services.Implements
         // View paginated comments with validation of parent-child relationship
         public async Task<IPaginate<CommentReponse>> ViewAllComment(CommentFilter filter, PagingModel pagingModel)
         {
+            //var comments = await _unitOfWork.GetRepository<Comment>().GetPagingListAsync(
+            //    selector: x => _mapper.Map<CommentReponse>(x),
+            //    filter: filter,
+            //    orderBy: x => x.OrderBy(x => x.CreatedAt),
+            //    page: pagingModel.page,
+            //    size: pagingModel.size
+            //);
+            Expression<Func<Comment, bool>> predicate = x =>
+        (!filter.PostId.HasValue || x.PostId == filter.PostId) &&
+        (!filter.AuthorId.HasValue || x.AuthorId == filter.AuthorId) &&
+        (x.ParentCommentId == filter.ParentCommentId);
+
             var comments = await _unitOfWork.GetRepository<Comment>().GetPagingListAsync(
                 selector: x => _mapper.Map<CommentReponse>(x),
-                filter: filter,
+                predicate: predicate,
+                include: q => q.Include(c => c.Author),
                 orderBy: x => x.OrderBy(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size
             );
+
+            // If getting root comments, include their direct replies in ChildComments
+            if (filter.ParentCommentId == null)
+            {
+                var commentIds = comments.Items.Select(c => c.CommentId).ToList();
+
+                var childComments = await _unitOfWork.GetRepository<Comment>().GetListAsync(
+                    predicate: x => commentIds.Contains(x.ParentCommentId.Value),
+                    include: q => q.Include(c => c.Author)
+                );
+
+                var mappedChildComments = childComments
+                    .Select(x => _mapper.Map<CommentReponse>(x))
+                    .ToList();
+
+                // Group child comments by ParentCommentId
+                var groupedReplies = mappedChildComments
+                    .GroupBy(x => x.ParentCommentId)
+                    .ToDictionary(g => g.Key!.Value, g => g.ToList());
+
+                // Assign replies to corresponding root comment
+                foreach (var parent in comments.Items)
+                {
+                    if (groupedReplies.TryGetValue(parent.CommentId, out var replies))
+                    {
+                        parent.ChildComments = replies;
+                    }
+                }
+            }
 
             var errorMessages = new List<string>();
 
