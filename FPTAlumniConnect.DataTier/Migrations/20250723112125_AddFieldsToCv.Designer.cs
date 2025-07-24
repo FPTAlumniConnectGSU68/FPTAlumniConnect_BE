@@ -4,6 +4,7 @@ using FPTAlumniConnect.DataTier.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FPTAlumniConnect.DataTier.Migrations
 {
     [DbContext(typeof(AlumniConnectContext))]
-    partial class AlumniConnectContextModelSnapshot : ModelSnapshot
+    [Migration("20250723112125_AddFieldsToCv")]
+    partial class AddFieldsToCv
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -80,7 +83,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("Comments", (string)null);
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Cv", b =>
@@ -274,7 +277,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Educations", (string)null);
+                    b.ToTable("Educations");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.EducationHistory", b =>
@@ -384,7 +387,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("OrganizerId");
 
-                    b.ToTable("Events", (string)null);
+                    b.ToTable("Events");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.EventTimeLine", b =>
@@ -414,7 +417,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("EventTimeLines", (string)null);
+                    b.ToTable("EventTimeLines");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.GroupChat", b =>
@@ -500,7 +503,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GroupChatMembers", (string)null);
+                    b.ToTable("GroupChatMembers");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.JobApplication", b =>
@@ -557,7 +560,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("JobPostId");
 
-                    b.ToTable("JobApplications", (string)null);
+                    b.ToTable("JobApplications");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.JobPost", b =>
@@ -806,7 +809,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.NotificationSetting", b =>
@@ -864,7 +867,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("NotificationSettings", (string)null);
+                    b.ToTable("NotificationSettings");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Post", b =>
@@ -933,7 +936,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("MajorId");
 
-                    b.ToTable("Posts", (string)null);
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.PostReport", b =>
@@ -982,7 +985,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PostReports", (string)null);
+                    b.ToTable("PostReports");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.PrivacySetting", b =>
@@ -1375,7 +1378,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.UserJoinEvent", b =>
@@ -1470,7 +1473,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("WorkExperiences", (string)null);
+                    b.ToTable("WorkExperiences");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Comment", b =>

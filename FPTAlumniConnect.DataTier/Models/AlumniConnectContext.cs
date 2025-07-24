@@ -155,6 +155,11 @@ public partial class AlumniConnectContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Cvs)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__CV__UserID__3D2915A8");
+
+            entity.Property(e => e.Status)
+                .HasConversion<string>()  // Lưu enum dưới dạng string
+                .HasMaxLength(50);
+
         });
 
         modelBuilder.Entity<EducationHistory>(entity =>

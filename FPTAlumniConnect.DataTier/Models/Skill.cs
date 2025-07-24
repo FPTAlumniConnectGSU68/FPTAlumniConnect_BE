@@ -23,5 +23,8 @@ namespace FPTAlumniConnect.DataTier.Models
         public int? CvID { get; set; }
 
         public virtual Cv? Cv { get; set; }
+
+        public virtual ICollection<Cv> Cvs { get; set; } = new List<Cv>();
+
     }
 }

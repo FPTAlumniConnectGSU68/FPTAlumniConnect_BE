@@ -2,9 +2,11 @@
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.CV;
+using FPTAlumniConnect.DataTier.Enums;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Microsoft.IdentityModel.Tokens;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -56,6 +58,10 @@ namespace FPTAlumniConnect.API.Services.Implements
             User userId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: x => x.UserId.Equals(request.UserId)) ??
                 throw new BadHttpRequestException("UserNotFound");
+            
+            MajorCode majorId = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
+                predicate: x => x.MajorId.Equals(request.MajorId)) ??
+                throw new BadHttpRequestException("MajorNotFound");
 
             Cv newCV = _mapper.Map<Cv>(request);
 
@@ -92,6 +98,10 @@ namespace FPTAlumniConnect.API.Services.Implements
             Cv cV = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
                 predicate: x => x.Id.Equals(id)) ??
                 throw new BadHttpRequestException("CVNotFound");
+
+            MajorCode majorId = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
+                predicate: x => x.MajorId.Equals(request.MajorId)) ??
+                throw new BadHttpRequestException("MajorNotFound");
 
             // Validate Birthday: phải trên 18 tuổi
             if (request.Birthday.HasValue)
@@ -135,7 +145,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             {
                 throw new BadHttpRequestException("MaxSalary cannot be negative.");
             }
-            if (request.MinSalary > request.MaxSalary)
+            if (request.MinSalary > request.MaxSalary || request.MinSalary > cV.MaxSalary)
             {
                 throw new BadHttpRequestException("MaxSalary cannot be less than MinSalary.");
             }
@@ -152,12 +162,16 @@ namespace FPTAlumniConnect.API.Services.Implements
             cV.JobLevel = string.IsNullOrEmpty(request.JobLevel) ? cV.JobLevel : request.JobLevel;
             cV.Language = string.IsNullOrEmpty(request.Language) ? cV.Language : request.Language;
             cV.LanguageLevel = string.IsNullOrEmpty(request.LanguageLevel) ? cV.LanguageLevel : request.LanguageLevel;
-            cV.MinSalary = request.MinSalary;
-            cV.MaxSalary = request.MaxSalary;
+            cV.MinSalary = request.MinSalary ?? cV.MinSalary;
+            cV.MaxSalary = request.MaxSalary ?? cV.MaxSalary;
             if (request.IsDeal.HasValue)
             {
                 cV.IsDeal = request.IsDeal.Value;
             }
+            cV.DesiredJob = string.IsNullOrEmpty(request.DesiredJob) ? cV.DesiredJob : request.DesiredJob;
+            cV.Position = string.IsNullOrEmpty(request.Position) ? cV.Position : request.Position;
+            cV.MajorId = request.MajorId ?? cV.MajorId;
+            cV.AdditionalContent = string.IsNullOrEmpty(request.AdditionalContent) ? cV.AdditionalContent : request.AdditionalContent;
 
             // Cập nhật thông tin audit
             cV.UpdatedAt = DateTime.Now;
@@ -171,24 +185,32 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<IPaginate<CVReponse>> ViewAllCV(CVFilter filter, PagingModel pagingModel)
         {
-            // Kiểm tra điều kiện thời gian
-            if (filter.EndAt.HasValue)
+            try
             {
-                if (filter.StartAt.HasValue && filter.EndAt.Value < filter.StartAt.Value)
+                // Kiểm tra điều kiện thời gian
+                if (filter.EndAt.HasValue)
                 {
-                    throw new BadHttpRequestException("EndAt cannot be earlier than StartAt.");
+                    if (filter.StartAt.HasValue && filter.EndAt.Value < filter.StartAt.Value)
+                    {
+                        throw new BadHttpRequestException("EndAt cannot be earlier than StartAt.");
+                    }
                 }
-            }
 
-            // Thực hiện truy vấn sau khi kiểm tra hợp lệ
-            IPaginate<CVReponse> response = await _unitOfWork.GetRepository<Cv>().GetPagingListAsync(
-                selector: x => _mapper.Map<CVReponse>(x),
-                filter: filter,
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
-                page: pagingModel.page,
-                size: pagingModel.size
-            );
-            return response;
+                // Thực hiện truy vấn sau khi kiểm tra hợp lệ
+                IPaginate<CVReponse> response = await _unitOfWork.GetRepository<Cv>().GetPagingListAsync(
+                        selector: x => _mapper.Map<CVReponse>(x),
+                        filter: filter,
+                        orderBy: x => x.OrderBy(x => x.CreatedAt),
+                        page: pagingModel.page,
+                        size: pagingModel.size
+                    );
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch CV with filter: {@Filter}", filter);
+                throw;
+            }
         }
 
         //public async Task<bool> ShareCvByEmailAsync(ShareCvRequest request)
