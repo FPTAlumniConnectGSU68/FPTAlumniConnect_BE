@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FPTAlumniConnect.DataTier.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace FPTAlumniConnect.BusinessTier.Payload.CV
@@ -17,9 +18,9 @@ namespace FPTAlumniConnect.BusinessTier.Payload.CV
 
         public string? Company { get; set; }
 
-        public string? PrimaryDuties { get; set; } 
+        public string? PrimaryDuties { get; set; }
 
-        public string? JobLevel { get; set; } 
+        public string? JobLevel { get; set; }
 
         public DateTime? StartAt { get; set; }
 
@@ -29,10 +30,20 @@ namespace FPTAlumniConnect.BusinessTier.Payload.CV
 
         public string? LanguageLevel { get; set; }
 
-        public string? MinSalary { get; set; } 
+        public int? MinSalary { get; set; }
 
-        public string? MaxSalary { get; set; } 
+        public int? MaxSalary { get; set; }
 
         public bool? IsDeal { get; set; }
+
+        // Đề xuất thêm nếu bạn cần lọc theo các trường mới
+
+        public string? DesiredJob { get; set; }
+
+        public string? Position { get; set; }
+
+        public int? MajorId { get; set; }
+
+        public CVStatus? Status { get; set; }
     }
 }

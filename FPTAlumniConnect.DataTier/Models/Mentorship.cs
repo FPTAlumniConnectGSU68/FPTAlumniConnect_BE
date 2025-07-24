@@ -13,8 +13,6 @@ public partial class Mentorship
 
     public string? RequestMessage { get; set; }
 
-    public string? Type { get; set; }
-
     public string? Status { get; set; }
 
     public string? CreatedBy { get; set; }

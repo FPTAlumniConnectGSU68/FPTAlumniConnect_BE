@@ -71,4 +71,7 @@ public partial class User
     // New relationships for WorkExperience and Education
     public virtual ICollection<WorkExperience> WorkExperiences { get; set; } = new List<WorkExperience>();
     public virtual ICollection<Education> EducationRecords { get; set; } = new List<Education>();
+    
+    public virtual RecruiterInfo? RecruiterInfos { get; set; }
+
 }

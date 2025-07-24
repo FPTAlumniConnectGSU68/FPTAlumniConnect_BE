@@ -120,7 +120,6 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // PostId, AuthorId, and ParentCommentId should not be changed
             comment.Content = string.IsNullOrEmpty(request.Content) ? comment.Content : request.Content;
-            comment.Type = string.IsNullOrEmpty(request.Type) ? comment.Type : request.Type;
             comment.UpdatedAt = DateTime.Now;
             comment.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 

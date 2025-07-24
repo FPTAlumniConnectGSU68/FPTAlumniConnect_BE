@@ -17,8 +17,6 @@ public partial class Comment
 
     public int? ParentCommentId { get; set; }
 
-    public string? Type { get; set; }
-
     public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }

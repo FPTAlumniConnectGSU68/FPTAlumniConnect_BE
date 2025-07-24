@@ -1,5 +1,6 @@
-﻿namespace FPTAlumniConnect.DataTier.Models;
+using FPTAlumniConnect.DataTier.Enums;
 
+namespace FPTAlumniConnect.DataTier.Models;
 public partial class Cv
 {
     public int Id { get; set; }
@@ -48,11 +49,25 @@ public partial class Cv
 
     public string? UpdatedBy { get; set; }
 
+    // Các trường mới
+    public string? DesiredJob { get; set; }
+
+    public string? Position { get; set; }
+
+    public int? MajorId { get; set; }
+
+    public string? AdditionalContent { get; set; }
+
+    public CVStatus Status { get; set; }
+
+    // Quan hệ
+    public virtual User? User { get; set; }
+
     public virtual ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
 
     public virtual ICollection<TagJob> TagJobs { get; set; } = new List<TagJob>();
 
-    public virtual ICollection<SkillJob> SkillJobs { get; set; } = new List<SkillJob>();
+    public virtual ICollection<CvSkill> CvSkills { get; set; } = new List<CvSkill>();
 
-    public virtual User? User { get; set; }
+    public virtual MajorCode? Major { get; set; }  // FK tới MajorCode
 }

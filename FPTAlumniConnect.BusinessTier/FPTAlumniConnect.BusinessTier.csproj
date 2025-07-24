@@ -10,6 +10,7 @@
     <ProjectReference Include="..\FPTAlumniConnect.DataTier\FPTAlumniConnect.DataTier.csproj" />
   </ItemGroup>
 
+
   <ItemGroup>
     <Folder Include="Enums\" />
   </ItemGroup>

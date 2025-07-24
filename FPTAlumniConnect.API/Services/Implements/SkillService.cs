@@ -5,6 +5,7 @@ using FPTAlumniConnect.BusinessTier.Payload.SkillJob;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -15,131 +16,87 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
         }
 
+        // Create a new skill and assign it to a CV
         public async Task<int> CreateNewSkill(SkillJobInfo request)
         {
-            // Check if CV exists
-            Cv checkCvId = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
-                predicate: s => s.Id == request.CvID);
-            if (checkCvId == null)
+            var cv = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
+                predicate: x => x.Id == request.CvID,
+                orderBy: null,
+                include: null
+            ) ?? throw new BadHttpRequestException("CvIdNotFound");
+
+            var skillRepo = _unitOfWork.GetRepository<Skill>();
+            var existingSkill = await skillRepo.SingleOrDefaultAsync(
+                predicate: s => s.Name == request.Skill,
+                orderBy: null,
+                include: null
+            );
+
+            if (existingSkill == null)
             {
-                throw new BadHttpRequestException("CvIdNotFound");
-            }
-
-            // Check for duplicate skill in the same CV
-            SkillJob existingSkillJob = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
-                predicate: s => s.Skill == request.Skill && s.CvID == request.CvID);
-            if (existingSkillJob != null)
-            {
-                throw new BadHttpRequestException("Skill already exists.");
-            }
-
-            // Map and insert new skill
-            SkillJob newSkill = _mapper.Map<SkillJob>(request);
-            await _unitOfWork.GetRepository<SkillJob>().InsertAsync(newSkill);
-
-            // Commit to DB
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessful) throw new BadHttpRequestException("CreateFailed");
-
-            return newSkill.SkillJobId;
-        }
-
-        public async Task<SkillJobReponse> GetSkillById(int id)
-        {
-            // Get skill by ID
-            SkillJob skill = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
-                predicate: x => x.SkillJobId.Equals(id)) ??
-                throw new BadHttpRequestException("SkillNotFound");
-
-            return _mapper.Map<SkillJobReponse>(skill);
-        }
-
-        public async Task<SkillJobReponse> GetSkillByCvId(int id)
-        {
-            // Get a skill by CV ID (returns only one)
-            SkillJob skill = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
-                predicate: x => x.CvID.Equals(id)) ??
-                throw new BadHttpRequestException("SkillNotFound");
-
-            return _mapper.Map<SkillJobReponse>(skill);
-        }
-
-        public async Task<List<SkillJobReponse>> GetSkillsByCvId(int cvId)
-        {
-            // Get all skills by CV ID
-            var skills = await _unitOfWork.GetRepository<SkillJob>().GetListAsync(
-                predicate: x => x.CvID == cvId,
-                orderBy: q => q.OrderBy(x => x.CreatedAt));
-
-            return skills.Select(s => _mapper.Map<SkillJobReponse>(s)).ToList();
-        }
-
-        public async Task<bool> UpdateSkillInfo(int id, SkillJobInfo request)
-        {
-            // Find skill by ID
-            SkillJob skill = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
-                predicate: x => x.SkillJobId.Equals(id)) ??
-                throw new BadHttpRequestException("SkillNotFound");
-
-            // Check if CV exists
-            Cv checkCvId = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
-                predicate: s => s.Id == request.CvID);
-            if (checkCvId == null)
-            {
-                throw new BadHttpRequestException("CvIdNotFound");
-            }
-
-            // Check for duplicate skill
-            if (!string.IsNullOrEmpty(request.Skill))
-            {
-                var duplicate = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
-                    predicate: s => s.Skill == request.Skill && s.CvID == request.CvID && s.SkillJobId != id);
-                if (duplicate != null)
+                existingSkill = new Skill
                 {
-                    throw new BadHttpRequestException("Skill already exists.");
-                }
-
-                skill.Skill = request.Skill;
+                    Name = request.Skill!,
+                    CreatedAt = DateTime.Now,
+                };
+                await skillRepo.InsertAsync(existingSkill);
             }
 
-            // Update metadata
-            skill.Skill = string.IsNullOrEmpty(request.Skill) ? skill.Skill : request.Skill;
-            skill.UpdatedAt = DateTime.Now;
-            skill.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            var cvSkillRepo = _unitOfWork.GetRepository<CvSkill>();
+            var duplicate = await cvSkillRepo.SingleOrDefaultAsync(
+                predicate: x => x.CvId == request.CvID && x.SkillId == existingSkill.SkillId,
+                orderBy: null,
+                include: null
+            );
 
-            _unitOfWork.GetRepository<SkillJob>().UpdateAsync(skill);
-            bool isSuccesful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccesful;
+            if (duplicate != null)
+            {
+                throw new BadHttpRequestException("Skill already assigned to CV.");
+            }
+
+            var cvSkill = new CvSkill
+            {
+                CvId = request.CvID!.Value,
+                SkillId = existingSkill.SkillId,
+                CreatedAt = DateTime.Now,
+            };
+
+            await cvSkillRepo.InsertAsync(cvSkill);
+
+            bool success = await _unitOfWork.CommitAsync() > 0;
+            if (!success) throw new BadHttpRequestException("CreateFailed");
+
+            return existingSkill.SkillId;
         }
 
-        public async Task<IPaginate<SkillJobReponse>> ViewAllSkill(SkillJobFilter filter, PagingModel pagingModel)
+        // Get all skill names assigned to a specific CV
+        public async Task<List<string>> GetSkillsByCvId(int cvId)
         {
-            // Get all skills with filtering and pagination
-            IPaginate<SkillJobReponse> response = await _unitOfWork.GetRepository<SkillJob>().GetPagingListAsync(
-                selector: x => _mapper.Map<SkillJobReponse>(x),
-                filter: filter,
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
-                page: pagingModel.page,
-                size: pagingModel.size);
-            return response;
+            var skills = await _unitOfWork.GetRepository<CvSkill>().GetListAsync(
+                predicate: x => x.CvId == cvId,
+                include: x => x.Include(cs => cs.Skill),
+                orderBy: x => x.OrderBy(cs => cs.CreatedAt));
+
+            return skills.Select(cs => cs.Skill.Name).ToList();
         }
 
-        public async Task<bool> DeleteSkill(int id)
+        // Delete a skill from a specific CV
+        public async Task<bool> DeleteSkillFromCv(int skillId, int cvId)
         {
-            // Find and delete skill by ID
-            SkillJob skill = await _unitOfWork.GetRepository<SkillJob>().SingleOrDefaultAsync(
-                predicate: x => x.SkillJobId.Equals(id)) ??
-                throw new BadHttpRequestException("SkillNotFound");
+            var cvSkill = await _unitOfWork.GetRepository<CvSkill>().SingleOrDefaultAsync(
+                predicate: x => x.CvId == cvId && x.SkillId == skillId,
+                orderBy: null,
+                include: null
+            ) ?? throw new BadHttpRequestException("NotFound");
 
-            _unitOfWork.GetRepository<SkillJob>().DeleteAsync(skill);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            return isSuccessful;
+            _unitOfWork.GetRepository<CvSkill>().DeleteAsync(cvSkill);
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
+        // Count number of skills assigned to a CV
         public async Task<int> CountSkillByCvId(int cvId)
         {
-            // Count skills by CV ID
-            return await _unitOfWork.GetRepository<SkillJob>().CountAsync(x => x.CvID == cvId);
+            return await _unitOfWork.GetRepository<CvSkill>().CountAsync(x => x.CvId == cvId);
         }
     }
 }
