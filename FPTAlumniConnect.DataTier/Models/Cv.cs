@@ -1,9 +1,6 @@
-﻿using FPTAlumniConnect.DataTier.Enums;
-using System;
-using System.Collections.Generic;
+using FPTAlumniConnect.DataTier.Enums;
 
 namespace FPTAlumniConnect.DataTier.Models;
-
 public partial class Cv
 {
     public int Id { get; set; }
