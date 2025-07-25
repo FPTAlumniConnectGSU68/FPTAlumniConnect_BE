@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.PrivacySetting
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.PrivacySetting
 {
     public class GetPrivacySettingResponse
     {

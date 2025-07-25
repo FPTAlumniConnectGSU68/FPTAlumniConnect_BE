@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.Mentorship;
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.Mentorship;
 
 public class MentorshipInfo
 {

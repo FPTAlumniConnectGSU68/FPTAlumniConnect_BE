@@ -1,6 +1,6 @@
-﻿using FPTAlumniConnect.BusinessTier.Payload.NotificationSetting;
+﻿using FPTAlumniConnect.BusinessTier.Payload;
+using FPTAlumniConnect.BusinessTier.Payload.NotificationSetting;
 using FPTAlumniConnect.DataTier.Paginate;
-using FPTAlumniConnect.BusinessTier.Payload;
 
 namespace FPTAlumniConnect.API.Services.Interfaces
 {

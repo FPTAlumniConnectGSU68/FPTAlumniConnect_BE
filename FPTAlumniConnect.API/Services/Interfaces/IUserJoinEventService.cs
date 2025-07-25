@@ -1,7 +1,6 @@
-﻿using FPTAlumniConnect.BusinessTier.Payload.Event;
-using FPTAlumniConnect.BusinessTier.Payload;
-using FPTAlumniConnect.DataTier.Paginate;
+﻿using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.UserJoinEvent;
+using FPTAlumniConnect.DataTier.Paginate;
 
 namespace FPTAlumniConnect.API.Services.Interfaces
 {

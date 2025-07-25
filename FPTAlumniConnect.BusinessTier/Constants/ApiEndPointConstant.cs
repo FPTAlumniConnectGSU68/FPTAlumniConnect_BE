@@ -175,7 +175,7 @@
             public const string RecruiterInfoEndPoint = RecruiterInfosEndPoint + "/{id}";
             public const string RecruiterInfoUserEndPoint = RecruiterInfosEndPoint + "/user/{id}";
         }
-      
+
         public static class CvSkill
         {
             public const string CvSkillsEndPoint = ApiEndpoint + "/cvskills";

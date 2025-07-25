@@ -2,8 +2,6 @@
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.CV;
-using FPTAlumniConnect.DataTier.Paginate;
-using FPTAlumniConnect.API.Services.Implements;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.PostReport
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.PostReport
 {
     public class PostReportReponse
     {

@@ -1,13 +1,10 @@
-﻿using FirebaseAdmin;
-using FPTAlumniConnect.API.Services.Implements;
+﻿using FPTAlumniConnect.API.Services.Implements;
 using FPTAlumniConnect.API.Services.Implements.FPTAlumniConnect.API.Services.Implements;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Repository.Implement;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;

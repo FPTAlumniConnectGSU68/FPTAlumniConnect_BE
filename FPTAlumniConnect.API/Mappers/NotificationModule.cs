@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.BusinessTier.Payload.Notification;
-using FPTAlumniConnect.BusinessTier.Payload.Post;
 using FPTAlumniConnect.DataTier.Models;
 
 namespace FPTAlumniConnect.API.Mappers

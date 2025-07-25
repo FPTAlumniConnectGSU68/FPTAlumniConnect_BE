@@ -5,8 +5,8 @@ using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -131,7 +131,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 predicate: x => /*!x.IsDeleted &&*/
                                 (x.JobTitle.Contains(keyword) || x.JobDescription.Contains(keyword)),
                 selector: x => _mapper.Map<JobPostResponse>(x));
-                //,: DefaultIncludes());
+            //,: DefaultIncludes());
 
             return jobPosts;
         }

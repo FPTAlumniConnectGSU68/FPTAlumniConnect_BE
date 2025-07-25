@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.EducationHistory
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.EducationHistory
 {
     public class EducationHistoryInfo
     {

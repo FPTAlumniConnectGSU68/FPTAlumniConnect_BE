@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.Event
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.Event
 {
     public class EventInfo
     {
@@ -14,9 +8,9 @@ namespace FPTAlumniConnect.BusinessTier.Payload.Event
 
         public string? Description { get; set; }
 
-        public DateTime? StartDate { get; set; }  
+        public DateTime? StartDate { get; set; }
 
-        public DateTime? EndDate { get; set; }    
+        public DateTime? EndDate { get; set; }
 
         public int? OrganizerId { get; set; }
 
