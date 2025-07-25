@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.DataTier.Models;
+﻿namespace FPTAlumniConnect.DataTier.Models;
 
 public partial class JobPost
 {
     public int JobPostId { get; set; }
 
     public string JobDescription { get; set; } = null!;
-    public string JobTitle {  get; set; } = null!;
+    public string JobTitle { get; set; } = null!;
     public string? Location { get; set; }
     public string? City { get; set; }
     public int? MinSalary { get; set; }

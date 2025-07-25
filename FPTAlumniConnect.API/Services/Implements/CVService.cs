@@ -2,11 +2,9 @@
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.CV;
-using FPTAlumniConnect.DataTier.Enums;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using Microsoft.IdentityModel.Tokens;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -58,7 +56,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             User userId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: x => x.UserId.Equals(request.UserId)) ??
                 throw new BadHttpRequestException("UserNotFound");
-            
+
             MajorCode majorId = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
                 predicate: x => x.MajorId.Equals(request.MajorId)) ??
                 throw new BadHttpRequestException("MajorNotFound");

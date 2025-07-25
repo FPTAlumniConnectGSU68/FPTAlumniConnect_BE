@@ -4,7 +4,7 @@ using FPTAlumniConnect.DataTier.Models;
 
 namespace FPTAlumniConnect.API.Mappers
 {
-    public class EducationHistoryModule: Profile
+    public class EducationHistoryModule : Profile
     {
         public EducationHistoryModule()
         {

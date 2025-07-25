@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.SocialLink
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.SocialLink
 {
     public class GetSocialLinkResponse
     {

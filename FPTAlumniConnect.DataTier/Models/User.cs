@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.DataTier.Models;
+﻿namespace FPTAlumniConnect.DataTier.Models;
 public partial class User
 {
     public int UserId { get; set; }
@@ -71,7 +68,7 @@ public partial class User
     // New relationships for WorkExperience and Education
     public virtual ICollection<WorkExperience> WorkExperiences { get; set; } = new List<WorkExperience>();
     public virtual ICollection<Education> EducationRecords { get; set; } = new List<Education>();
-    
+
     public virtual RecruiterInfo? RecruiterInfos { get; set; }
 
 }

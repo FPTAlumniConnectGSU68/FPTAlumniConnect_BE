@@ -1,19 +1,16 @@
 ﻿namespace FPTAlumniConnect.API.Services.Implements
 {
-    using Microsoft.Extensions.Logging;
+    using AutoMapper;
     using global::FPTAlumniConnect.API.Services.Interfaces;
+    using global::FPTAlumniConnect.BusinessTier.Payload.Notification;
     using global::FPTAlumniConnect.DataTier.Models;
     using global::FPTAlumniConnect.DataTier.Repository.Interfaces;
-    using AutoMapper;
-    using global::FPTAlumniConnect.BusinessTier.Payload.Notification;
     using Microsoft.AspNetCore.SignalR;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
-    using global::FPTAlumniConnect.BusinessTier.Payload.Comment;
+    using Microsoft.Extensions.Logging;
 
     namespace FPTAlumniConnect.API.Services.Implements
     {
-        
+
         public class NotificationService : BaseService<NotificationService>, INotificationService
         {
             private readonly IHubContext<NotificationHub> _hubContext;
@@ -65,7 +62,7 @@
                 _unitOfWork.GetRepository<Notification>().UpdateAsync(notification);
                 return await _unitOfWork.CommitAsync() > 0;
             }
-          
+
         }
     }
 

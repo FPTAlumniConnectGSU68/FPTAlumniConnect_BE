@@ -1,15 +1,11 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
-using FPTAlumniConnect.BusinessTier.Payload.GroupChat;
 using FPTAlumniConnect.BusinessTier.Payload;
-using FPTAlumniConnect.BusinessTier.Utils;
+using FPTAlumniConnect.BusinessTier.Payload.GroupChat;
+using FPTAlumniConnect.BusinessTier.Payload.User;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Http;
-using FPTAlumniConnect.BusinessTier.Payload.MessageGroupChat;
-using FPTAlumniConnect.BusinessTier.Payload.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace FPTAlumniConnect.API.Services.Implements

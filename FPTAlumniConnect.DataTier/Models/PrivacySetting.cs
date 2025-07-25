@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.DataTier.Models;
+﻿namespace FPTAlumniConnect.DataTier.Models;
 
 public partial class PrivacySetting
 {

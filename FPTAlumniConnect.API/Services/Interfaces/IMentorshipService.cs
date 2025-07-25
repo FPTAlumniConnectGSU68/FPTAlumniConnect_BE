@@ -4,7 +4,7 @@ using FPTAlumniConnect.DataTier.Paginate;
 
 namespace FPTAlumniConnect.API.Services.Interfaces
 {
-    public interface IMentorshipService 
+    public interface IMentorshipService
     {
         Task<int> CreateNewMentorship(MentorshipInfo request);
         Task<IPaginate<MentorshipReponse>> ViewAllMentorship(MentorshipFilter filter, PagingModel pagingModel);

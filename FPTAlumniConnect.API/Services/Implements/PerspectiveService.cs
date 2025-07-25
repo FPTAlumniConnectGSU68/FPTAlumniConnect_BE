@@ -1,10 +1,9 @@
 ﻿using AutoMapper;
 using Azure;
+using Azure.AI.ContentSafety;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using Azure.AI.ContentSafety;
-using Azure.Core;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {

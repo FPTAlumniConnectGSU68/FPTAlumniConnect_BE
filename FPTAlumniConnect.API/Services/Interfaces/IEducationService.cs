@@ -1,8 +1,6 @@
 ﻿using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Education;
 using FPTAlumniConnect.DataTier.Paginate;
-using System;
-using System.Threading.Tasks;
 
 namespace FPTAlumniConnect.API.Services.Interfaces
 {

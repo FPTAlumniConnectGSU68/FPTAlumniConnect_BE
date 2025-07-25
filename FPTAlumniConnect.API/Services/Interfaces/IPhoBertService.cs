@@ -1,6 +1,4 @@
-﻿
-using FPTAlumniConnect.BusinessTier.Payload;
-using FPTAlumniConnect.DataTier.Models;
+﻿using FPTAlumniConnect.DataTier.Models;
 
 namespace FPTAlumniConnect.API.Services.Interfaces
 {

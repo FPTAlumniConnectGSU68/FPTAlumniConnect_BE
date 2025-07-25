@@ -6,7 +6,8 @@ namespace FPTAlumniConnect.API.Mappers
 {
     public class CvSkillModule : Profile
     {
-        public CvSkillModule() {
+        public CvSkillModule()
+        {
             CreateMap<CvSkillInfo, CvSkill>();
             CreateMap<CvSkill, CvSkillResponse>()
                 .ForMember(dest => dest.CvTitle, opt => opt.MapFrom(src => src.Cv.FullName))

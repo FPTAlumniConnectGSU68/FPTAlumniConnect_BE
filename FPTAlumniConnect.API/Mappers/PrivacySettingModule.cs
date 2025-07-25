@@ -4,10 +4,10 @@ using FPTAlumniConnect.DataTier.Models;
 
 namespace FPTAlumniConnect.API.Mappers
 {
-    public class PrivacySettingModule: Profile
+    public class PrivacySettingModule : Profile
     {
-        public PrivacySettingModule() 
-        { 
+        public PrivacySettingModule()
+        {
             CreateMap<PrivacySetting, GetPrivacySettingResponse>();
             CreateMap<PrivacySettingInfo, PrivacySetting>();
         }
