@@ -1,88 +1,147 @@
 ﻿using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
+using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.SkillJob;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
 {
     [ApiController]
-    public class SkillJobController : BaseController<SkillJobController>
+    public class SkillController : BaseController<SkillController>
     {
         private readonly ISkillService _skillService;
 
-        public SkillJobController(ILogger<SkillJobController> logger, ISkillService skillService)
-            : base(logger)
+        public SkillController(ILogger<SkillController> logger, ISkillService skillService) : base(logger)
         {
             _skillService = skillService;
         }
 
-        // Add or assign a skill to a CV
         [HttpPost(ApiEndPointConstant.Skill.SkillsEndPoint)]
-        public async Task<IActionResult> CreateNewSkill([FromBody] SkillJobInfo request)
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateSkill([FromBody] SkillInfo request)
         {
             if (request == null)
             {
-                return BadRequest(new { status = "error", message = "Request body is null" });
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
             }
-
             try
             {
-                var id = await _skillService.CreateNewSkill(request);
-                return StatusCode(201, new { status = "success", message = "Skill created", data = new { id } });
+                var id = await _skillService.CreateSkill(request);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Resource created successfully",
+                    data = new { SkillId = id }
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create skill");
+                _logger.LogError(ex, "Failed to create Skill");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
 
-        // Get all skills assigned to a CV
-        [HttpGet(ApiEndPointConstant.Skill.SkillCVEndPoint)]
-        public async Task<IActionResult> GetSkillsByCvId([FromQuery] int id)
+        [HttpGet(ApiEndPointConstant.Skill.SkillEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetSkillById([FromRoute] int skillId)
         {
             try
             {
-                var response = await _skillService.GetSkillsByCvId(id);
-                return Ok(new { status = "success", data = response });
+                var response = await _skillService.GetSkillById(skillId);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to fetch skills by CV ID");
+                _logger.LogError(ex, "Failed to fetch Skill");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
 
-        // Delete a skill from a CV
+        [HttpGet(ApiEndPointConstant.Skill.SkillsEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ViewAllSkills([FromQuery] SkillFilter filter, [FromQuery] PagingModel pagingModel)
+        {
+            try
+            {
+                var response = await _skillService.ViewAllSkills(filter, pagingModel);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch Skills");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpPatch(ApiEndPointConstant.Skill.SkillEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateSkill([FromRoute] int skillId, [FromBody] SkillInfo request)
+        {
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
+            try
+            {
+                var isSuccessful = await _skillService.UpdateSkill(skillId, request);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
+
+                return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update Skill");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
         [HttpDelete(ApiEndPointConstant.Skill.SkillEndPoint)]
-        public async Task<IActionResult> DeleteSkillFromCv([FromQuery] int skillId, [FromQuery] int cvId)
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteSkill([FromRoute] int skillId)
         {
             try
             {
-                var success = await _skillService.DeleteSkillFromCv(skillId, cvId);
-                if (!success) return BadRequest(new { status = "error", message = "Delete failed" });
+                var isSuccessful = await _skillService.DeleteSkill(skillId);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Deletion failed" });
+                }
 
-                return Ok(new { status = "success", message = "Skill removed from CV" });
+                return Ok(new { status = "success", message = "Deletion successful" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete skill from CV");
-                return StatusCode(500, new { status = "error", message = "Internal server error" });
-            }
-        }
-
-        // Count skills of a CV
-        [HttpGet(ApiEndPointConstant.Skill.SkillCountEndPoint)]
-        public async Task<IActionResult> CountSkillByCvId([FromQuery] int cvId)
-        {
-            try
-            {
-                int count = await _skillService.CountSkillByCvId(cvId);
-                return Ok(new { status = "success", data = count });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to count skills");
+                _logger.LogError(ex, "Failed to delete Skill");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
