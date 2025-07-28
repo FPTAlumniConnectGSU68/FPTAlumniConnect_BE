@@ -6,6 +6,7 @@ using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -178,5 +179,132 @@ namespace FPTAlumniConnect.API.Services.Implements
             _unitOfWork.GetRepository<Event>().DeleteAsync(ev);
             return await _unitOfWork.CommitAsync() > 0;
         }
+
+        // Đếm số lượng sự kiện theo trạng thái(tận dụng trường Status)
+        public async Task<Dictionary<string, int>> GetEventCountByStatus()
+        {
+            var events = await _unitOfWork.GetRepository<Event>()
+                .GetListAsync();
+            return events.GroupBy(e => e.Status ?? "Unknown")
+                .ToDictionary(g => g.Key, g => g.Count());
+        }
+
+        // Kiểm tra trùng lịch sự kiện (dùng StartDate và EndDate)
+        public async Task<bool> CheckEventConflict(int eventId, DateTime newStart, DateTime newEnd)
+        {
+            var existingEvent = await _unitOfWork.GetRepository<Event>()
+                .SingleOrDefaultAsync(predicate: e => e.EventId == eventId);
+            if (existingEvent == null) return false;
+            return await _unitOfWork.GetRepository<Event>()
+                .AnyAsync(e => e.EventId != eventId &&
+                              e.OrganizerId == existingEvent.OrganizerId &&
+                              ((newStart >= e.StartDate && newStart <= e.EndDate) ||
+                               (newEnd >= e.StartDate && newEnd <= e.EndDate) ||
+                               (newStart <= e.StartDate && newEnd >= e.EndDate)));
+        }
+
+        // Gợi ý sự kiện tương tự (dựa trên MajorId và Description)
+        public async Task<IEnumerable<GetEventResponse>> GetSimilarEvents(int eventId, int count)
+        {
+            // Lấy thông tin sự kiện hiện tại
+            var currentEvent = await _unitOfWork.GetRepository<Event>()
+                .SingleOrDefaultAsync(predicate: e => e.EventId == eventId);
+
+            if (currentEvent == null)
+                throw new BadHttpRequestException("EventNotFound");
+
+            // Tìm các sự kiện tương tự
+            var similarEvents = await _unitOfWork.GetRepository<Event>().GetListAsync(
+                predicate: x => x.EventId != eventId &&
+                                (x.MajorId == currentEvent.MajorId ||
+                                 x.Description.Contains(currentEvent.EventName)),
+                orderBy: x => x.OrderByDescending(e => e.StartDate)
+            );
+
+            // Map kết quả và giới hạn số lượng
+            var mappedEvents = _mapper.Map<IEnumerable<GetEventResponse>>(similarEvents);
+
+            return mappedEvents.Take(count);
+        }
+
+
+        // Lấy events sắp xếp theo độ phổ biến (dựa vào số lượng người tham gia)
+        public async Task<IEnumerable<EventPopularityDto>> GetEventsByPopularity(int top)
+        {
+            var paginatedEvents = await _unitOfWork.GetRepository<Event>()
+                .GetPagingListAsync(
+                    include: x => x.Include(e => e.UserJoinEvents),
+                    selector: x => new EventPopularityDto
+                    {
+                        EventId = x.EventId,
+                        EventName = x.EventName,
+                        ParticipantCount = x.UserJoinEvents.Count,
+                        PopularityScore = CalculatePopularityScore(x)
+                    },
+                    orderBy: x => x.OrderByDescending(e => e.UserJoinEvents.Count),
+                    size: top
+                );
+            // Sử dụng Items để lấy danh sách các mục
+            return paginatedEvents.Items; // Trả về danh sách các EventPopularityDto
+        }
+
+        private static float CalculatePopularityScore(Event e)
+        {
+            // Tính điểm phổ biến dựa trên số người tham gia và thời gian còn lại
+            var timeFactor = (e.StartDate - DateTime.Now).TotalDays > 30 ? 1.2f : 1.0f;
+            return e.UserJoinEvents.Count * timeFactor;
+        }
+
+        public async Task<BestEventTimeDto> SuggestBestTimeForNewEvent(int organizerId, int durationHours)
+        {
+            var organizerEvents = await _unitOfWork.GetRepository<Event>()
+                .GetListAsync(predicate: x => x.OrganizerId == organizerId);
+            var timeSlots = new Dictionary<DateTime, int>();
+            var startDate = DateTime.Now.AddDays(7);
+            var endDate = startDate.AddDays(30);
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+                    continue; // Bỏ qua cuối tuần
+                for (var hour = 9; hour <= 17; hour += 2) // Xét các khung giờ hàng 2 tiếng
+                {
+                    var slotStart = new DateTime(date.Year, date.Month, date.Day, hour, 0, 0);
+                    var slotEnd = slotStart.AddHours(durationHours); // Tính thời gian kết thúc dựa trên durationHours
+                    var conflictExists = organizerEvents.Any(e =>
+                        (slotStart < e.EndDate && slotEnd > e.StartDate)); // Kiểm tra xung đột với thời gian mới
+
+                    if (!conflictExists)
+                    {
+                        timeSlots[slotStart] = CalculateTimeSlotScore(slotStart);
+                    }
+                }
+            }
+            var bestTime = timeSlots.OrderByDescending(x => x.Value).FirstOrDefault();
+            return new BestEventTimeDto
+            {
+                SuggestedTime = bestTime.Key,
+                Score = bestTime.Value,
+                AlternativeTimes = timeSlots
+                    .Where(x => x.Value >= bestTime.Value * 0.8)
+                    .OrderByDescending(x => x.Value)
+                    .Take(3)
+                    .ToDictionary(x => x.Key, x => x.Value)
+            };
+        }
+
+        private int CalculateTimeSlotScore(DateTime timeSlot)
+        {
+            // Điểm cao hơn cho các khung giờ 10-11AM và 2-3PM
+            return timeSlot.Hour switch
+            {
+                10 or 11 => 5,
+                14 or 15 => 4,
+                9 or 16 => 3,
+                13 or 17 => 2,
+                _ => 1
+            };
+        }
+
+
     }
 }
