@@ -1,6 +1,4 @@
 ﻿using FPTAlumniConnect.DataTier.Enums;
-using System;
-using System.Collections.Generic;
 
 namespace FPTAlumniConnect.BusinessTier.Payload.CV
 {

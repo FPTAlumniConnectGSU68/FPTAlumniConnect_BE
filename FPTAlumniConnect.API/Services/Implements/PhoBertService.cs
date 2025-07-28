@@ -1,15 +1,12 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
-using FPTAlumniConnect.DataTier.Models;
-using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
-using FPTAlumniConnect.BusinessTier.Payload.CV;
+using FPTAlumniConnect.DataTier.Models;
+using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {

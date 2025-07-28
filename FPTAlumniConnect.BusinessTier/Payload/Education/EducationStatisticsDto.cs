@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.Education
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.Education
 {
     public class EducationStatisticsDto
     {

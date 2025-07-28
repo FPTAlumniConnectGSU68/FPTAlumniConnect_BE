@@ -28,6 +28,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.WorkExperience.WorkExperiencesEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateWorkExperience([FromBody] WorkExperienceInfo request)
         {
             if (request == null)
@@ -83,6 +84,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPut(ApiEndPointConstant.WorkExperience.WorkExperienceEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateWorkExperience(int id, [FromBody] WorkExperienceInfo request)
         {
             if (request == null)

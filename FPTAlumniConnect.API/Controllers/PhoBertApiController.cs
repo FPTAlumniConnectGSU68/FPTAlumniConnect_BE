@@ -1,7 +1,5 @@
-﻿using FPTAlumniConnect.API.Services.Implements;
-using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
-using FPTAlumniConnect.BusinessTier.Payload;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers

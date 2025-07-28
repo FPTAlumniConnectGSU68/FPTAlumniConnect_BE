@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FPTAlumniConnect.DataTier.Models
+﻿namespace FPTAlumniConnect.DataTier.Models
 {
     public partial class JobPostSkill
     {

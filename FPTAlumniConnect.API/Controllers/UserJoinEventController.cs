@@ -46,6 +46,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.UserJoinEvent.UserJoinEventsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateUserJoinEvent([FromBody] UserJoinEventInfo request)
         {
             if (request == null)
@@ -99,6 +100,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPut(ApiEndPointConstant.UserJoinEvent.UserJoinEventEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateUserJoinEvent(int id, [FromBody] UserJoinEventInfo request)
         {
             if (request == null)

@@ -74,6 +74,11 @@
         {
             public const string EventsEndPoint = ApiEndpoint + "/events";
             public const string EventEndPoint = EventsEndPoint + "/{id}";
+            public const string EventPopularityEndPoint = EventsEndPoint + "/popularity";
+            public const string EventSimilarEndPoint = EventsEndPoint + "/similar/{eventId}";
+            public const string EventConflictEndPoint = EventsEndPoint + "/conflict";
+            public const string SuggestBestTimeForNewEventEndPoint = EventsEndPoint + "/suggest";
+            public const string EventCountByStatusEndPoint = EventsEndPoint + "/count";
         }
         public static class UserJoinEvent
         {
@@ -175,7 +180,7 @@
             public const string RecruiterInfoEndPoint = RecruiterInfosEndPoint + "/{id}";
             public const string RecruiterInfoUserEndPoint = RecruiterInfosEndPoint + "/user/{id}";
         }
-      
+
         public static class CvSkill
         {
             public const string CvSkillsEndPoint = ApiEndpoint + "/cvskills";

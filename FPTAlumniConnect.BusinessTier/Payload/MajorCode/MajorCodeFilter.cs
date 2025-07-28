@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.MajorCode
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.MajorCode
 {
     public class MajorCodeFilter
     {

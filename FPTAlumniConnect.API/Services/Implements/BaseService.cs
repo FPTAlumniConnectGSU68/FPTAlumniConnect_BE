@@ -1,4 +1,4 @@
-﻿    using AutoMapper;
+﻿using AutoMapper;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using System.Security.Claims;

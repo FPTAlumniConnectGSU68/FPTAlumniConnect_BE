@@ -1,14 +1,9 @@
 ﻿using FPTAlumniConnect.DataTier.Paginate;
-using LAK.Sdk.Core.Utilities;
-using Microsoft.EntityFrameworkCore.Query;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using LAK.Sdk.Core.Utilities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using System.Linq.Expressions;
 
 namespace FPTAlumniConnect.DataTier.Repository.Implement
 {

@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
-using FPTAlumniConnect.DataTier.Models;
-using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.BusinessTier.Payload.UserJoinEvent;
+using FPTAlumniConnect.DataTier.Models;
+using FPTAlumniConnect.DataTier.Paginate;
+using FPTAlumniConnect.DataTier.Repository.Interfaces;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {

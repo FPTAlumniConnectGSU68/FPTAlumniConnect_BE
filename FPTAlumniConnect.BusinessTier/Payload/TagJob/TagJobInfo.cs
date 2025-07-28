@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.TagJob
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.TagJob
 {
     public class TagJobInfo
     {

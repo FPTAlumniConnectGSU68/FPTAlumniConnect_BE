@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.SpMajorCode
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.SpMajorCode
 {
     public class SpMajorCodeInfo
     {

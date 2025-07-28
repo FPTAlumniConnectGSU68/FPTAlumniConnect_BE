@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.NotificationSetting
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.NotificationSetting
 {
     public class GetNotificationSettingResponse
     {

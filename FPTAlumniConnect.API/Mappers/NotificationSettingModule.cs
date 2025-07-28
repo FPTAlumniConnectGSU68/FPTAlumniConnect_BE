@@ -4,9 +4,9 @@ using FPTAlumniConnect.DataTier.Models;
 
 namespace FPTAlumniConnect.API.Mappers
 {
-    public class NotificationSettingModule: Profile
+    public class NotificationSettingModule : Profile
     {
-        public NotificationSettingModule() 
+        public NotificationSettingModule()
         {
             CreateMap<NotificationSetting, GetNotificationSettingResponse>();
             CreateMap<NotificationSettingInfo, NotificationSetting>();

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.SkillJob
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.SkillJob
 {
     public class SkillInfo
     {

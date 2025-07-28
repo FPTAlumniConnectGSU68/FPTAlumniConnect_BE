@@ -5,11 +5,6 @@ using FPTAlumniConnect.BusinessTier.Payload.Education;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {

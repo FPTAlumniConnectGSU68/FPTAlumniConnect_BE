@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.Comment;
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.Comment;
 
 public class CommentInfo
 {
