@@ -10,5 +10,15 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<GetEventResponse> GetEventById(int id);
         Task<bool> UpdateEventInfo(int id, EventInfo request);
         Task<IPaginate<GetEventResponse>> ViewAllEvent(EventFilter filter, PagingModel pagingModel);
+
+        Task<Dictionary<string, int>> GetEventCountByStatus();
+
+        Task<bool> CheckEventConflict(int eventId, DateTime newStart, DateTime newEnd);
+
+        Task<IEnumerable<GetEventResponse>> GetSimilarEvents(int eventId, int count);
+
+        Task<IEnumerable<EventPopularityDto>> GetEventsByPopularity(int top);
+
+        Task<BestEventTimeDto> SuggestBestTimeForNewEvent(int organizerId, int durationHours);
     }
 }

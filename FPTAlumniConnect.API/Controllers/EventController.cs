@@ -69,6 +69,7 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
         [HttpPut(ApiEndPointConstant.Event.EventEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
@@ -122,5 +123,119 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        // Lấy danh sách sự kiện theo độ phổ biến
+        [HttpGet(ApiEndPointConstant.Event.EventPopularityEndPoint)]
+        [ProducesResponseType(typeof(IEnumerable<EventPopularityDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetEventsByPopularity(int top = 10)
+        {
+            try
+            {
+                var response = await _eventService.GetEventsByPopularity(top);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch events by popularity");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        // Tìm sự kiện tương tự
+        [HttpGet(ApiEndPointConstant.Event.EventSimilarEndPoint)]
+        [ProducesResponseType(typeof(IEnumerable<GetEventResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetSimilarEvents(int eventId, int count = 3)
+        {
+            try
+            {
+                var response = await _eventService.GetSimilarEvents(eventId, count);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch similar events");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        // Kiểm tra sự kiện có bị trùng lịch không
+        [HttpGet(ApiEndPointConstant.Event.EventConflictEndPoint)]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CheckEventConflict(int eventId, DateTime newStart, DateTime newEnd)
+        {
+            try
+            {
+                var response = await _eventService.CheckEventConflict(eventId, newStart, newEnd);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to check event conflict");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpPost(ApiEndPointConstant.Event.SuggestBestTimeForNewEventEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> SuggestBestTimeForNewEvent(int organizerId, int durationHours)
+        {
+            try
+            {
+                var response = await _eventService.SuggestBestTimeForNewEvent(organizerId, durationHours);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to suggest best time for new event");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Event.EventCountByStatusEndPoint)]
+        [ProducesResponseType(typeof(Dictionary<string, int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetEventCountByStatus()
+        {
+            try
+            {
+                var response = await _eventService.GetEventCountByStatus();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch event count by status");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
     }
 }
