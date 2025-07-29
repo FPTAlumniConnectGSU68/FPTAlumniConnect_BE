@@ -90,7 +90,10 @@ namespace FPTAlumniConnect.API.Services.Implements
                     UserId = user.UserId,
                     Email = user.Email,
                     RoleId = user.RoleId,  // Get RoleId directly from User
-                    RoleName = user.Role?.Name ?? "No Role Assigned"  // Safely access Role.Name
+                    RoleName = user.Role?.Name ?? "No Role Assigned",  // Safely access Role.Name
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    IsMentor = user.IsMentor
                 }
             };
 
