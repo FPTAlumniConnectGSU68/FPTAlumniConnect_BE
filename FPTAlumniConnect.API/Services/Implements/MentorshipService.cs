@@ -19,7 +19,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         // Create new mentorship record
         public async Task<int> CreateNewMentorship(MentorshipInfo request)
         {
-            await EnsureAlumniExists(request.AlumniId);
+            await EnsureAlumniExists(request.AumniId);
 
             var newMentorship = _mapper.Map<Mentorship>(request);
 
@@ -61,10 +61,10 @@ namespace FPTAlumniConnect.API.Services.Implements
                 predicate: x => x.Id.Equals(id)) ??
                 throw new BadHttpRequestException("MentorshipNotFound");
 
-            if (request.AlumniId != mentorship.AumniId)
+            if (request.AumniId != mentorship.AumniId)
             {
-                await EnsureAlumniExists(request.AlumniId);
-                mentorship.AumniId = request.AlumniId;
+                await EnsureAlumniExists(request.AumniId);
+                mentorship.AumniId = request.AumniId;
             }
 
             mentorship.RequestMessage = string.IsNullOrEmpty(request.RequestMessage)

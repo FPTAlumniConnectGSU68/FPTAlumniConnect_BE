@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.SkillJob;
 using FPTAlumniConnect.DataTier.Models;
+using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

@@ -2,7 +2,7 @@
 
 public class MentorshipInfo
 {
-    public int? AlumniId { get; set; }
+    public int? AumniId { get; set; }
 
     public string? RequestMessage { get; set; }
 
