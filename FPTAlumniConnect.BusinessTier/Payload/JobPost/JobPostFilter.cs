@@ -26,6 +26,13 @@ namespace FPTAlumniConnect.BusinessTier.Payload.JobPost
         //public DateTime? CreatedAt { get; set; }
 
         //public DateTime? UpdatedAt { get; set; }
+
+        public SalaryRange GetSalaryRange() => new SalaryRange
+        {
+            Min = MinSalary,
+            Max = MaxSalary
+        };
+
     }
 
 }
