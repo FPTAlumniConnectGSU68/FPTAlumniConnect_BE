@@ -1,7 +1,5 @@
 using FPTAlumniConnect.API.Extensions;
 using FPTAlumniConnect.API.Middlewares;
-using FPTAlumniConnect.BusinessTier.Constants;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,10 +18,12 @@ var builder = WebApplication.CreateBuilder(args);
 //        });
 //});
 builder.Services.AddCors(x => x.AddPolicy("AllowAll", p =>
-{ p.SetIsOriginAllowed(_ => true)
+{
+    p.SetIsOriginAllowed(_ => true)
     .AllowAnyHeader()
     .AllowAnyMethod()
-    .AllowCredentials(); }));
+    .AllowCredentials();
+}));
 
 builder.Services.AddControllers().AddJsonOptions(x =>
 {
@@ -49,7 +49,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "FPT Alumni Connect API V1");       
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "FPT Alumni Connect API V1");
     });
 }
 else
@@ -57,7 +57,7 @@ else
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "FPT Alumni Connect API V1");
-        c.RoutePrefix = string.Empty; 
+        c.RoutePrefix = string.Empty;
     });
 }
 

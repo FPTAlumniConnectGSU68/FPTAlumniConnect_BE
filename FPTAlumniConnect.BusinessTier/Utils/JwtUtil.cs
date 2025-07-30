@@ -1,12 +1,8 @@
 ﻿using FPTAlumniConnect.DataTier.Models;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace FPTAlumniConnect.BusinessTier.Utils
 {
@@ -30,7 +26,7 @@ namespace FPTAlumniConnect.BusinessTier.Utils
             {
                 throw new InvalidOperationException("User role is required to generate JWT token.");
             }
-            if (user.UserId == 0) 
+            if (user.UserId == 0)
             {
                 throw new InvalidOperationException("User ID is required to generate JWT token.");
             }

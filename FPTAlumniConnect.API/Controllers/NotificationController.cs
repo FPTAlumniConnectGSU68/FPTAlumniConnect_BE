@@ -1,12 +1,6 @@
 ﻿using FPTAlumniConnect.API.Services.Interfaces;
-using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload.Notification;
 using Microsoft.AspNetCore.Mvc;
-using FPTAlumniConnect.DataTier.Models;
-using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
-using Azure.Core;
-using Azure;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -30,15 +24,16 @@ namespace FPTAlumniConnect.API.Controllers
         {
             //var notifications = await _notificationService.GetUserNotificationsAsync(userId);
             //return Ok(notifications);
-            try { 
-            var response = await _notificationService.GetUserNotificationsAsync(userId);
-            return Ok(new
+            try
             {
-                status = "success",
-                message = "Request successful",
-                data = response
-            });
-        }
+                var response = await _notificationService.GetUserNotificationsAsync(userId);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch comment");
@@ -65,15 +60,16 @@ namespace FPTAlumniConnect.API.Controllers
                     errors = new[] { "Request body is null or malformed" }
                 });
             }
-            try { 
-            var isSuccessful = await _notificationService.MarkAsReadAsync(notificationId);
-            if (!isSuccessful)
+            try
             {
-                return Ok(new { status = "error", message = "Update failed" });
-            }
+                var isSuccessful = await _notificationService.MarkAsReadAsync(notificationId);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
 
-            return Ok(new { status = "success", message = "Update successful" });
-        }
+                return Ok(new { status = "success", message = "Update successful" });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update comment");
@@ -103,15 +99,16 @@ namespace FPTAlumniConnect.API.Controllers
                     errors = new[] { "Request body is null or malformed" }
                 });
             }
-            try { 
-            var isSuccessful = await _notificationService.SendNotificationAsync(request);
-            if (!isSuccessful)
+            try
             {
-                return Ok(new { status = "error", message = "Update failed" });
-            }
+                var isSuccessful = await _notificationService.SendNotificationAsync(request);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
 
-            return Ok(new { status = "success", message = "Update successful" });
-        }
+                return Ok(new { status = "success", message = "Update successful" });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update comment");

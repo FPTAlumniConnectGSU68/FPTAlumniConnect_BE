@@ -5,7 +5,6 @@ using FPTAlumniConnect.BusinessTier.Payload.EducationHistory;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using Microsoft.IdentityModel.Tokens;
 using System.Linq.Expressions;
 
 namespace FPTAlumniConnect.API.Services.Implements

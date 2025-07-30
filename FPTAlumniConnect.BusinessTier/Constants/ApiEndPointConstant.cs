@@ -59,10 +59,10 @@
         }
         public static class Skill
         {
-            public const string SkillsEndPoint = "api/skills"; // POST
-            public const string SkillCVEndPoint = "api/skills/by-cv"; // GET? id={cvId}
-            public const string SkillEndPoint = "api/skills"; // DELETE?skillId=1&cvId=2
-            public const string SkillCountEndPoint = "api/skills/count"; // GET?cvId=1
+            public const string SkillsEndPoint = ApiEndpoint + "/skills";
+            public const string SkillEndPoint = SkillsEndPoint + "/{skillId}";
+            public const string SkillByCVEndPoint = SkillsEndPoint + "/by-cv/{cvId}";
+            public const string SkillCountByCVEndPoint = SkillsEndPoint + "/count-by-cv/{cvId}";
         }
         public static class Tag
         {
@@ -181,7 +181,7 @@
             public const string RecruiterInfoEndPoint = RecruiterInfosEndPoint + "/{id}";
             public const string RecruiterInfoUserEndPoint = RecruiterInfosEndPoint + "/user/{id}";
         }
-      
+
         public static class CvSkill
         {
             public const string CvSkillsEndPoint = ApiEndpoint + "/cvskills";

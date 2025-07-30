@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.Schedule;
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.Schedule;
 
 public class ScheduleFilter
 {

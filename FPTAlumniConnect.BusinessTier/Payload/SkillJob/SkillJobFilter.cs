@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.SkillJob
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.SkillJob
 {
-    public class SkillJobFilter
+    public class SkillFilter
     {
-        public string? Skill { get; set; }
-
-        public int? CvID { get; set; }
-
-        public int? JobPostID { get; set; }
+        public string? Name { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }

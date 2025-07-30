@@ -5,9 +5,9 @@ using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {

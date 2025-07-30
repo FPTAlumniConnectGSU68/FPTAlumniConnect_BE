@@ -1,19 +1,16 @@
 ﻿using AutoMapper;
-using Azure.Core;
-using Azure.Messaging;
-using FirebaseAdmin.Auth;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
+using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 using FPTAlumniConnect.BusinessTier.Payload.User;
 using FPTAlumniConnect.BusinessTier.Utils;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using Google.Apis.Auth;
-using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
-using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -93,7 +90,10 @@ namespace FPTAlumniConnect.API.Services.Implements
                     UserId = user.UserId,
                     Email = user.Email,
                     RoleId = user.RoleId,  // Get RoleId directly from User
-                    RoleName = user.Role?.Name ?? "No Role Assigned"  // Safely access Role.Name
+                    RoleName = user.Role?.Name ?? "No Role Assigned",  // Safely access Role.Name
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    IsMentor = user.IsMentor
                 }
             };
 
@@ -267,7 +267,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             );
             foreach (var mentor in mentorList.Items)
             {
-                mentor.Rating =  await GetAverageRatingByMentorId(mentor.UserId);
+                mentor.Rating = await GetAverageRatingByMentorId(mentor.UserId);
             }
             return mentorList;
         }

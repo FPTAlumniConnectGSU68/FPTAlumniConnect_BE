@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.BusinessTier.Payload.Event;
-using FPTAlumniConnect.BusinessTier.Payload.User;
 using FPTAlumniConnect.DataTier.Models;
 
 namespace FPTAlumniConnect.API.Mappers

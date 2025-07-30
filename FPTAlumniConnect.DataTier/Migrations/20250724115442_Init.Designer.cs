@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FPTAlumniConnect.DataTier.Migrations
 {
     [DbContext(typeof(AlumniConnectContext))]
-    [Migration("20250724015615_AddRecruiterInfoTable")]
-    partial class AddRecruiterInfoTable
+    [Migration("20250724115442_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -62,10 +62,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
-
-                    b.Property<string>("Type")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -196,9 +192,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("SkillJobId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("StartAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
@@ -227,11 +220,30 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasIndex("MajorId");
 
-                    b.HasIndex("SkillJobId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("CV", (string)null);
+                });
+
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.CvSkill", b =>
+                {
+                    b.Property<int>("CvId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime");
+
+                    b.HasKey("CvId", "SkillId");
+
+                    b.HasIndex("SkillId");
+
+                    b.ToTable("CvSkills");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Education", b =>
@@ -364,16 +376,18 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Property<string>("Location")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("MajorId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("OrganizerId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime");
 
-                    b.Property<bool?>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                    b.Property<string>("Status")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -386,6 +400,8 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasKey("EventId")
                         .HasName("PK__Events__7944C870B1F118B4");
+
+                    b.HasIndex("MajorId");
 
                     b.HasIndex("OrganizerId");
 
@@ -542,10 +558,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("Type")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
@@ -575,6 +587,9 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JobPostId"));
 
                     b.Property<string>("Benefits")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -657,6 +672,27 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.ToTable("JobPost", (string)null);
                 });
 
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.JobPostSkill", b =>
+                {
+                    b.Property<int>("JobPostId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime");
+
+                    b.HasKey("JobPostId", "SkillId");
+
+                    b.HasIndex("SkillId");
+
+                    b.ToTable("JobPostSkills");
+                });
+
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.MajorCode", b =>
                 {
                     b.Property<int>("MajorId")
@@ -720,10 +756,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Type")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -1173,44 +1205,28 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.ToTable("Schedule", (string)null);
                 });
 
-            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.SkillJob", b =>
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Skill", b =>
                 {
-                    b.Property<int>("SkillJobId")
+                    b.Property<int>("SkillId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SkillJobId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SkillId"));
 
                     b.Property<DateTime?>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasColumnType("datetime");
 
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int?>("CvID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Skill")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasColumnType("datetime");
 
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                    b.HasKey("SkillId");
 
-                    b.HasKey("SkillJobId");
-
-                    b.HasIndex("CvID");
-
-                    b.ToTable("SkillJob", (string)null);
+                    b.ToTable("Skills");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.SoicalLink", b =>
@@ -1541,10 +1557,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .WithMany()
                         .HasForeignKey("MajorId");
 
-                    b.HasOne("FPTAlumniConnect.DataTier.Models.SkillJob", null)
-                        .WithMany("Cvs")
-                        .HasForeignKey("SkillJobId");
-
                     b.HasOne("FPTAlumniConnect.DataTier.Models.User", "User")
                         .WithMany("Cvs")
                         .HasForeignKey("UserId")
@@ -1553,6 +1565,25 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Navigation("Major");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.CvSkill", b =>
+                {
+                    b.HasOne("FPTAlumniConnect.DataTier.Models.Cv", "Cv")
+                        .WithMany("CvSkills")
+                        .HasForeignKey("CvId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FPTAlumniConnect.DataTier.Models.Skill", "Skill")
+                        .WithMany("CvSkills")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cv");
+
+                    b.Navigation("Skill");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Education", b =>
@@ -1578,10 +1609,16 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Event", b =>
                 {
+                    b.HasOne("FPTAlumniConnect.DataTier.Models.MajorCode", "Major")
+                        .WithMany("Events")
+                        .HasForeignKey("MajorId");
+
                     b.HasOne("FPTAlumniConnect.DataTier.Models.User", "Organizer")
                         .WithMany("Events")
                         .HasForeignKey("OrganizerId")
                         .HasConstraintName("FK__Events__Organize__02084FDA");
+
+                    b.Navigation("Major");
 
                     b.Navigation("Organizer");
                 });
@@ -1656,6 +1693,25 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Navigation("Major");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.JobPostSkill", b =>
+                {
+                    b.HasOne("FPTAlumniConnect.DataTier.Models.JobPost", "JobPost")
+                        .WithMany("JobPostSkills")
+                        .HasForeignKey("JobPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FPTAlumniConnect.DataTier.Models.Skill", "Skill")
+                        .WithMany("JobPostSkills")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JobPost");
+
+                    b.Navigation("Skill");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Mentorship", b =>
@@ -1769,15 +1825,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Navigation("MentorShip");
                 });
 
-            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.SkillJob", b =>
-                {
-                    b.HasOne("FPTAlumniConnect.DataTier.Models.Cv", "Cv")
-                        .WithMany("SkillJobs")
-                        .HasForeignKey("CvID");
-
-                    b.Navigation("Cv");
-                });
-
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.SoicalLink", b =>
                 {
                     b.HasOne("FPTAlumniConnect.DataTier.Models.User", "User")
@@ -1856,9 +1903,9 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Cv", b =>
                 {
-                    b.Navigation("JobApplications");
+                    b.Navigation("CvSkills");
 
-                    b.Navigation("SkillJobs");
+                    b.Navigation("JobApplications");
 
                     b.Navigation("TagJobs");
                 });
@@ -1883,10 +1930,14 @@ namespace FPTAlumniConnect.DataTier.Migrations
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.JobPost", b =>
                 {
                     b.Navigation("JobApplications");
+
+                    b.Navigation("JobPostSkills");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.MajorCode", b =>
                 {
+                    b.Navigation("Events");
+
                     b.Navigation("JobPosts");
 
                     b.Navigation("Posts");
@@ -1913,9 +1964,11 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.SkillJob", b =>
+            modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.Skill", b =>
                 {
-                    b.Navigation("Cvs");
+                    b.Navigation("CvSkills");
+
+                    b.Navigation("JobPostSkills");
                 });
 
             modelBuilder.Entity("FPTAlumniConnect.DataTier.Models.User", b =>

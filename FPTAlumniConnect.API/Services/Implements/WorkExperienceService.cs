@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
-using FPTAlumniConnect.BusinessTier.Payload.Post;
 using FPTAlumniConnect.BusinessTier.Payload.WorkExperience;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;

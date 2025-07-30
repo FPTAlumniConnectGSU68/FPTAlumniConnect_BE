@@ -8,8 +8,8 @@ namespace FPTAlumniConnect.API.Mappers
     {
         public SkillModule()
         {
-            CreateMap<Skill, SkillJobReponse>();
-            CreateMap<SkillJobInfo, Skill>();
+            CreateMap<SkillInfo, Skill>();
+            CreateMap<Skill, SkillResponse>();
         }
     }
 }

@@ -7,8 +7,8 @@ namespace FPTAlumniConnect.API.Mappers
 {
     public class GroupChatModules : Profile
     {
-        public GroupChatModules() 
-        { 
+        public GroupChatModules()
+        {
             CreateMap<GroupChat, GroupChatReponse>();
             CreateMap<GroupChatInfo, GroupChat>();
 

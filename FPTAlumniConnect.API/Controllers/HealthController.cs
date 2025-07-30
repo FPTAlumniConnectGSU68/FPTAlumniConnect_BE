@@ -17,7 +17,7 @@ namespace FPTAlumniConnect.API.Controllers
         public IActionResult Get()
         {
             _logger.LogInformation("Health check requested");
-            
+
             return Ok(new
             {
                 Status = "Healthy",
@@ -49,4 +49,4 @@ namespace FPTAlumniConnect.API.Controllers
             });
         }
     }
-} 
+}

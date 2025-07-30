@@ -189,9 +189,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("SkillJobId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("StartAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
@@ -219,8 +216,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasName("PK__CV__3214EC07F4EB68AB");
 
                     b.HasIndex("MajorId");
-
-                    b.HasIndex("SkillJobId");
 
                     b.HasIndex("UserId");
 
@@ -1558,10 +1553,6 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.HasOne("FPTAlumniConnect.DataTier.Models.MajorCode", "Major")
                         .WithMany()
                         .HasForeignKey("MajorId");
-
-                    b.HasOne("FPTAlumniConnect.DataTier.Models.SkillJob", null)
-                        .WithMany("Cvs")
-                        .HasForeignKey("SkillJobId");
 
                     b.HasOne("FPTAlumniConnect.DataTier.Models.User", "User")
                         .WithMany("Cvs")

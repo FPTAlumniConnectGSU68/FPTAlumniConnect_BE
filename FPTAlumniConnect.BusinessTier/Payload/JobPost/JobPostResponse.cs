@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.JobPost
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.JobPost
 {
     public class JobPostResponse
     {

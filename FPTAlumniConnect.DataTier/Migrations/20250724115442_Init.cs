@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -144,11 +143,21 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                    UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    DesiredJob = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Position = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MajorId = table.Column<int>(type: "int", nullable: true),
+                    AdditionalContent = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__CV__3214EC07F4EB68AB", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CV_MajorCode_MajorId",
+                        column: x => x.MajorId,
+                        principalTable: "MajorCode",
+                        principalColumn: "MajorId");
                     table.ForeignKey(
                         name: "FK__CV__UserID__3D2915A8",
                         column: x => x.UserID,
@@ -432,6 +441,32 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserID");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RecruiterInfo",
+                columns: table => new
+                {
+                    RecruiterInfoId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyPhone = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyLogoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyCertificateUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RecruiterInfo", x => x.RecruiterInfoId);
+                    table.ForeignKey(
+                        name: "FK_RecruiterInfo_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -798,6 +833,11 @@ namespace FPTAlumniConnect.DataTier.Migrations
                 column: "PostID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CV_MajorId",
+                table: "CV",
+                column: "MajorId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CV_UserID",
                 table: "CV",
                 column: "UserID");
@@ -918,6 +958,12 @@ namespace FPTAlumniConnect.DataTier.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RecruiterInfo_UserId",
+                table: "RecruiterInfo",
+                column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Schedule_MentorID",
                 table: "Schedule",
                 column: "MentorID");
@@ -1006,6 +1052,9 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
             migrationBuilder.DropTable(
                 name: "PrivacySetting");
+
+            migrationBuilder.DropTable(
+                name: "RecruiterInfo");
 
             migrationBuilder.DropTable(
                 name: "Schedule");

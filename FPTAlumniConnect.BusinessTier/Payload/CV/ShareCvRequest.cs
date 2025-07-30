@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace FPTAlumniConnect.BusinessTier.Payload.CV
+﻿namespace FPTAlumniConnect.BusinessTier.Payload.CV
 {
     public class ShareCvRequest
     {
