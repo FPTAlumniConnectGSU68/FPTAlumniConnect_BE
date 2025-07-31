@@ -20,6 +20,38 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
         }
 
+        // Accept mentorship and create a new schedule
+        public async Task<int> AcceptMentorShip(ScheduleInfo request)
+        {
+            // Validate mentorship ID in the request
+            if (!request.MentorShipId.HasValue || request.MentorShipId.Value == 0)
+                throw new BadHttpRequestException("MentorShipId is required.");
+
+            // Validate mentorship existence
+            var mentorship = await EnsureMentorshipExists(request.MentorShipId.Value);
+
+            // Ensure mentor ID is provided and valid
+            if (!request.MentorId.HasValue || request.MentorId.Value == 0)
+                throw new BadHttpRequestException("MentorId is required.");
+            await EnsureUserExists(request.MentorId.Value);
+
+            // Create new schedule
+            var newSchedule = _mapper.Map<Schedule>(request);
+            await _unitOfWork.GetRepository<Schedule>().InsertAsync(newSchedule);
+
+            // Update mentorship status
+            mentorship.Status = "Active";
+            mentorship.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            _unitOfWork.GetRepository<Mentorship>().UpdateAsync(mentorship);
+
+            // Commit both operations
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            if (!isSuccessful)
+                throw new BadHttpRequestException("Failed to create schedule or update mentorship status.");
+
+            return newSchedule.ScheduleId;
+        }
+
         // Create a new schedule
         public async Task<int> CreateNewSchedule(ScheduleInfo request)
         {

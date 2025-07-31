@@ -11,5 +11,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<bool> UpdateScheduleInfo(int id, ScheduleInfo request);
         Task<ScheduleReponse> GetScheduleById(int id);
         Task<ICollection<ScheduleReponse>> GetSchedulesByMentorId(int id);
+        Task<int> AcceptMentorShip(ScheduleInfo request);
     }
 }

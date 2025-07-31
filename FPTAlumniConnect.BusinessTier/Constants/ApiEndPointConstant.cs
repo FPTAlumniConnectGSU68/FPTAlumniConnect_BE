@@ -47,9 +47,10 @@
         }
         public static class Schedule
         {
-            public const string SchedulesEndPoint = ApiEndpoint + "/schedules";
-            public const string ScheduleEndPoint = SchedulesEndPoint + "/{id}";
-            public const string ScheduleMentorEndPoint = SchedulesEndPoint + "/mentor/{id}";
+            public const string SchedulesEndPoint = "/api/schedules";
+            public const string ScheduleEndPoint = "/api/schedules/{id}";
+            public const string ScheduleMentorEndPoint = "/api/schedules/mentor/{id}";
+            public const string AcceptMentorshipEndPoint = "/api/schedules/mentorship/accept";
         }
         public static class CV
         {
