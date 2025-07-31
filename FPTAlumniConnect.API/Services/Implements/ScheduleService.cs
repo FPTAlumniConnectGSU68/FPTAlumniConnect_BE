@@ -123,24 +123,6 @@ namespace FPTAlumniConnect.API.Services.Implements
                 schedule.MentorId = request.MentorId.Value;
             }
 
-            // Validate and update time range
-            if (request.StartTime.HasValue)
-            {
-                if (request.StartTime.Value < DateTime.UtcNow)
-                    throw new BadHttpRequestException("StartTime cannot be in the past.");
-
-                schedule.StartTime = request.StartTime.Value;
-            }
-
-            if (request.EndTime.HasValue)
-            {
-                DateTime compareStart = request.StartTime ?? schedule.StartTime;
-                if (request.EndTime.Value < compareStart)
-                    throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
-
-                schedule.EndTime = request.EndTime.Value;
-            }
-
             // Update content and status if available
             if (!string.IsNullOrEmpty(request.Content))
                 schedule.Content = request.Content;
@@ -162,6 +144,27 @@ namespace FPTAlumniConnect.API.Services.Implements
             schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
+            return await _unitOfWork.CommitAsync() > 0;
+        }
+
+        // Complete a schedule by updating status to Completed for both schedule and mentorship
+        public async Task<bool> CompleteSchedule(int id)
+        {
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
+                predicate: x => x.ScheduleId == id)
+                ?? throw new BadHttpRequestException("ScheduleNotFound");
+
+            var mentorship = await EnsureMentorshipExists(schedule.MentorShipId ?? 0);
+
+            schedule.Status = "Completed";
+            schedule.UpdatedAt = DateTime.UtcNow;
+            schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
+
+            mentorship.Status = "Completed";
+            mentorship.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            _unitOfWork.GetRepository<Mentorship>().UpdateAsync(mentorship);
+
             return await _unitOfWork.CommitAsync() > 0;
         }
 
