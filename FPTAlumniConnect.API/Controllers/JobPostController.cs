@@ -122,5 +122,45 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        [HttpGet(ApiEndPointConstant.JobPost.SearchJobPostsEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> SearchJobPosts(
+    [FromQuery] string keyword,
+    [FromQuery] int? minSalary = null,
+    [FromQuery] int? maxSalary = null)
+        {
+            try
+            {
+                _logger.LogInformation("Searching job posts with keyword: {Keyword}, MinSalary: {MinSalary}, MaxSalary: {MaxSalary}",
+                    keyword, minSalary, maxSalary);
+
+                var jobPosts = await _jobPostService.SearchJobPosts(keyword, minSalary, maxSalary);
+
+                if (jobPosts == null || !jobPosts.Any())
+                {
+                    return Ok(new
+                    {
+                        status = "success",
+                        message = "No job posts found matching the criteria.",
+                        data = new List<JobPostResponse>() // Return an empty list if no job posts found
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Search successful",
+                    data = jobPosts
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to search job posts");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
     }
 }

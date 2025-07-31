@@ -117,6 +117,7 @@
         {
             public const string JobPostsEndPoint = ApiEndpoint + "/jobposts";
             public const string JobPostEndPoint = JobPostsEndPoint + "/{id}";
+            public const string SearchJobPostsEndPoint = JobPostsEndPoint + "/search";
         }
         public static class JobApplication
         {
