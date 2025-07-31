@@ -205,5 +205,37 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        [HttpPatch(ApiEndPointConstant.Schedule.CompleteScheduleEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CompleteSchedule(int id)
+        {
+            try
+            {
+                var isSuccessful = await _scheduleService.CompleteSchedule(id);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Completion failed" });
+                }
+
+                return Ok(new { status = "success", message = "Schedule and mentorship status updated to Completed" });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message,
+                    errors = new[] { ex.Message }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to complete schedule or update mentorship status");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
     }
 }
