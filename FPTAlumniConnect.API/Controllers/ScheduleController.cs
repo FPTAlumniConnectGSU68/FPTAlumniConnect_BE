@@ -85,10 +85,25 @@ namespace FPTAlumniConnect.API.Controllers
                     data = new { id }
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                // Handle specific service-layer validation errors
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message, // Use the specific error message from the service
+                    errors = new[] { ex.Message }
+                });
+            }
             catch (Exception ex)
             {
+                // Handle unexpected errors
                 _logger.LogError(ex, "Failed to create schedule");
-                return StatusCode(500, new { status = "error", message = "Internal server error" });
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
             }
         }
 
