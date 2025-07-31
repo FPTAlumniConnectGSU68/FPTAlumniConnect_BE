@@ -38,6 +38,51 @@ namespace FPTAlumniConnect.API.Controllers
             }
         }
 
+        [HttpPost(ApiEndPointConstant.Schedule.AcceptMentorshipEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> AcceptMentorShip([FromBody] ScheduleInfo request)
+        {
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
+            try
+            {
+                var id = await _scheduleService.AcceptMentorShip(request);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Mentorship accepted and schedule created successfully",
+                    data = new { id }
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message,
+                    errors = new[] { ex.Message }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to accept mentorship or create schedule");
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
+            }
+        }
+
         [HttpGet(ApiEndPointConstant.Schedule.ScheduleMentorEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
