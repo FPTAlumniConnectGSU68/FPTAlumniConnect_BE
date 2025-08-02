@@ -144,37 +144,59 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<IPaginate<JobPostResponse>> ViewAllJobPosts(JobPostFilter filter, PagingModel pagingModel)
         {
-            var salaryRange = filter.GetSalaryRange();
+            ArgumentNullException.ThrowIfNull(filter, nameof(filter));
+            ArgumentNullException.ThrowIfNull(pagingModel, nameof(pagingModel));
 
             Expression<Func<JobPost, bool>> predicate = x =>
-                (!filter.UserId.HasValue || x.UserId == filter.UserId) &&
-                (!filter.MajorId.HasValue || x.MajorId == filter.MajorId) &&
-                (
-                    // Handle all possible null cases for salary range
-                    (!filter.MinSalary.HasValue && !filter.MaxSalary.HasValue) || // No salary filter
-                    (!filter.MinSalary.HasValue && x.MinSalary <= filter.MaxSalary) || // Only max filter
-                    (!filter.MaxSalary.HasValue && x.MaxSalary >= filter.MinSalary) || // Only min filter
-                    (x.MinSalary <= filter.MaxSalary && x.MaxSalary >= filter.MinSalary) // Both min and max
-                ) &&
-                // Other filters...
-                (filter.IsDeal == null || x.IsDeal == filter.IsDeal) &&
-                (string.IsNullOrEmpty(filter.Location) || x.Location.Contains(filter.Location)) &&
-                (string.IsNullOrEmpty(filter.City) || x.City.Contains(filter.City)) &&
-                (string.IsNullOrEmpty(filter.Status) || x.Status.Equals(filter.Status, StringComparison.OrdinalIgnoreCase)) &&
+                // User ID filter
+                (!filter.UserId.HasValue || x.UserId == filter.UserId.Value) &&
+
+                // Major ID filter
+                (!filter.MajorId.HasValue || x.MajorId == filter.MajorId.Value) &&
+
+                // Salary range filter
+                (filter.MinSalary == null && filter.MaxSalary == null ||
+                 filter.MinSalary == null && x.MinSalary <= filter.MaxSalary ||
+                 filter.MaxSalary == null && x.MaxSalary >= filter.MinSalary ||
+                 x.MinSalary <= filter.MaxSalary && x.MaxSalary >= filter.MinSalary) &&
+
+                // Deal status filter
+                (filter.IsDeal == null || x.IsDeal == filter.IsDeal.Value) &&
+
+                // Location filter (case-insensitive)
+                (string.IsNullOrWhiteSpace(filter.Location) ||
+                 x.Location.ToLower().Contains(filter.Location.ToLower())) &&
+
+                // City filter (case-insensitive)
+                (string.IsNullOrWhiteSpace(filter.City) ||
+                 x.City.ToLower().Contains(filter.City.ToLower())) &&
+
+                // Status filter (case-insensitive)
+                (string.IsNullOrWhiteSpace(filter.Status) ||
+                 x.Status.ToLower() == filter.Status.ToLower()) &&
+
+                // Date filter
                 (!filter.Time.HasValue || x.Time.Date == filter.Time.Value.Date);
 
-            return await _unitOfWork.GetRepository<JobPost>()
-                .GetPagingListAsync(
-                    selector: x => _mapper.Map<JobPostResponse>(x),
-                    predicate: predicate,
-                    include: q => q.Include(x => x.Major),
-                    orderBy: x => x.OrderByDescending(x => x.CreatedAt),
-                    page: pagingModel.page,
-                    size: pagingModel.size
-                );
+            try
+            {
+                return await _unitOfWork.GetRepository<JobPost>()
+                    .GetPagingListAsync(
+                        selector: x => _mapper.Map<JobPostResponse>(x),
+                        predicate: predicate,
+                        include: q => q.Include(x => x.Major),
+                        orderBy: x => x.OrderByDescending(x => x.CreatedAt),
+                        page: pagingModel.page,
+                        size: pagingModel.size
+                    );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while retrieving job posts");
+                throw;
+            }
         }
 
-        // Phương thức mới để xác thực lương
         private void ValidateSalary(int? minSalary, int? maxSalary)
         {
             if (minSalary < 0 || maxSalary < 0)
