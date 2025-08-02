@@ -1,5 +1,6 @@
 using FPTAlumniConnect.API.Extensions;
 using FPTAlumniConnect.API.Middlewares;
+using FPTAlumniConnect.API.Services;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +42,7 @@ builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddConfigSwagger();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHostedService<MentorshipCleanupService>(); // Register background service
 
 var app = builder.Build();
 
