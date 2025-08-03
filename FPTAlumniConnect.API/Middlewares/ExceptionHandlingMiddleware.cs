@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.BusinessTier.Utils;
+﻿using FPTAlumniConnect.API.Exceptions;
+using FPTAlumniConnect.BusinessTier.Utils;
 using System.Net;
 
 namespace FPTAlumniConnect.API.Middlewares
@@ -40,6 +41,13 @@ namespace FPTAlumniConnect.API.Middlewares
                     errorResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                     _logger.LogInformation(exception.Message);
                     break;
+
+                case ConflictException:
+                    response.StatusCode = (int)HttpStatusCode.Conflict;
+                    errorResponse.StatusCode = response.StatusCode;
+                    _logger.LogInformation(exception.Message);
+                    break;
+
                 default:
                     //unhandled error
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
