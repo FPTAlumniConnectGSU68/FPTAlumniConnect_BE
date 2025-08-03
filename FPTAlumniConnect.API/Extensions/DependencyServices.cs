@@ -74,6 +74,7 @@ namespace FPTAlumniConnect.API.Extensions
             services.AddScoped<IJobPostService, JobPostService>();
             services.AddScoped<IJobApplicationService, JobApplicationService>();
             services.AddScoped<IEventService, EventService>();
+            services.AddScoped<ITimeLineService, TimeLineService>();
             services.AddScoped<IUserJoinEventService, UserJoinEventService>();
             services.AddScoped<INotificationSettingService, NotificationSettingService>();
             services.AddScoped<IPrivacySettingService, PrivacySettingService>();

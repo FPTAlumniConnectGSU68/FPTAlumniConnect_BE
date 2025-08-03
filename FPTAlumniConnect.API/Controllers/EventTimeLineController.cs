@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Services.Implements;
+using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.EventTimeLine;
@@ -123,5 +124,23 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        [HttpPost("{eventId}/timelines")]
+        public async Task<IActionResult> AddTimelinesToEvent(int eventId, [FromBody] List<TimeLineInfo> timelines)
+        {
+            if (timelines == null || !timelines.Any())
+            {
+                return BadRequest(new { Message = "The timelines field is required." });
+            }
+
+            foreach (var timeline in timelines)
+            {
+                timeline.EventId = eventId;
+                await _Service.CreateTimeLine(timeline);
+            }
+
+            return Ok(new { Message = "Timelines added successfully" });
+        }
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Event;
+using FPTAlumniConnect.BusinessTier.Payload.EventTimeLine;
 using FPTAlumniConnect.DataTier.Paginate;
 
 namespace FPTAlumniConnect.API.Services.Interfaces
@@ -20,5 +21,8 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IEnumerable<EventPopularityDto>> GetEventsByPopularity(int top);
 
         Task<BestEventTimeDto> SuggestBestTimeForNewEvent(int organizerId, int durationHours);
+
+        List<SuggestedTimelineDto> GetSuggestedTimelines(DateTime eventStartTime, int eventDurationHours);
+
     }
 }

@@ -7,6 +7,7 @@ using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using FPTAlumniConnect.BusinessTier.Payload.EventTimeLine;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -42,6 +43,10 @@ namespace FPTAlumniConnect.API.Services.Implements
             User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: x => x.UserId == request.OrganizerId)
                 ?? throw new BadHttpRequestException("UserNotFound");
+
+            var majorId = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
+                predicate: x => x.MajorId == request.MajorId)
+                ?? throw new BadHttpRequestException("MajorIdNotFound");
 
             var newEvent = _mapper.Map<Event>(request);
             await _unitOfWork.GetRepository<Event>().InsertAsync(newEvent);
@@ -303,6 +308,66 @@ namespace FPTAlumniConnect.API.Services.Implements
                 13 or 17 => 2,
                 _ => 1
             };
+        }
+
+        public List<SuggestedTimelineDto> GetSuggestedTimelines(DateTime eventStartTime, int eventDurationHours)
+        {
+            var suggestions = new List<SuggestedTimelineDto>();
+
+            // Example timeline templates that can be adjusted based on event duration
+            var baseTemplates = new List<SuggestedTimelineDto>
+    {
+        new SuggestedTimelineDto
+        {
+            Name = "Opening Ceremony",
+            StartTime = eventStartTime.AddHours(0),
+            EndTime = eventStartTime.AddHours(1),
+            Description = "Welcome speech and introductions"
+        },
+        new SuggestedTimelineDto
+        {
+            Name = "Keynote Session",
+            StartTime = eventStartTime.AddHours(1),
+            EndTime = eventStartTime.AddHours(2),
+            Description = "Main presentation by keynote speaker"
+        },
+        new SuggestedTimelineDto
+        {
+            Name = "Break",
+            StartTime = eventStartTime.AddHours(2),
+            EndTime = eventStartTime.AddHours(2.5),
+            Description = "Networking and refreshments"
+        },
+        new SuggestedTimelineDto
+        {
+            Name = "Workshop Session",
+            StartTime = eventStartTime.AddHours(2.5),
+            EndTime = eventStartTime.AddHours(4),
+            Description = "Interactive workshop activities"
+        },
+        new SuggestedTimelineDto
+        {
+            Name = "Closing Remarks",
+            StartTime = eventStartTime.AddHours(4),
+            EndTime = eventStartTime.AddHours(4.5),
+            Description = "Final thoughts and thank yous"
+        }
+    };
+
+            // Adjust timelines based on event duration
+            var scaleFactor = eventDurationHours / 4.5; // 4.5 is total hours in our template
+            foreach (var template in baseTemplates)
+            {
+                suggestions.Add(new SuggestedTimelineDto
+                {
+                    Name = template.Name,
+                    StartTime = eventStartTime.AddHours(template.StartTime.Hour * scaleFactor),
+                    EndTime = eventStartTime.AddHours(template.EndTime.Hour * scaleFactor),
+                    Description = template.Description
+                });
+            }
+
+            return suggestions;
         }
 
 
