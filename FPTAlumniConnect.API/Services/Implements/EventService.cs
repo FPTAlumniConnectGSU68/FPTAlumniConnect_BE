@@ -161,6 +161,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 (!filter.StartDate.HasValue || x.EndDate >= filter.StartDate) &&
                 (!filter.EndDate.HasValue || x.StartDate <= filter.EndDate) &&
                 (!filter.OrganizerId.HasValue || x.OrganizerId == filter.OrganizerId) &&
+                (!filter.MajorId.HasValue || x.MajorId == filter.MajorId) &&
                 (string.IsNullOrEmpty(filter.Location) || x.Location.Contains(filter.Location));
 
             // Thực hiện truy vấn
