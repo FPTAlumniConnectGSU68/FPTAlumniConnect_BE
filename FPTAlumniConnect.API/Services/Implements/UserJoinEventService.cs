@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FPTAlumniConnect.API.Exceptions;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.UserJoinEvent;
@@ -28,7 +29,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             bool alreadyJoined = await _unitOfWork.GetRepository<UserJoinEvent>().AnyAsync(
                 x => x.UserId == request.UserId && x.EventId == request.EventId);
             if (alreadyJoined)
-                throw new BadHttpRequestException("This user already joined this event!");
+                throw new ConflictException("This user already joined this event!");
 
             // Create record
             UserJoinEvent newJoinEvent = _mapper.Map<UserJoinEvent>(request);
