@@ -33,18 +33,62 @@ namespace FPTAlumniConnect.API.Controllers
             }
             try
             {
-                var id = await _eventService.CreateNewEvent(request);
+                // 1. Tạo sự kiện mới
+                var eventId = await _eventService.CreateNewEvent(request);
+                // 2. Kiểm tra và tính toán timeline
+                if (!request.StartDate.HasValue || !request.EndDate.HasValue)
+                {
+                    // Nếu không có thời gian cụ thể, chỉ trả về ID sự kiện
+                    return StatusCode(201, new
+                    {
+                        status = "success",
+                        message = "Event created successfully (no timeline suggestions)",
+                        data = new { id = eventId }
+                    });
+                }
+                // 3. Tính toán thời lượng sự kiện
+                var eventDuration = (request.EndDate.Value - request.StartDate.Value).TotalHours;
+
+                // 4. Lấy gợi ý timeline
+                var timelineSuggestions = _eventService.GetSuggestedTimelines(
+                    request.StartDate.Value,
+                    (int)eventDuration
+                );
+                // 5. Kiểm tra validation timeline
+                if (timelineSuggestions != null && timelineSuggestions.Any(t => t.EndTime > request.EndDate.Value))
+                {
+                    return StatusCode(201, new
+                    {
+                        status = "partial_success",
+                        message = "Event created. Some timeline suggestions may exceed event end time",
+                        data = new
+                        {
+                            id = eventId,
+                            timelineSuggestions
+                        }
+                    });
+                }
+                // 6. Trả về thành công
                 return StatusCode(201, new
                 {
                     status = "success",
-                    message = "Resource created successfully",
-                    data = new { id }
+                    message = "Event and timeline suggestions created successfully",
+                    data = new
+                    {
+                        id = eventId,
+                        timelineSuggestions
+                    }
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create event");
-                return StatusCode(500, new { status = "error", message = "Internal server error" });
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error",
+                    detail = ex.Message
+                });
             }
         }
 
