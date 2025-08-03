@@ -1,36 +1,40 @@
-﻿namespace FPTAlumniConnect.BusinessTier.Payload.CV
+﻿using FPTAlumniConnect.DataTier.Models;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+
+namespace FPTAlumniConnect.BusinessTier.Payload.CV
 {
     public class CVInfo
     {
         public int UserId { get; set; }
 
-        public string? FullName { get; set; } = null!;
+        public string? FullName { get; set; }
 
-        public string? Address { get; set; } = null!;
+        public string? Address { get; set; }
 
         public DateTime? Birthday { get; set; }
 
-        public string? Gender { get; set; } = null!;
+        public string? Gender { get; set; }
 
-        public string? Email { get; set; } = null!;
+        public string? Email { get; set; }
 
-        public string? Phone { get; set; } = null!;
+        public string? Phone { get; set; }
 
-        public string? City { get; set; } = null!;
+        public string? City { get; set; }
 
-        public string? Company { get; set; } = null!;
+        public string? Company { get; set; }
 
-        public string? PrimaryDuties { get; set; } = null!;
+        public string? PrimaryDuties { get; set; }
 
-        public string? JobLevel { get; set; } = null!;
+        public string? JobLevel { get; set; }
 
         public DateTime? StartAt { get; set; }
 
         public DateTime? EndAt { get; set; }
 
-        public string? Language { get; set; } = null!;
+        public string? Language { get; set; }
 
-        public string? LanguageLevel { get; set; } = null!;
+        public string? LanguageLevel { get; set; }
 
         public int? MinSalary { get; set; }
 
@@ -38,7 +42,6 @@
 
         public bool? IsDeal { get; set; }
 
-        // Các trường mới
         public string? DesiredJob { get; set; }
 
         public string? Position { get; set; }
@@ -48,5 +51,8 @@
         public string? AdditionalContent { get; set; }
 
         public string? Status { get; set; }
+
+        // New field to handle multiple CV skills
+        public List<int>? SkillIds { get; set; } // List of Skill IDs to associate with the CV
     }
 }

@@ -4,7 +4,8 @@
     {
         Deleted = 0,
         Public = 1,
-        Private = 2
+        Private = 2,
+        Pending = 3
     }
 
 }

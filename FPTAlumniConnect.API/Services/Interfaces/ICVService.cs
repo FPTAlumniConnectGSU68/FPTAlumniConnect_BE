@@ -7,12 +7,13 @@ namespace FPTAlumniConnect.API.Services.Interfaces
     public interface ICVService
     {
         Task<int> CreateNewCV(CVInfo request);
-        Task<IPaginate<CVReponse>> ViewAllCV(CVFilter filter, PagingModel pagingModel);
+        Task<CVResponse> GetCVById(int id);
+        Task<CVResponse> GetCVByUserId(int id);
         Task<bool> UpdateCVInfo(int id, CVInfo request);
-        Task<CVReponse> GetCVById(int id);
-        Task<CVReponse> GetCVByUserId(int id);
-
+        Task<IPaginate<CVResponse>> ViewAllCV(CVFilter filter, PagingModel pagingModel);
         Task<bool> ToggleIsLookingForJobAsync(int cvId);
         Task<byte[]> ExportCvToPdfAsync(int cvId);
+        Task<List<int>> GetCVSkills(int cvId);
+        Task ShareCvByEmailAsync(ShareCvRequest request);
     }
 }

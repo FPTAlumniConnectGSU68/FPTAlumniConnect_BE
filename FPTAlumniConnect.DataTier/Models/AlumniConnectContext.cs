@@ -53,7 +53,6 @@ public partial class AlumniConnectContext : DbContext
 
     public virtual DbSet<JobPostSkill> JobPostSkills { get; set; }
 
-
     public virtual DbSet<SoicalLink> SoicalLinks { get; set; }
 
     public virtual DbSet<SpMajorCode> SpMajorCodes { get; set; }
@@ -96,7 +95,7 @@ public partial class AlumniConnectContext : DbContext
                 .HasForeignKey(d => d.PostId)
                 .HasConstraintName("FK__Comments__PostID__1F98B2C1");
             entity.Property(e => e.Status)
-    .HasDefaultValue(true);
+                .HasDefaultValue(true);
         });
         modelBuilder.Entity<Notification>(entity =>
         {
@@ -162,7 +161,16 @@ public partial class AlumniConnectContext : DbContext
                 .HasConversion<string>()  // Lưu enum dưới dạng string
                 .HasMaxLength(50);
 
+            entity.HasMany(c => c.CvSkills)
+            .WithOne(cs => cs.Cv)
+            .HasForeignKey(cs => cs.CvId)
+            .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<CvSkill>()
+    .HasIndex(cs => cs.CvId);
+        modelBuilder.Entity<CvSkill>()
+            .HasIndex(cs => cs.SkillId);
 
         modelBuilder.Entity<EducationHistory>(entity =>
         {
