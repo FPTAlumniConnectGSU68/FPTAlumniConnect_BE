@@ -49,7 +49,11 @@ namespace FPTAlumniConnect.API.Services.Implements
                 predicate: x => x.MajorId == request.MajorId)
                 ?? throw new NotFoundException("MajorIdNotFound");
 
+
             var newEvent = _mapper.Map<Event>(request);
+            var userName = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            newEvent.UpdatedBy = string.IsNullOrEmpty(userName) ? "system" : userName;
+
             await _unitOfWork.GetRepository<Event>().InsertAsync(newEvent);
 
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
@@ -183,7 +187,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 (!filter.EndDate.HasValue || x.StartDate <= filter.EndDate) &&
                 (!filter.OrganizerId.HasValue || x.OrganizerId == filter.OrganizerId) &&
                 (!filter.MajorId.HasValue || x.MajorId == filter.MajorId) &&
-                (string.IsNullOrEmpty(filter.Location) || x.Location.Contains(filter.Location));
+                (string.IsNullOrEmpty(filter.Location) || x.Location.Contains(filter.Location)) &&
+                (string.IsNullOrEmpty(filter.CreatedBy) || x.CreatedBy.Contains(filter.CreatedBy));
 
             // Thực hiện truy vấn
             IPaginate<GetEventResponse> response = await _unitOfWork.GetRepository<Event>().GetPagingListAsync(
