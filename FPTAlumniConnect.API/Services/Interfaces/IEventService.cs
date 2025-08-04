@@ -7,7 +7,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
 {
     public interface IEventService
     {
-        Task<int> CreateNewEvent(EventInfo request);
+        Task<int> CreateNewEvent(EventInfo request); 
         Task<GetEventResponse> GetEventById(int id);
         Task<bool> UpdateEventInfo(int id, EventInfo request);
         Task<IPaginate<GetEventResponse>> ViewAllEvent(EventFilter filter, PagingModel pagingModel);
@@ -24,5 +24,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
 
         List<SuggestedTimelineDto> GetSuggestedTimelines(DateTime eventStartTime, int eventDurationHours);
 
+        Task<List<GetEventResponse>> GetEventsUserJoined(int userId);
     }
 }
