@@ -2,12 +2,13 @@
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
+using FPTAlumniConnect.BusinessTier.Utils;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Query;
+using System.Linq.Expressions;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -21,66 +22,55 @@ namespace FPTAlumniConnect.API.Services.Implements
         public async Task<int> CreateNewJobPost(JobPostInfo request)
         {
             _logger.LogInformation("Creating new job post: {JobTitle}", request.JobTitle);
-
             ValidateSalary(request.MinSalary, request.MaxSalary);
 
             JobPost newJobPost = _mapper.Map<JobPost>(request);
-            newJobPost.CreatedAt = DateTime.Now;
+            newJobPost.CreatedAt = DateTime.UtcNow;
             newJobPost.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<JobPost>().InsertAsync(newJobPost);
-
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessful)
+            if (!isSuccessful) throw new BadHttpRequestException("CreateFailed");
+
+            if (request.SkillIds != null && request.SkillIds.Any())
             {
-                _logger.LogError("Create job post failed.");
-                throw new BadHttpRequestException("CreateFailed");
+                foreach (var skillId in request.SkillIds)
+                {
+                    var jobPostSkill = new JobPostSkill
+                    {
+                        JobPostId = newJobPost.JobPostId,
+                        SkillId = skillId,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    await _unitOfWork.GetRepository<JobPostSkill>().InsertAsync(jobPostSkill);
+                }
+                isSuccessful = await _unitOfWork.CommitAsync() > 0;
+                if (!isSuccessful) throw new BadHttpRequestException("Failed to add JobPost skills");
             }
 
-            _logger.LogInformation("Created job post with ID: {Id}", newJobPost.JobPostId);
             return newJobPost.JobPostId;
         }
 
         public async Task<JobPostResponse> GetJobPostById(int id)
         {
-            _logger.LogInformation("Retrieving job post by ID: {Id}", id);
+            var jobPost = await _unitOfWork.GetRepository<JobPost>().SingleOrDefaultAsync(
+                predicate: x => x.JobPostId == id,
+                include: q => q.Include(x => x.Major).Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill))
+                ?? throw new BadHttpRequestException("JobPostNotFound");
 
-            Func<IQueryable<JobPost>, IIncludableQueryable<JobPost, object>> include = q => q.Include(u => u.Major);
-            JobPost jobPost = await _unitOfWork.GetRepository<JobPost>().SingleOrDefaultAsync(
-                predicate: x => x.JobPostId.Equals(id), include: include) ??
-                throw new BadHttpRequestException("JobPostNotFound");
-
-            JobPostResponse result = _mapper.Map<JobPostResponse>(jobPost);
-            return result;
+            return _mapper.Map<JobPostResponse>(jobPost);
         }
 
         public async Task<bool> UpdateJobPostInfo(int id, JobPostInfo request)
         {
-            _logger.LogInformation("Updating job post with ID: {Id}", id);
-
             ValidateSalary(request.MinSalary, request.MaxSalary);
 
-            JobPost jobPost = await _unitOfWork.GetRepository<JobPost>().SingleOrDefaultAsync(
-                predicate: x => x.JobPostId.Equals(id)) ??
-                throw new BadHttpRequestException("JobPostNotFound");
+            var jobPost = await _unitOfWork.GetRepository<JobPost>().SingleOrDefaultAsync(
+                predicate: x => x.JobPostId == id,
+                include: q => q.Include(j => j.JobPostSkills))
+                ?? throw new BadHttpRequestException("JobPostNotFound");
 
-            UpdateJobPostFields(jobPost, request);
-
-            _unitOfWork.GetRepository<JobPost>().UpdateAsync(jobPost);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            if (isSuccessful)
-                _logger.LogInformation("Successfully updated job post ID: {Id}", id);
-            else
-                _logger.LogWarning("Update job post failed for ID: {Id}", id);
-
-            return isSuccessful;
-        }
-
-        private void UpdateJobPostFields(JobPost jobPost, JobPostInfo request)
-        {
-            // Validate salary first
-            ValidateSalary(request.MinSalary, request.MaxSalary);
-            // Update other fields
             jobPost.JobTitle = request.JobTitle ?? jobPost.JobTitle;
             jobPost.JobDescription = request.JobDescription ?? jobPost.JobDescription;
             jobPost.Requirements = request.Requirements ?? jobPost.Requirements;
@@ -93,37 +83,51 @@ namespace FPTAlumniConnect.API.Services.Implements
             jobPost.Email = request.Email ?? jobPost.Email;
             jobPost.MajorId = request.MajorId ?? jobPost.MajorId;
             jobPost.IsDeal = request.IsDeal ?? jobPost.IsDeal;
-            jobPost.UpdatedAt = DateTime.Now;
+            jobPost.UpdatedAt = DateTime.UtcNow;
+            jobPost.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
-            var userName = _httpContextAccessor.HttpContext?.User.Identity?.Name;
-            jobPost.UpdatedBy = string.IsNullOrEmpty(userName) ? "system" : userName;
+            if (request.SkillIds != null)
+            {
+                var existingSkills = await _unitOfWork.GetRepository<JobPostSkill>().GetListAsync(
+                    predicate: x => x.JobPostId == id);
+
+                foreach (var skill in existingSkills)
+                    _unitOfWork.GetRepository<JobPostSkill>().DeleteAsync(skill);
+
+                foreach (var skillId in request.SkillIds)
+                {
+                    var jobPostSkill = new JobPostSkill
+                    {
+                        JobPostId = id,
+                        SkillId = skillId,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    await _unitOfWork.GetRepository<JobPostSkill>().InsertAsync(jobPostSkill);
+                }
+            }
+
+            _unitOfWork.GetRepository<JobPost>().UpdateAsync(jobPost);
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
         public async Task<bool> DeleteJobPost(int id)
         {
-            _logger.LogInformation("Soft deleting job post with ID: {Id}", id);
+            var jobPost = await _unitOfWork.GetRepository<JobPost>().SingleOrDefaultAsync(
+                predicate: x => x.JobPostId == id)
+                ?? throw new BadHttpRequestException("JobPostNotFound");
 
-            JobPost jobPost = await _unitOfWork.GetRepository<JobPost>().SingleOrDefaultAsync(
-                predicate: x => x.JobPostId == id) ??
-                throw new BadHttpRequestException("JobPostNotFound");
-
-            jobPost.UpdatedAt = DateTime.Now;
+            jobPost.UpdatedAt = DateTime.UtcNow;
             jobPost.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
-
             _unitOfWork.GetRepository<JobPost>().UpdateAsync(jobPost);
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
-            return isSuccessful;
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
         public async Task<IEnumerable<JobPostResponse>> SearchJobPosts(string keyword, int? minSalary, int? maxSalary)
         {
-            _logger.LogInformation("Searching job posts with keyword: {Keyword}", keyword);
-
             Expression<Func<JobPost, bool>> predicate = x =>
-                (string.IsNullOrEmpty(keyword) ||
-                 x.JobTitle.Contains(keyword) ||
-                 x.JobDescription.Contains(keyword)) &&
+                (string.IsNullOrEmpty(keyword) || x.JobTitle.Contains(keyword) || x.JobDescription.Contains(keyword)) &&
                 (
                     (!minSalary.HasValue && !maxSalary.HasValue) ||
                     (!minSalary.HasValue && x.MinSalary <= maxSalary) ||
@@ -135,94 +139,70 @@ namespace FPTAlumniConnect.API.Services.Implements
                 .GetListAsync(
                     predicate: predicate,
                     selector: x => _mapper.Map<JobPostResponse>(x),
-                    orderBy: x => x.OrderByDescending(x => x.CreatedAt)
-                );
+                    include: q => q.Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill),
+                    orderBy: x => x.OrderByDescending(x => x.CreatedAt));
 
             return jobPosts;
         }
 
-
         public async Task<IPaginate<JobPostResponse>> ViewAllJobPosts(JobPostFilter filter, PagingModel pagingModel)
         {
-            ArgumentNullException.ThrowIfNull(filter, nameof(filter));
-            ArgumentNullException.ThrowIfNull(pagingModel, nameof(pagingModel));
+            Expression<Func<JobPost, bool>> predicate = x => true;
 
-            Expression<Func<JobPost, bool>> predicate = x =>
-                // User ID filter
-                (!filter.UserId.HasValue || x.UserId == filter.UserId.Value) &&
+            if (filter.UserId.HasValue)
+                predicate = predicate.And(x => x.UserId == filter.UserId);
+            if (filter.MajorId.HasValue)
+                predicate = predicate.And(x => x.MajorId == filter.MajorId);
+            if (!string.IsNullOrWhiteSpace(filter.JobTitle))
+                predicate = predicate.And(x => x.JobTitle.ToLower().Contains(filter.JobTitle.ToLower()));
+            if (filter.MinSalary.HasValue && filter.MaxSalary.HasValue)
+                predicate = predicate.And(x => x.MinSalary <= filter.MaxSalary && x.MaxSalary >= filter.MinSalary);
+            else if (filter.MinSalary.HasValue)
+                predicate = predicate.And(x => x.MaxSalary >= filter.MinSalary);
+            else if (filter.MaxSalary.HasValue)
+                predicate = predicate.And(x => x.MinSalary <= filter.MaxSalary);
+            if (filter.IsDeal.HasValue)
+                predicate = predicate.And(x => x.IsDeal == filter.IsDeal);
+            if (!string.IsNullOrWhiteSpace(filter.Location))
+                predicate = predicate.And(x => x.Location.ToLower().Contains(filter.Location.ToLower()));
+            if (!string.IsNullOrWhiteSpace(filter.City))
+                predicate = predicate.And(x => x.City.ToLower().Contains(filter.City.ToLower()));
+            if (!string.IsNullOrWhiteSpace(filter.Status))
+                predicate = predicate.And(x => x.Status.ToLower() == filter.Status.ToLower());
+            if (filter.Time.HasValue)
+                predicate = predicate.And(x => x.Time.Date == filter.Time.Value.Date);
 
-                // Major ID filter
-                (!filter.MajorId.HasValue || x.MajorId == filter.MajorId.Value) &&
-
-                // Salary range filter
-                (filter.MinSalary == null && filter.MaxSalary == null ||
-                 filter.MinSalary == null && x.MinSalary <= filter.MaxSalary ||
-                 filter.MaxSalary == null && x.MaxSalary >= filter.MinSalary ||
-                 x.MinSalary <= filter.MaxSalary && x.MaxSalary >= filter.MinSalary) &&
-
-                // Deal status filter
-                (filter.IsDeal == null || x.IsDeal == filter.IsDeal.Value) &&
-
-                // Location filter (case-insensitive)
-                (string.IsNullOrWhiteSpace(filter.Location) ||
-                 x.Location.ToLower().Contains(filter.Location.ToLower())) &&
-
-                // City filter (case-insensitive)
-                (string.IsNullOrWhiteSpace(filter.City) ||
-                 x.City.ToLower().Contains(filter.City.ToLower())) &&
-
-                // Status filter (case-insensitive)
-                (string.IsNullOrWhiteSpace(filter.Status) ||
-                 x.Status.ToLower() == filter.Status.ToLower()) &&
-
-                // Date filter
-                (!filter.Time.HasValue || x.Time.Date == filter.Time.Value.Date);
-
-            try
+            if (filter.SkillIds != null && filter.SkillIds.Any())
             {
-                return await _unitOfWork.GetRepository<JobPost>()
-                    .GetPagingListAsync(
-                        selector: x => _mapper.Map<JobPostResponse>(x),
-                        predicate: predicate,
-                        include: q => q.Include(x => x.Major),
-                        orderBy: x => x.OrderByDescending(x => x.CreatedAt),
-                        page: pagingModel.page,
-                        size: pagingModel.size
-                    );
+                predicate = predicate.And(x => x.JobPostSkills.Any(jps => filter.SkillIds.Contains(jps.SkillId)));
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while retrieving job posts");
-                throw;
-            }
+
+            return await _unitOfWork.GetRepository<JobPost>()
+                .GetPagingListAsync(
+                    selector: x => _mapper.Map<JobPostResponse>(x),
+                    predicate: predicate,
+                    include: q => q.Include(x => x.Major).Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill),
+                    orderBy: x => x.OrderByDescending(x => x.CreatedAt),
+                    page: pagingModel.page,
+                    size: pagingModel.size);
         }
 
         private void ValidateSalary(int? minSalary, int? maxSalary)
         {
             if (minSalary < 0 || maxSalary < 0)
-            {
                 throw new BadHttpRequestException("Salary values must be positive numbers");
-            }
-
             if (minSalary > maxSalary)
-            {
                 throw new BadHttpRequestException("Minimum salary cannot be greater than maximum salary");
-            }
-
-            if (maxSalary > 1000000) // Ngưỡng lương tối đa hợp lý
-            {
+            if (maxSalary > 1000000)
                 throw new BadHttpRequestException("Maximum salary exceeds reasonable limit");
-            }
         }
 
-        // Phương thức mới để lấy danh sách các job post theo trạng thái
         public async Task<IEnumerable<JobPostResponse>> GetJobPostsByStatus(string status)
         {
-            _logger.LogInformation("Retrieving job posts with status: {Status}", status);
-
             var jobPosts = await _unitOfWork.GetRepository<JobPost>().GetListAsync(
                 predicate: x => x.Status.Equals(status, StringComparison.OrdinalIgnoreCase),
-                selector: x => _mapper.Map<JobPostResponse>(x));
+                selector: x => _mapper.Map<JobPostResponse>(x),
+                include: q => q.Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill));
 
             return jobPosts;
         }

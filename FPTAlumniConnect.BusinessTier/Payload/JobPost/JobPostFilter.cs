@@ -6,6 +6,8 @@
 
         public int? MajorId { get; set; }
 
+        public string? JobTitle { get; set; }
+
         public int? MinSalary { get; set; }
 
         public int? MaxSalary { get; set; }
@@ -20,16 +22,6 @@
 
         public DateTime? Time { get; set; }
 
-        //public DateTime? CreatedAt { get; set; }
-
-        //public DateTime? UpdatedAt { get; set; }
-
-        public SalaryRange GetSalaryRange() => new SalaryRange
-        {
-            Min = MinSalary,
-            Max = MaxSalary
-        };
-
+        public List<int>? SkillIds { get; set; } 
     }
-
 }
