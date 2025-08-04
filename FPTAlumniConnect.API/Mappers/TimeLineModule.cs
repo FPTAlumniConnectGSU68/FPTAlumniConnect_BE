@@ -9,7 +9,11 @@ namespace FPTAlumniConnect.API.Mappers
         public TimeLineModule()
         {
             CreateMap<EventTimeLine, TimeLineReponse>();
-            CreateMap<TimeLineInfo, EventTimeLine>();
+
+            // Ánh xạ từ TimeLineInfo sang EventTimeLine
+            CreateMap<TimeLineInfo, EventTimeLine>()
+                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime.TimeOfDay))
+                .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime.TimeOfDay));
         }
     }
 }

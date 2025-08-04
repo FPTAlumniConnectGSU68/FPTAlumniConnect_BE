@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FPTAlumniConnect.API.Exceptions;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
@@ -21,6 +22,7 @@ namespace FPTAlumniConnect.API.Controllers
             _logger = logger;
             _mapper = mapper;
         }
+
         [HttpGet(ApiEndPointConstant.UserJoinEvent.ViewAllUserJoinEventsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
@@ -46,6 +48,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.UserJoinEvent.UserJoinEventsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateUserJoinEvent([FromBody] UserJoinEventInfo request)
         {
@@ -66,6 +69,14 @@ namespace FPTAlumniConnect.API.Controllers
                     status = "success",
                     message = "Resource created successfully",
                     data = new { id }
+                });
+            }
+            catch (ConflictException ex)
+            {
+                return Conflict(new
+                {
+                    status = "error",
+                    message = ex.Message
                 });
             }
             catch (Exception ex)
