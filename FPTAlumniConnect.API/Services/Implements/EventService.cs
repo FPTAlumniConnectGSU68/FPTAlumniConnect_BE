@@ -8,6 +8,7 @@ using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using FPTAlumniConnect.BusinessTier.Payload.EventTimeLine;
+using FPTAlumniConnect.API.Exceptions;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -42,11 +43,11 @@ namespace FPTAlumniConnect.API.Services.Implements
             // Kiểm tra OrganizerId hợp lệ
             User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: x => x.UserId == request.OrganizerId)
-                ?? throw new BadHttpRequestException("UserNotFound");
+                ?? throw new NotFoundException("UserNotFound");
 
             var majorId = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
                 predicate: x => x.MajorId == request.MajorId)
-                ?? throw new BadHttpRequestException("MajorIdNotFound");
+                ?? throw new NotFoundException("MajorIdNotFound");
 
             var newEvent = _mapper.Map<Event>(request);
             await _unitOfWork.GetRepository<Event>().InsertAsync(newEvent);
@@ -67,11 +68,31 @@ namespace FPTAlumniConnect.API.Services.Implements
             return result;
         }
 
+        public async Task<List<GetEventResponse>> GetEventsUserJoined(int userId)
+        {
+            User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: x => x.UserId.Equals(userId)) ?? 
+                throw new ConflictException("UserNotFound");
+
+            var events = await _unitOfWork.GetRepository<Event>().GetListAsync(
+                predicate: e => e.UserJoinEvents.Any(uj => uj.UserId == userId),
+                include: q => q.Include(e => e.UserJoinEvents),
+                orderBy: q => q.OrderByDescending(e => e.StartDate)
+            );
+
+            if (events == null)
+            {
+                return new List<GetEventResponse>();
+            }
+
+            return _mapper.Map<List<GetEventResponse>>(events.ToList());
+        }
+
         public async Task<bool> UpdateEventInfo(int id, EventInfo request)
         {
             Event eventToUpdate = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
                 predicate: x => x.EventId.Equals(id))
-                ?? throw new BadHttpRequestException("EventNotFound");
+                ?? throw new NotFoundException("EventNotFound");
 
             // Validate ngày tháng
             if (request.StartDate.HasValue && request.EndDate.HasValue)
@@ -96,7 +117,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             {
                 User userId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                     predicate: x => x.UserId.Equals(request.OrganizerId))
-                    ?? throw new BadHttpRequestException("UserNotFound");
+                    ?? throw new NotFoundException("UserNotFound");
                 eventToUpdate.OrganizerId = request.OrganizerId.Value;
             }
 
@@ -180,7 +201,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             var ev = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
                 predicate: x => x.EventId == id) ??
-                throw new BadHttpRequestException("EventNotFound");
+                throw new NotFoundException("EventNotFound");
 
             _unitOfWork.GetRepository<Event>().DeleteAsync(ev);
             return await _unitOfWork.CommitAsync() > 0;
@@ -217,7 +238,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 .SingleOrDefaultAsync(predicate: e => e.EventId == eventId);
 
             if (currentEvent == null)
-                throw new BadHttpRequestException("EventNotFound");
+                throw new NotFoundException("EventNotFound");
 
             // Tìm các sự kiện tương tự
             var similarEvents = await _unitOfWork.GetRepository<Event>().GetListAsync(
@@ -232,7 +253,6 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return mappedEvents.Take(count);
         }
-
 
         // Lấy events sắp xếp theo độ phổ biến (dựa vào số lượng người tham gia)
         public async Task<IEnumerable<EventPopularityDto>> GetEventsByPopularity(int top)

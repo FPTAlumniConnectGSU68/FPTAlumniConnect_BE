@@ -76,6 +76,7 @@
         {
             public const string EventsEndPoint = ApiEndpoint + "/events";
             public const string EventEndPoint = EventsEndPoint + "/{id}";
+            public const string EventJoinedByUserIdEndPoint = EventsEndPoint + "/user/{id}";
             public const string EventPopularityEndPoint = EventsEndPoint + "/popularity";
             public const string EventSimilarEndPoint = EventsEndPoint + "/similar/{eventId}";
             public const string EventConflictEndPoint = EventsEndPoint + "/conflict";

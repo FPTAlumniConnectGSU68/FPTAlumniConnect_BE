@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FPTAlumniConnect.API.Exceptions
+﻿namespace FPTAlumniConnect.API.Exceptions
 {
     public class ConflictException : Exception
     {

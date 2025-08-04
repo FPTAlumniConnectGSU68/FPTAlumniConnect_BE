@@ -48,6 +48,12 @@ namespace FPTAlumniConnect.API.Middlewares
                     _logger.LogInformation(exception.Message);
                     break;
 
+                case NotFoundException:
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                    errorResponse.StatusCode = response.StatusCode;
+                    _logger.LogInformation(exception.Message);
+                    break;
+
                 default:
                     //unhandled error
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
