@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Exceptions;
+using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Event;
@@ -19,6 +20,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.Event.EventsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateNewEvent([FromBody] EventInfo request)
         {
@@ -80,6 +82,16 @@ namespace FPTAlumniConnect.API.Controllers
                     }
                 });
             }
+
+            catch (NotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
+
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create event");
@@ -114,9 +126,41 @@ namespace FPTAlumniConnect.API.Controllers
             }
         }
 
+        [HttpGet(ApiEndPointConstant.Event.EventJoinedByUserIdEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetEventJoinedByUserId(int id)
+        {
+            try
+            {
+                var response = await _eventService.GetEventsUserJoined(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch event");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
         [HttpPut(ApiEndPointConstant.Event.EventEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateEventInfo(int id, [FromBody] EventInfo request)
         {
@@ -137,6 +181,14 @@ namespace FPTAlumniConnect.API.Controllers
                     return Ok(new { status = "error", message = "Update failed" });
                 }
                 return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
             }
             catch (Exception ex)
             {
