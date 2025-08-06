@@ -28,6 +28,6 @@ public class JobPostResponse
 public class SkillResponse
 {
     public int SkillId { get; set; }
-    public string SkillName { get; set; } = null!;
+    public string Name { get; set; } = null!;
 }
 

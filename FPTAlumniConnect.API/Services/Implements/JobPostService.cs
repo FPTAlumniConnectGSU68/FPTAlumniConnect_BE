@@ -147,44 +147,20 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<IPaginate<JobPostResponse>> ViewAllJobPosts(JobPostFilter filter, PagingModel pagingModel)
         {
-            Expression<Func<JobPost, bool>> predicate = x => true;
+            _logger.LogInformation("Viewing all job posts with filter and paging.");
 
-            if (filter.UserId.HasValue)
-                predicate = predicate.And(x => x.UserId == filter.UserId);
-            if (filter.MajorId.HasValue)
-                predicate = predicate.And(x => x.MajorId == filter.MajorId);
-            if (!string.IsNullOrWhiteSpace(filter.JobTitle))
-                predicate = predicate.And(x => x.JobTitle.ToLower().Contains(filter.JobTitle.ToLower()));
-            if (filter.MinSalary.HasValue && filter.MaxSalary.HasValue)
-                predicate = predicate.And(x => x.MinSalary <= filter.MaxSalary && x.MaxSalary >= filter.MinSalary);
-            else if (filter.MinSalary.HasValue)
-                predicate = predicate.And(x => x.MaxSalary >= filter.MinSalary);
-            else if (filter.MaxSalary.HasValue)
-                predicate = predicate.And(x => x.MinSalary <= filter.MaxSalary);
-            if (filter.IsDeal.HasValue)
-                predicate = predicate.And(x => x.IsDeal == filter.IsDeal);
-            if (!string.IsNullOrWhiteSpace(filter.Location))
-                predicate = predicate.And(x => x.Location.ToLower().Contains(filter.Location.ToLower()));
-            if (!string.IsNullOrWhiteSpace(filter.City))
-                predicate = predicate.And(x => x.City.ToLower().Contains(filter.City.ToLower()));
-            if (!string.IsNullOrWhiteSpace(filter.Status))
-                predicate = predicate.And(x => x.Status.ToLower() == filter.Status.ToLower());
-            if (filter.Time.HasValue)
-                predicate = predicate.And(x => x.Time.Date == filter.Time.Value.Date);
+            Func<IQueryable<JobPost>, IIncludableQueryable<JobPost, object>> include =
+                q => q.Include(x => x.Major).Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill);
 
-            if (filter.SkillIds != null && filter.SkillIds.Any())
-            {
-                predicate = predicate.And(x => x.JobPostSkills.Any(jps => filter.SkillIds.Contains(jps.SkillId)));
-            }
+            IPaginate<JobPostResponse> response = await _unitOfWork.GetRepository<JobPost>().GetPagingListAsync(
+                selector: x => _mapper.Map<JobPostResponse>(x),
+                filter: filter,
+                include: include,
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
+                page: pagingModel.page,
+                size: pagingModel.size);
 
-            return await _unitOfWork.GetRepository<JobPost>()
-                .GetPagingListAsync(
-                    selector: x => _mapper.Map<JobPostResponse>(x),
-                    predicate: predicate,
-                    include: q => q.Include(x => x.Major).Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill),
-                    orderBy: x => x.OrderByDescending(x => x.CreatedAt),
-                    page: pagingModel.page,
-                    size: pagingModel.size);
+            return response;
         }
 
         private void ValidateSalary(int? minSalary, int? maxSalary)

@@ -17,7 +17,7 @@ namespace FPTAlumniConnect.API.Mappers
                         ? src.JobPostSkills.Select(jps => new SkillResponse
                         {
                             SkillId = jps.Skill.SkillId,
-                            SkillName = jps.Skill.Name
+                            Name = jps.Skill.Name
                         }).ToList()
                         : new List<SkillResponse>()));
 
