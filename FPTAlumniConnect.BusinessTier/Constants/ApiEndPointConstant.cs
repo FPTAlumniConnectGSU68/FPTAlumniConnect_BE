@@ -51,7 +51,7 @@
             public const string ScheduleEndPoint = "/api/schedules/{id}";
             public const string ScheduleMentorEndPoint = "/api/schedules/mentor/{id}";
             public const string AcceptMentorshipEndPoint = "/api/schedules/mentorship/accept";
-            public const string CompleteScheduleEndPoint = "/api/schedules/{id}/complete";
+            public const string CompleteScheduleEndPoint = "/api/schedules/complete/{id}";
         }
         public static class CV
         {
