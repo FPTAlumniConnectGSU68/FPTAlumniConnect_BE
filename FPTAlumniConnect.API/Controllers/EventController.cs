@@ -130,11 +130,14 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetEventJoinedByUserId(int id)
+        public async Task<IActionResult> GetEventJoinedByUserId(
+            [FromRoute] int id,
+            [FromQuery] EventFilter filter,
+            [FromQuery] PagingModel pagingModel)
         {
             try
             {
-                var response = await _eventService.GetEventsUserJoined(id);
+                var response = await _eventService.GetEventsUserJoined(id, filter, pagingModel);
                 return Ok(new
                 {
                     status = "success",

@@ -64,33 +64,44 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<GetEventResponse> GetEventById(int id)
         {
-            Event Event = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
-                predicate: x => x.EventId.Equals(id)) ??
-                throw new BadHttpRequestException("EventNotFound");
+            var ev = await _unitOfWork.GetRepository<Event>()
+                .SingleOrDefaultAsync(
+                    predicate: e => e.EventId == id,
+                    include: e => e.Include(ev => ev.UserJoinEvents)
+                );
 
-            GetEventResponse result = _mapper.Map<GetEventResponse>(Event);
-            return result;
-        }
-
-        public async Task<List<GetEventResponse>> GetEventsUserJoined(int userId)
-        {
-            User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                predicate: x => x.UserId.Equals(userId)) ?? 
-                throw new ConflictException("UserNotFound");
-
-            var events = await _unitOfWork.GetRepository<Event>().GetListAsync(
-                predicate: e => e.UserJoinEvents.Any(uj => uj.UserId == userId),
-                include: q => q.Include(e => e.UserJoinEvents),
-                orderBy: q => q.OrderByDescending(e => e.StartDate)
-            );
-
-            if (events == null)
+            if (ev == null)
             {
-                return new List<GetEventResponse>();
+                throw new NotFoundException("Event not found");
             }
 
-            return _mapper.Map<List<GetEventResponse>>(events.ToList());
+            return _mapper.Map<GetEventResponse>(ev);
         }
+
+        public async Task<IPaginate<GetEventResponse>> GetEventsUserJoined(int userId, EventFilter filter, PagingModel pagingModel)
+        {
+            _ = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: x => x.UserId.Equals(userId))
+                ?? throw new ConflictException("UserNotFound");
+
+            Expression<Func<UserJoinEvent, bool>> predicate = uje =>
+                uje.UserId == userId &&
+                (string.IsNullOrEmpty(filter.EventName) || uje.Event.EventName.Contains(filter.EventName)) &&
+                (!filter.StartDate.HasValue || uje.Event.EndDate >= filter.StartDate) &&
+                (!filter.EndDate.HasValue || uje.Event.StartDate <= filter.EndDate) &&
+                (string.IsNullOrEmpty(filter.Location) || uje.Event.Location.Contains(filter.Location));
+
+            return await _unitOfWork.GetRepository<UserJoinEvent>().GetPagingListAsync(
+                selector: uje => _mapper.Map<GetEventResponse>(uje),
+                predicate: predicate,
+                include: q => q.Include(uje => uje.Event)
+                               .ThenInclude(e => e.UserJoinEvents),
+                orderBy: q => q.OrderByDescending(uje => uje.Event.StartDate),
+                page: pagingModel.page,
+                size: pagingModel.size
+            );
+        }
+
 
         public async Task<bool> UpdateEventInfo(int id, EventInfo request)
         {
@@ -178,7 +189,6 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("EndDate cannot be earlier than StartDate.");
             }
 
-            // Xây dựng biểu thức lọc
             Expression<Func<Event, bool>> predicate = x =>
                 (string.IsNullOrEmpty(filter.EventName) || x.EventName.Contains(filter.EventName)) &&
                 (string.IsNullOrEmpty(filter.Img) || x.Img == filter.Img) &&
@@ -190,16 +200,14 @@ namespace FPTAlumniConnect.API.Services.Implements
                 (string.IsNullOrEmpty(filter.Location) || x.Location.Contains(filter.Location)) &&
                 (string.IsNullOrEmpty(filter.CreatedBy) || x.CreatedBy.Contains(filter.CreatedBy));
 
-            // Thực hiện truy vấn
-            IPaginate<GetEventResponse> response = await _unitOfWork.GetRepository<Event>().GetPagingListAsync(
+            return await _unitOfWork.GetRepository<Event>().GetPagingListAsync(
                 selector: x => _mapper.Map<GetEventResponse>(x),
                 predicate: predicate,
                 orderBy: x => x.OrderByDescending(x => x.EndDate),
+                include: q => q.Include(e => e.UserJoinEvents),
                 page: pagingModel.page,
                 size: pagingModel.size
             );
-
-            return response;
         }
 
         public async Task<bool> DeleteEvent(int id)
