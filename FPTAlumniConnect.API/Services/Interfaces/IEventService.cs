@@ -24,6 +24,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
 
         List<SuggestedTimelineDto> GetSuggestedTimelines(DateTime eventStartTime, int eventDurationHours);
 
-        Task<List<GetEventResponse>> GetEventsUserJoined(int userId);
+        Task<IPaginate<GetEventResponse>> GetEventsUserJoined(int userId, EventFilter filter, PagingModel pagingModel);
     }
 }
