@@ -3,6 +3,7 @@ using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -19,6 +20,7 @@ namespace FPTAlumniConnect.API.Controllers
 
         [HttpGet(ApiEndPointConstant.JobPost.JobPostEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetJobPostById(int id)
         {
@@ -32,6 +34,11 @@ namespace FPTAlumniConnect.API.Controllers
                     data = response
                 });
             }
+            catch (BadHttpRequestException badEx)
+            {
+                _logger.LogError(badEx, "Bad request");
+                return BadRequest(new { status = "error", message = badEx.Message });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch job post");
@@ -42,6 +49,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.JobPost.JobPostsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateNewJobPost([FromBody] JobPostInfo request)
         {
             if (request == null)
@@ -63,6 +71,11 @@ namespace FPTAlumniConnect.API.Controllers
                     data = new { id }
                 });
             }
+            catch (BadHttpRequestException badEx)
+            {
+                _logger.LogError(badEx, "Bad request");
+                return BadRequest(new { status = "error", message = badEx.Message });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create job post");
@@ -73,6 +86,7 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPatch(ApiEndPointConstant.JobPost.JobPostEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateJobPostInfo(int id, [FromBody] JobPostInfo request)
         {
             if (request == null)
@@ -94,6 +108,11 @@ namespace FPTAlumniConnect.API.Controllers
 
                 return Ok(new { status = "success", message = "Update successful" });
             }
+            catch (BadHttpRequestException badEx)
+            {
+                _logger.LogError(badEx, "Bad request");
+                return BadRequest(new { status = "error", message = badEx.Message });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update job post");
@@ -103,6 +122,7 @@ namespace FPTAlumniConnect.API.Controllers
 
         [HttpGet(ApiEndPointConstant.JobPost.JobPostsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ViewAllJobPosts([FromQuery] JobPostFilter filter, [FromQuery] PagingModel pagingModel)
         {
@@ -116,6 +136,11 @@ namespace FPTAlumniConnect.API.Controllers
                     data = response
                 });
             }
+            catch (BadHttpRequestException badEx)
+            {
+                _logger.LogError(badEx, "Bad request");
+                return BadRequest(new { status = "error", message = badEx.Message });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch job post");
@@ -125,6 +150,7 @@ namespace FPTAlumniConnect.API.Controllers
 
         [HttpGet(ApiEndPointConstant.JobPost.SearchJobPostsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SearchJobPosts(
     [FromQuery] string keyword,
@@ -154,6 +180,11 @@ namespace FPTAlumniConnect.API.Controllers
                     message = "Search successful",
                     data = jobPosts
                 });
+            }
+            catch (BadHttpRequestException badEx)
+            {
+                _logger.LogError(badEx, "Bad request");
+                return BadRequest(new { status = "error", message = badEx.Message });
             }
             catch (Exception ex)
             {

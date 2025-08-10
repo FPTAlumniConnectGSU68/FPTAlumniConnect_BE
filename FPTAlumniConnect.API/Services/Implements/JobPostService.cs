@@ -169,7 +169,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("Salary values must be positive numbers");
             if (minSalary > maxSalary)
                 throw new BadHttpRequestException("Minimum salary cannot be greater than maximum salary");
-            if (maxSalary > 1000000)
+            if (maxSalary > 1000000000000)
                 throw new BadHttpRequestException("Maximum salary exceeds reasonable limit");
         }
 
