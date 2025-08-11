@@ -107,10 +107,11 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<bool> UpdateCVInfo(int id, CVInfo request)
         {
+            // Load CV without eager loading CvSkills here to avoid duplicate tracking
             Cv cv = await _unitOfWork.GetRepository<Cv>().SingleOrDefaultAsync(
                 predicate: x => x.Id == id,
-                include: query => query.Include(c => c.CvSkills))
-                ?? throw new BadHttpRequestException("CVNotFound");
+                include: null // <-- Don't include CvSkills here
+            ) ?? throw new BadHttpRequestException("CVNotFound");
 
             if (request.MajorId.HasValue)
             {
@@ -149,6 +150,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             if (request.MinSalary.HasValue && request.MaxSalary.HasValue && request.MinSalary > request.MaxSalary)
                 throw new BadHttpRequestException("MaxSalary cannot be less than MinSalary.");
 
+            // Update fields
             cv.FullName = string.IsNullOrEmpty(request.FullName) ? cv.FullName : request.FullName;
             cv.Address = string.IsNullOrEmpty(request.Address) ? cv.Address : request.Address;
             cv.Gender = string.IsNullOrEmpty(request.Gender) ? cv.Gender : request.Gender;
@@ -171,17 +173,19 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             if (request.SkillIds != null)
             {
-                var existingSkills = await _unitOfWork.GetRepository<CvSkill>().GetListAsync(
-                    predicate: x => x.CvId == id,
-                    orderBy: null,
-                    include: null);
+                // Delete skills without tracking to avoid duplicate tracking issues
+                var existingSkills = await _unitOfWork
+                    .GetRepository<CvSkill>()
+                    .GetListAsync(predicate: x => x.CvId == id);
+
 
                 foreach (var skill in existingSkills)
                 {
                     _unitOfWork.GetRepository<CvSkill>().DeleteAsync(skill);
+                    await _unitOfWork.CommitAsync();
                 }
 
-                foreach (var skillId in request.SkillIds)
+                foreach (var skillId in request.SkillIds.Distinct()) // distinct to avoid key conflicts
                 {
                     var cvSkill = new CvSkill
                     {
@@ -200,6 +204,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             _unitOfWork.GetRepository<Cv>().UpdateAsync(cv);
             return await _unitOfWork.CommitAsync() > 0;
         }
+
 
         public async Task<IPaginate<CVResponse>> ViewAllCV(CVFilter filter, PagingModel pagingModel)
         {

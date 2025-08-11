@@ -240,9 +240,9 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.Schedule.ScheduleRateMentorEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RateMentor(int scheduleId, string content, int rate)
+        public async Task<IActionResult> RateMentor([FromRoute] int scheduleId, [FromBody] RateMentorRequest request)
         {
-            if (string.IsNullOrWhiteSpace(content) || rate < 1 || rate > 5)
+            if (string.IsNullOrWhiteSpace(request.Comment) || request.Rate < 1 || request.Rate > 5)
             {
                 return BadRequest(new
                 {
@@ -254,7 +254,7 @@ namespace FPTAlumniConnect.API.Controllers
 
             try
             {
-                var success = await _scheduleService.RateMentor(scheduleId, content, rate);
+                var success = await _scheduleService.RateMentor(scheduleId, request.Comment, request.Rate);
 
                 if (!success)
                 {
@@ -281,5 +281,6 @@ namespace FPTAlumniConnect.API.Controllers
                 });
             }
         }
+
     }
 }
