@@ -183,7 +183,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         }
 
         // Rate mentor for a schedule
-        public async Task<bool> RateMentor(int scheduleId, string content, int rate)
+        public async Task<bool> RateMentor(int scheduleId, string comment, int rate)
         {
             var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
                 predicate: x => x.ScheduleId == scheduleId)
@@ -192,7 +192,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             if (rate < 0 || rate > 5)
                 throw new BadHttpRequestException("Rating must be between 0 and 5.");
 
-            schedule.Comment = content;
+            schedule.Comment = comment;
             schedule.Rating = rate;
             schedule.UpdatedAt = DateTime.UtcNow;
             schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
