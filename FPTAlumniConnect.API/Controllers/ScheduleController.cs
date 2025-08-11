@@ -237,5 +237,49 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+        [HttpPost(ApiEndPointConstant.Schedule.ScheduleRateMentorEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> RateMentor(int scheduleId, string content, int rate)
+        {
+            if (string.IsNullOrWhiteSpace(content) || rate < 1 || rate > 5)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Invalid rating data" }
+                });
+            }
+
+            try
+            {
+                var success = await _scheduleService.RateMentor(scheduleId, content, rate);
+
+                if (!success)
+                {
+                    return Ok(new
+                    {
+                        status = "error",
+                        message = "Rating failed"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Mentor rated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to rate mentor");
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
+            }
+        }
     }
 }
