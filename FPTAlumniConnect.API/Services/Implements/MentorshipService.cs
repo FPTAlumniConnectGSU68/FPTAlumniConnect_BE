@@ -36,7 +36,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             var mentorship = await _unitOfWork.GetRepository<Mentorship>().SingleOrDefaultAsync(
                 predicate: x => x.Id.Equals(id),
-                include: q => q.Include(x => x.Aumni)) ??
+                include: q => q.Include(x => x.Aumni).Include(x => x.Schedules).ThenInclude(s => s.Mentor)) ??
                 throw new BadHttpRequestException("MentorshipNotFound");
 
             return _mapper.Map<MentorshipReponse>(mentorship);
@@ -47,7 +47,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             var mentorships = await _unitOfWork.GetRepository<Mentorship>().GetListAsync(
                 predicate: x => x.AumniId == alumniId,
-                include: q => q.Include(x => x.Aumni),
+                include: q => q.Include(x => x.Aumni).Include(x => x.Schedules).ThenInclude(s => s.Mentor),
                 orderBy: q => q.OrderByDescending(x => x.CreatedAt)
             );
 
@@ -87,7 +87,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             IPaginate<MentorshipReponse> response = await _unitOfWork.GetRepository<Mentorship>().GetPagingListAsync(
                 selector: x => _mapper.Map<MentorshipReponse>(x),
-                include: q => q.Include(x => x.Aumni),
+                include: q => q.Include(x => x.Aumni).Include(x => x.Schedules).ThenInclude(s => s.Mentor),
                 filter: filter,
                 orderBy: x => x.OrderBy(x => x.CreatedAt),
                 page: pagingModel.page,
