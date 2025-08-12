@@ -95,6 +95,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
                 selector: x => _mapper.Map<ScheduleReponse>(x),
                 predicate: x => x.MentorId == id,
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 include: q => q.Include(x => x.Mentor)
                               .Include(x => x.MentorShip)
                               .ThenInclude(m => m.Aumni))
@@ -177,7 +178,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                               .Include(x => x.MentorShip)
                               .ThenInclude(m => m.Aumni),
                 filter: filter,
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size);
         }

@@ -89,7 +89,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 selector: x => _mapper.Map<MentorshipReponse>(x),
                 include: q => q.Include(x => x.Aumni).Include(x => x.Schedules).ThenInclude(s => s.Mentor),
                 filter: filter,
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size
                 );

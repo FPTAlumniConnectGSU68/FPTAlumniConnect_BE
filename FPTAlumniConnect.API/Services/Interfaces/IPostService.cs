@@ -10,5 +10,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IPaginate<PostReponse>> ViewAllPost(PostFilter filter, PagingModel pagingModel);
         Task<bool> UpdatePostInfo(int id, PostInfo request);
         Task<PostReponse> GetPostById(int id);
+        Task<IEnumerable<object>> GetTopUsersByNumberOfPosts(int topN = 10);
     }
 }

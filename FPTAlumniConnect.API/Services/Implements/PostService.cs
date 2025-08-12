@@ -88,7 +88,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 selector: x => _mapper.Map<PostReponse>(x),
                 filter: filter,
                 include: include,
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size
             );
@@ -106,6 +106,33 @@ namespace FPTAlumniConnect.API.Services.Implements
             post.AuthorId = request.AuthorId ?? post.AuthorId;
             post.UpdatedAt = DateTime.Now;
             post.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+        }
+
+        // Get top users by number of posts
+        public async Task<IEnumerable<object>> GetTopUsersByNumberOfPosts(int topN = 10)
+        {
+            _logger.LogInformation("Getting top {TopN} users by number of posts", topN);
+
+            var query = _unitOfWork.GetRepository<Post>().GetQueryable()
+                .Include(p => p.Author);
+
+            var topUsers = await query
+                .GroupBy(p => p.AuthorId)
+                .Select(g => new
+                {
+                    UserId = g.Key,
+                    UserAvatar = g.FirstOrDefault().Author != null ? g.FirstOrDefault().Author.ProfilePicture : "default-avatar.png",
+                    UserCode = g.FirstOrDefault().Author != null ? g.FirstOrDefault().Author.Code : "Unknown",
+                    UserName = g.FirstOrDefault().Author != null
+                        ? g.FirstOrDefault().Author.FirstName + " " + g.FirstOrDefault().Author.LastName
+                        : "Unknown",
+                    PostCount = g.Count()
+                })
+                .OrderByDescending(x => x.PostCount)
+                .Take(topN)
+                .ToListAsync();
+
+            return topUsers;
         }
 
         // Default include function (currently only includes Major)

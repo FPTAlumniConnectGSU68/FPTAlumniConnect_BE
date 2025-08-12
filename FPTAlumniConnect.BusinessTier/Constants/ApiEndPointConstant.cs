@@ -26,6 +26,7 @@
         {
             public const string PostsEndPoint = ApiEndpoint + "/posts";
             public const string PostEndPoint = PostsEndPoint + "/{id}";
+            public const string TopUsersEndPoint = PostsEndPoint + "/top-users";
         }
         public static class PostReport
         {
