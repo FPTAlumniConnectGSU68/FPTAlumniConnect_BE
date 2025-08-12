@@ -123,5 +123,27 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        [HttpGet(ApiEndPointConstant.Post.TopUsersEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetTopUsersByNumberOfPosts([FromQuery] int topN = 10)
+        {
+            try
+            {
+                var response = await _postService.GetTopUsersByNumberOfPosts(topN);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch top users");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
     }
 }
