@@ -84,6 +84,7 @@
             public const string EventConflictEndPoint = EventsEndPoint + "/conflict";
             public const string SuggestBestTimeForNewEventEndPoint = EventsEndPoint + "/suggest";
             public const string EventCountByStatusEndPoint = EventsEndPoint + "/count";
+            public const string EventDetailEndPoint = EventsEndPoint + "/detail/{id}";
         }
         public static class UserJoinEvent
         {

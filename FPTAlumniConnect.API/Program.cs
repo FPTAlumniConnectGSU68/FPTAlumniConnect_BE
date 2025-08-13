@@ -43,6 +43,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddConfigSwagger();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<MentorshipCleanupService>(); // Register background service
+builder.Services.AddSingleton<ITimeService, TimeService>();
+
+
+builder.Services.AddControllers()
+    .AddJsonOptions(opts =>
+    {
+
+    });
 
 var app = builder.Build();
 
