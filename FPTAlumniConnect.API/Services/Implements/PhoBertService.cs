@@ -1,13 +1,22 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
+using FPTAlumniConnect.BusinessTier.Payload.CV;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
+using FPTAlumniConnect.DataTier.Enums;
 using FPTAlumniConnect.DataTier.Models;
+using FPTAlumniConnect.DataTier.Paginate;
+using FPTAlumniConnect.DataTier.Paginate;
+using FPTAlumniConnect.DataTier.Repository;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Polly;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -25,13 +34,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             IHttpContextAccessor httpContextAccessor,
             ICVService cvService,
             IJobPostService jobPostService,
-            IConfiguration configuration) // Thêm IConfiguration
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration)
             : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _apiToken = configuration["HuggingFace:ApiToken"]
                         ?? Environment.GetEnvironmentVariable("HUGGINGFACE_API_TOKEN")
                         ?? throw new ArgumentNullException("HuggingFace:ApiToken", "API token is not configured.");
-            _httpClient = new HttpClient();
+            _httpClient = httpClientFactory.CreateClient(nameof(PhoBertService));
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
             _cvService = cvService;
             _jobPostService = jobPostService;
@@ -47,12 +57,24 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             try
             {
-                var response = await _httpClient.PostAsync("https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2", content);
+                // Resilience (retry, timeout, etc.) is handled by AddStandardResilienceHandler in Program.cs
+                var response = await _httpClient.PostAsync("", content);
                 response.EnsureSuccessStatusCode();
 
                 var responseBody = await response.Content.ReadAsStringAsync();
+
+                // Handle Hugging Face "model is loading" case
+                if (responseBody.Contains("\"error\"", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception($"Hugging Face API returned an error: {responseBody}");
+                }
+
                 var embeddingList = JsonSerializer.Deserialize<List<double[]>>(responseBody);
                 return embeddingList?.FirstOrDefault() ?? throw new Exception("Failed to parse embedding.");
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                throw new Exception("Unauthorized: Please check your Hugging Face API token.", ex);
             }
             catch (Exception ex)
             {
@@ -62,6 +84,9 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         private double CalculateCosineSimilarity(double[] vecA, double[] vecB)
         {
+            if (vecA.Length != vecB.Length)
+                throw new ArgumentException("Vectors must be of the same length.");
+
             double dotProduct = 0.0, magnitudeA = 0.0, magnitudeB = 0.0;
             for (int i = 0; i < vecA.Length; i++)
             {
@@ -73,39 +98,104 @@ namespace FPTAlumniConnect.API.Services.Implements
             magnitudeA = Math.Sqrt(magnitudeA);
             magnitudeB = Math.Sqrt(magnitudeB);
 
+            if (magnitudeA == 0 || magnitudeB == 0) return 0.0;
+
             return dotProduct / (magnitudeA * magnitudeB);
         }
 
         private double CalculateScore(Cv cv, JobPostResponse job)
         {
             double score = 0.0;
+            int factorCount = 0;
 
-            double locationScore = cv.City?.Equals(job.Location, StringComparison.OrdinalIgnoreCase) == true ? 1.0 : 0.5;
-            score += locationScore;
+            if (!string.IsNullOrEmpty(cv.City) && !string.IsNullOrEmpty(job.Location))
+            {
+                score += cv.City.Equals(job.Location, StringComparison.OrdinalIgnoreCase) ? 1.0 : 0.5;
+                factorCount++;
+            }
 
-            double salaryScore = (cv.MinSalary <= job.MaxSalary && cv.MaxSalary >= job.MinSalary) ? 1.0 : 0.5;
-            score += salaryScore;
+            if (cv.MinSalary != 0 && cv.MaxSalary != 0 && job.MinSalary != 0 && job.MaxSalary != 0)
+            {
+                bool overlaps = cv.MinSalary <= job.MaxSalary && cv.MaxSalary >= job.MinSalary;
+                score += overlaps ? 1.0 : 0.5;
+                factorCount++;
+            }
 
-            double languageScore = cv.Language?.Equals(job.Requirements, StringComparison.OrdinalIgnoreCase) == true ? 1.0 : 0.5;
-            score += languageScore;
+            if (!string.IsNullOrEmpty(cv.Language) && !string.IsNullOrEmpty(job.Requirements))
+            {
+                score += cv.Language.Equals(job.Requirements, StringComparison.OrdinalIgnoreCase) ? 1.0 : 0.5;
+                factorCount++;
+            }
 
-            double majorScore = (cv.User?.MajorId == job.MajorId) ? 1.0 : 0.0;
-            score += majorScore;
+            var cvSkills = cv.CvSkills?.Select(s => s.Skill?.Name?.Trim())
+                .Where(name => !string.IsNullOrEmpty(name))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                ?? new HashSet<string>();
 
-            return score / 4.0; // Cập nhật số lượng yếu tố (4 thay vì 5 do thiếu skillScore)
+            var jobSkills = job.Skills?
+                .Select(s => s.Name?.Trim())
+                .Where(name => !string.IsNullOrEmpty(name))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                ?? new HashSet<string>();
+
+            if (jobSkills.Count > 0)
+            {
+                int matchingSkills = cvSkills.Intersect(jobSkills).Count();
+                double skillScore = (double)matchingSkills / jobSkills.Count;
+                score += skillScore;
+                factorCount++;
+            }
+
+            if (cv.MajorId.HasValue && job.MajorId.HasValue)
+            {
+                score += (cv.MajorId == job.MajorId) ? 1.0 : 0.0;
+                factorCount++;
+            }
+
+            return factorCount > 0 ? score / factorCount : 0.0;
         }
 
-        public async Task<List<Cv>> RecommendCVForJobPostAsync(int jobPostId)
+        public async Task<IPaginate<CVResponse>> RecommendCVForJobPostAsync(int jobPostId, PagingModel pagingModel)
         {
             var jobPost = await _jobPostService.GetJobPostById(jobPostId);
-            if (jobPost == null) return new List<Cv>();
+            if (jobPost == null)
+                throw new BadHttpRequestException($"JobPost with ID {jobPostId} not found.");
 
-            var cvs = await _unitOfWork.GetRepository<Cv>().GetAllAsync();
+            var cvRepository = _unitOfWork.GetRepository<Cv>();
 
-            return cvs.Select(cv => new { Cv = cv, Score = CalculateScore(cv, jobPost) })
-                      .OrderByDescending(x => x.Score)
-                      .Select(x => x.Cv)
-                      .ToList();
+            var cvs = await cvRepository.GetListAsync(
+                predicate: c =>
+                    c.MajorId.HasValue &&
+                    jobPost.MajorId.HasValue &&
+                    c.MajorId == jobPost.MajorId &&
+                    c.Status == CVStatus.Public,
+                include: query => query
+                    .Include(c => c.CvSkills).ThenInclude(cs => cs.Skill)
+                    .Include(c => c.Major)
+            );
+
+            var scored = cvs
+                .Select(cv => new { Cv = cv, Score = CalculateScore(cv, jobPost) })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .ToList();
+
+            var total = scored.Count;
+            var items = scored
+                .Skip((pagingModel.page - 1) * pagingModel.size)
+                .Take(pagingModel.size)
+                .Select(x => _mapper.Map<CVResponse>(x.Cv))
+                .ToList();
+
+            return new Paginate<CVResponse>
+            {
+                Page = pagingModel.page,
+                Size = pagingModel.size,
+                Total = total,
+                TotalPages = (int)Math.Ceiling(total / (double)pagingModel.size),
+                Items = items
+            };
         }
+
     }
 }

@@ -1,6 +1,9 @@
 using FPTAlumniConnect.API.Extensions;
 using FPTAlumniConnect.API.Middlewares;
 using FPTAlumniConnect.API.Services;
+using FPTAlumniConnect.API.Services.Implements;
+using Polly;
+using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +34,16 @@ builder.Services.AddControllers().AddJsonOptions(x =>
     x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     x.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
 });
+
+builder.Services.AddHttpClient<PhoBertService>(client =>
+{
+    client.BaseAddress = new Uri("https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2");
+    var apiToken = builder.Configuration["HuggingFace:ApiToken"]
+        ?? Environment.GetEnvironmentVariable("HUGGINGFACE_API_TOKEN")
+        ?? throw new ArgumentNullException("HuggingFace:ApiToken", "API token is not configured.");
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiToken);
+})
+.AddStandardResilienceHandler();
 
 builder.Services.AddDatabase(builder);
 builder.Services.AddUnitOfWork();
