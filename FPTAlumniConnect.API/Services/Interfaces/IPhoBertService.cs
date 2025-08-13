@@ -1,9 +1,12 @@
-﻿using FPTAlumniConnect.DataTier.Models;
+﻿using FPTAlumniConnect.BusinessTier.Payload;
+using FPTAlumniConnect.BusinessTier.Payload.CV;
+using FPTAlumniConnect.DataTier.Models;
+using FPTAlumniConnect.DataTier.Paginate;
 
 namespace FPTAlumniConnect.API.Services.Interfaces
 {
     public interface IPhoBertService
     {
-        Task<List<Cv>> RecommendCVForJobPostAsync(int jobPostId);
+        Task<IPaginate<CVResponse>> RecommendCVForJobPostAsync(int jobPostId, PagingModel pagingModel);
     }
 }

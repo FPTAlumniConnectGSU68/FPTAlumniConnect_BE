@@ -518,35 +518,35 @@ namespace FPTAlumniConnect.API.Services.Implements
     {
         new SuggestedTimelineDto
         {
-            Name = "Opening Ceremony",
+            Title = "Opening Ceremony",
             StartTime = eventStartTime.AddHours(0),
             EndTime = eventStartTime.AddHours(1),
             Description = "Welcome speech and introductions"
         },
         new SuggestedTimelineDto
         {
-            Name = "Keynote Session",
+            Title = "Keynote Session",
             StartTime = eventStartTime.AddHours(1),
             EndTime = eventStartTime.AddHours(2),
             Description = "Main presentation by keynote speaker"
         },
         new SuggestedTimelineDto
         {
-            Name = "Break",
+            Title     = "Break",
             StartTime = eventStartTime.AddHours(2),
             EndTime = eventStartTime.AddHours(2.5),
             Description = "Networking and refreshments"
         },
         new SuggestedTimelineDto
         {
-            Name = "Workshop Session",
+            Title     = "Workshop Session",
             StartTime = eventStartTime.AddHours(2.5),
             EndTime = eventStartTime.AddHours(4),
             Description = "Interactive workshop activities"
         },
         new SuggestedTimelineDto
         {
-            Name = "Closing Remarks",
+            Title = "Closing Remarks",
             StartTime = eventStartTime.AddHours(4),
             EndTime = eventStartTime.AddHours(4.5),
             Description = "Final thoughts and thank yous"
@@ -559,7 +559,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             {
                 suggestions.Add(new SuggestedTimelineDto
                 {
-                    Name = template.Name,
+                    Title = template.Title,
                     StartTime = eventStartTime.AddHours(template.StartTime.Hour * scaleFactor),
                     EndTime = eventStartTime.AddHours(template.EndTime.Hour * scaleFactor),
                     Description = template.Description
