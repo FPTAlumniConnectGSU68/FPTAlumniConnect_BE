@@ -16,7 +16,6 @@
         public string? Status { get; set; }
         public string? CreatedBy { get; set; }
 
-        // ⭐ Thêm
         public double? AverageRating { get; set; }
 
         public int UserJoinEventId { get; set; }

@@ -34,7 +34,23 @@ namespace FPTAlumniConnect.API.Mappers
                         ? src.Event.UserJoinEvents.Average(u => u.Rating ?? 0)
                         : (double?)null))
                 .ForMember(dest => dest.UserJoinEventId, opt => opt.MapFrom(src => src.Id));
-
+            CreateMap<EventTimeLineInfo, EventTimeLine>();
+            CreateMap<Event, EventDetailResponse>()
+                .ForMember(dest => dest.AverageRating,
+                    opt => opt.MapFrom(src =>
+                        src.UserJoinEvents != null && src.UserJoinEvents.Any()
+                            ? src.UserJoinEvents.Average(u => u.Rating ?? 0)
+                            : (double?)null
+                    ))
+                .ForMember(dest => dest.OrganizerName, opt => opt.MapFrom(
+                    src => src.Organizer != null
+                        ? src.Organizer.FirstName + " " + src.Organizer.LastName
+                        : null
+                ))
+                .ForMember(dest => dest.MajorName, opt => opt.MapFrom(src => src.Major != null ? src.Major.MajorName : null))
+                .ForMember(dest => dest.EventTimeLines, opt => opt.MapFrom(src => src.EventTimeLines));
+            // EventTimeLine -> EventTimeLineResponse
+            CreateMap<EventTimeLine, EventTimeLineResponse>();
         }
     }
 }

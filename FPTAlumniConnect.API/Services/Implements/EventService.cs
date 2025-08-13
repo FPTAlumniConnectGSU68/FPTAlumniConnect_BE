@@ -1,14 +1,15 @@
 ﻿using AutoMapper;
+using FPTAlumniConnect.API.Exceptions;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Event;
+using FPTAlumniConnect.BusinessTier.Payload.EventTimeLine;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using FPTAlumniConnect.BusinessTier.Payload.EventTimeLine;
-using FPTAlumniConnect.API.Exceptions;
+using Microsoft.EntityFrameworkCore.Query;
+using System.Linq.Expressions;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -78,6 +79,25 @@ namespace FPTAlumniConnect.API.Services.Implements
             return _mapper.Map<GetEventResponse>(ev);
         }
 
+        public async Task<EventDetailResponse> GetEventByIdAsync(int eventId)
+        {
+            // Get event with related data
+            var eventEntity = await _unitOfWork.GetRepository<Event>()
+                .SingleOrDefaultAsync(
+                    predicate: e => e.EventId == eventId,
+                    include: e => e
+                        .Include(ev => ev.Organizer)
+                        .Include(ev => ev.Major)
+                        .Include(ev => ev.EventTimeLines)
+                        .Include(ev => ev.UserJoinEvents)
+                ) ?? throw new NotFoundException("Event not found");
+
+            // Map to EventDetailResponse
+            var result = _mapper.Map<EventDetailResponse>(eventEntity);
+
+            return result;
+        }
+
         public async Task<IPaginate<GetEventResponse>> GetEventsUserJoined(int userId, EventFilter filter, PagingModel pagingModel)
         {
             _ = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
@@ -105,81 +125,226 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<bool> UpdateEventInfo(int id, EventInfo request)
         {
-            Event eventToUpdate = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
-                predicate: x => x.EventId.Equals(id))
-                ?? throw new NotFoundException("EventNotFound");
+            Func<IQueryable<Event>, IIncludableQueryable<Event, object>> include = q => q.Include(e => e.EventTimeLines);
 
-            // Validate ngày tháng
+            Event eventToUpdate = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
+                predicate: x => x.EventId.Equals(id),
+                include: include)
+                ?? throw new BadHttpRequestException("EventNotFound");
+
+            // Validate ngày tháng 
             if (request.StartDate.HasValue && request.EndDate.HasValue)
             {
-                // Validate khi cả StartDate và EndDate đều được cập nhật
                 if (request.EndDate.Value < request.StartDate.Value)
-                {
                     throw new BadHttpRequestException("EndDate cannot be earlier than StartDate.");
-                }
+            }
+            else if (request.StartDate.HasValue)
+            {
+                if (request.StartDate.Value > eventToUpdate.EndDate)
+                    throw new BadHttpRequestException("New StartDate cannot be later than the existing EndDate.");
             }
             else if (request.EndDate.HasValue)
             {
-                // Validate khi chỉ EndDate được cập nhật
-                // Nếu StartDate cũ không thay đổi, EndDate mới không được là ngày quá khứ so với StartDate cũ
                 if (request.EndDate.Value < eventToUpdate.StartDate)
-                {
                     throw new BadHttpRequestException("New EndDate cannot be earlier than the existing StartDate.");
-                }
             }
 
             if (request.OrganizerId.HasValue)
             {
-                User userId = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
-                    predicate: x => x.UserId.Equals(request.OrganizerId))
-                    ?? throw new NotFoundException("UserNotFound");
+                var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                    predicate: x => x.UserId.Equals(request.OrganizerId.Value))
+                    ?? throw new BadHttpRequestException("UserNotFound");
+
                 eventToUpdate.OrganizerId = request.OrganizerId.Value;
             }
 
-            // Validate tên sự kiện
+            if (request.MajorId.HasValue)
+            {
+                var major = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
+                    predicate: x => x.MajorId.Equals(request.MajorId.Value))
+                    ?? throw new BadHttpRequestException("MajorNotFound");
+
+                eventToUpdate.MajorId = request.MajorId.Value;
+            }
+
+            // Validate và cập nhật các trường string/date khác 
             if (!string.IsNullOrWhiteSpace(request.EventName))
             {
-                // Kiểm tra độ dài tên sự kiện
                 if (request.EventName.Length < 3 || request.EventName.Length > 100)
-                {
                     throw new BadHttpRequestException("Event name must be between 3 and 100 characters.");
-                }
+
                 eventToUpdate.EventName = request.EventName;
             }
 
-            // Validate mô tả
             if (!string.IsNullOrWhiteSpace(request.Description))
             {
-                // Kiểm tra độ dài mô tả
                 if (request.Description.Length > 1000)
-                {
                     throw new BadHttpRequestException("Description cannot exceed 1000 characters.");
-                }
+
                 eventToUpdate.Description = request.Description;
             }
 
-            // Validate địa điểm
             if (!string.IsNullOrWhiteSpace(request.Location))
             {
-                // Kiểm tra độ dài địa điểm
                 if (request.Location.Length > 200)
-                {
                     throw new BadHttpRequestException("Location cannot exceed 200 characters.");
-                }
+
                 eventToUpdate.Location = request.Location;
+            }
+
+            if (!string.IsNullOrEmpty(request.Status))
+            {
+                eventToUpdate.Status = request.Status;
             }
 
             eventToUpdate.StartDate = request.StartDate ?? eventToUpdate.StartDate;
             eventToUpdate.EndDate = request.EndDate ?? eventToUpdate.EndDate;
             eventToUpdate.Img = string.IsNullOrEmpty(request.Img) ? eventToUpdate.Img : request.Img;
-            eventToUpdate.UpdatedAt = DateTime.Now;
-            eventToUpdate.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name
-                /*?? throw new UnauthorizedAccessException("User not authenticated")*/ ;
+            eventToUpdate.UpdatedAt = DateTime.UtcNow;
+            eventToUpdate.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+
+            // --- helper local functions ---
+            TimeSpan ParseTimeSpanOrThrow(string input, string fieldName)
+            {
+                if (TimeSpan.TryParse(input, out var ts))
+                    return ts;
+
+                // Try common exact formats
+                var formats = new[] { "h\\:mm", "hh\\:mm", "hh\\:mm\\:ss", "h\\:mm\\:ss" };
+                foreach (var f in formats)
+                {
+                    if (TimeSpan.TryParseExact(input, f, null, out ts))
+                        return ts;
+                }
+
+                // Try ISO duration (PT...) as fallback
+                if (input.StartsWith("P", StringComparison.OrdinalIgnoreCase) ||
+                    input.StartsWith("PT", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        return System.Xml.XmlConvert.ToTimeSpan(input);
+                    }
+                    catch { }
+                }
+
+                throw new BadHttpRequestException($"Invalid {fieldName} format: '{input}'. Expected formats: 'HH:mm' or 'HH:mm:ss'.");
+            }
+
+            DateTime GetNextDateTimeForTime(Event e, TimeSpan timeOfDay, DateTime minAllowed)
+            {
+                // start searching from minAllowed.Date
+                var candidate = new DateTime(minAllowed.Year, minAllowed.Month, minAllowed.Day, timeOfDay.Hours, timeOfDay.Minutes, timeOfDay.Seconds);
+
+                // if candidate < minAllowed, move forward by days until >= minAllowed
+                while (candidate < minAllowed)
+                    candidate = candidate.AddDays(1);
+
+                // now ensure candidate is within event range
+                if (candidate < e.StartDate || candidate > e.EndDate)
+                    throw new BadHttpRequestException($"Timeline time {timeOfDay} (resolved to {candidate:u}) is outside event range [{e.StartDate:u} - {e.EndDate:u}].");
+
+                return candidate;
+            }
+
+            // Handle timelines (parse string -> TimeSpan -> validate DateTime in event range)
+            if (request.TimeLines != null)
+            {
+                var existingTimeLines = eventToUpdate.EventTimeLines.ToList();
+
+                foreach (var tlInfo in request.TimeLines)
+                {
+                    if (tlInfo.EventTimeLineId.HasValue)
+                    {
+                        var existing = existingTimeLines.FirstOrDefault(t => t.EventTimeLineId == tlInfo.EventTimeLineId.Value);
+                        if (existing == null)
+                            throw new BadHttpRequestException("TimeLineNotFound");
+
+                        existing.Title = string.IsNullOrEmpty(tlInfo.Title) ? existing.Title : tlInfo.Title;
+                        existing.Description = string.IsNullOrEmpty(tlInfo.Description) ? existing.Description : tlInfo.Description;
+
+                        // parse provided start/end strings if present; otherwise keep existing TimeSpan values
+                        TimeSpan startTs = existing.StartTime;
+                        TimeSpan endTs = existing.EndTime;
+
+                        DateTime startDt;
+                        DateTime endDt;
+
+                        if (!string.IsNullOrWhiteSpace(tlInfo.StartTime))
+                        {
+                            startTs = ParseTimeSpanOrThrow(tlInfo.StartTime!, "StartTime");
+                        }
+                        // resolve start date/time (earliest >= event.StartDate)
+                        startDt = GetNextDateTimeForTime(eventToUpdate, startTs, eventToUpdate.StartDate);
+
+                        if (!string.IsNullOrWhiteSpace(tlInfo.EndTime))
+                        {
+                            endTs = ParseTimeSpanOrThrow(tlInfo.EndTime!, "EndTime");
+                            // resolve end date/time as earliest >= startDt (allows crossing midnight to next day)
+                            endDt = GetNextDateTimeForTime(eventToUpdate, endTs, startDt);
+                        }
+                        else
+                        {
+                            // use existing endTs and ensure end >= start by resolving relative to startDt
+                            endDt = GetNextDateTimeForTime(eventToUpdate, endTs, startDt);
+                        }
+
+                        if (endDt < startDt)
+                            throw new BadHttpRequestException("Timeline EndTime cannot be earlier than StartTime.");
+
+                        // update persisted TimeSpan values
+                        existing.StartTime = startTs;
+                        existing.EndTime = endTs;
+
+                        _unitOfWork.GetRepository<EventTimeLine>().UpdateAsync(existing);
+                    }
+                    else
+                    {
+                        // New timeline -> require both start and end strings
+                        if (string.IsNullOrWhiteSpace(tlInfo.StartTime) || string.IsNullOrWhiteSpace(tlInfo.EndTime))
+                            throw new BadHttpRequestException("StartTime and EndTime are required for new timeline entries and must be non-empty strings.");
+
+                        var startTsNew = ParseTimeSpanOrThrow(tlInfo.StartTime!, "StartTime");
+                        var endTsNew = ParseTimeSpanOrThrow(tlInfo.EndTime!, "EndTime");
+
+                        // resolve startDt as earliest >= event.StartDate
+                        var startDtNew = GetNextDateTimeForTime(eventToUpdate, startTsNew, eventToUpdate.StartDate);
+                        // resolve endDt as earliest >= startDtNew (allows next-day end)
+                        var endDtNew = GetNextDateTimeForTime(eventToUpdate, endTsNew, startDtNew);
+
+                        if (endDtNew < startDtNew)
+                            throw new BadHttpRequestException("Timeline EndTime cannot be earlier than StartTime.");
+
+                        var newTL = new EventTimeLine
+                        {
+                            EventId = id, // ensure relation
+                            Title = tlInfo.Title,
+                            Description = tlInfo.Description,
+                            StartTime = startTsNew,
+                            EndTime = endTsNew
+                        };
+
+                        await _unitOfWork.GetRepository<EventTimeLine>().InsertAsync(newTL);
+                        eventToUpdate.EventTimeLines.Add(newTL); // keep in-memory consistent
+                    }
+                }
+
+                // Remove timelines not provided in the request (existing ones)
+                var providedIds = request.TimeLines.Where(t => t.EventTimeLineId.HasValue).Select(t => t.EventTimeLineId!.Value).ToList();
+                var toRemove = existingTimeLines.Where(t => !providedIds.Contains(t.EventTimeLineId)).ToList();
+
+                foreach (var tr in toRemove)
+                {
+                    _unitOfWork.GetRepository<EventTimeLine>().DeleteAsync(tr);
+                    var inMem = eventToUpdate.EventTimeLines.FirstOrDefault(x => x.EventTimeLineId == tr.EventTimeLineId);
+                    if (inMem != null) eventToUpdate.EventTimeLines.Remove(inMem);
+                }
+            }
 
             _unitOfWork.GetRepository<Event>().UpdateAsync(eventToUpdate);
-            bool isSuccesful = await _unitOfWork.CommitAsync() > 0;
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
-            return isSuccesful;
+            return isSuccessful;
         }
 
         public async Task<IPaginate<GetEventResponse>> ViewAllEvent(EventFilter filter, PagingModel pagingModel)
