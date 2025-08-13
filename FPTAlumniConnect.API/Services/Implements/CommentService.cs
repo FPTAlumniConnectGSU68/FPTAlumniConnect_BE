@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FPTAlumniConnect.API.Exceptions;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Comment;
@@ -42,6 +43,30 @@ namespace FPTAlumniConnect.API.Services.Implements
             // Validate the comment info
             ValidateCommentInfo(request);
 
+            // Get the target post
+            var post = await _postService.GetPostById(request.PostId);
+            if (post == null || post.AuthorId == null)
+                throw new BadHttpRequestException("Post not found");
+
+            // Get the parent Comment or not
+            if (request.ParentCommentId != null)
+            {
+                Comment parentComment = await _unitOfWork.GetRepository<Comment>().SingleOrDefaultAsync(
+                predicate: x => x.CommentId == request.ParentCommentId)
+                ?? throw new NotFoundException("ParentCommentNotFound");
+
+                // Kiểm tra PostId của comment cha có trùng với PostId gửi lên không
+                if (parentComment.PostId != request.PostId)
+                {
+                    throw new BadHttpRequestException("ParentCommentPostMismatch");
+                }
+            }
+
+            // Get the commenting user
+            var user = await _userService.GetUserById(request.AuthorId);
+            if (user == null)
+                throw new BadHttpRequestException("User not found");
+
             // Check content appropriateness using perspective API
             if (!await _perspectiveService.IsContentAppropriate(request.Content))
             {
@@ -53,18 +78,9 @@ namespace FPTAlumniConnect.API.Services.Implements
             newComment.CreatedAt = TimeHelper.NowInVietnam();
             newComment.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
             await _unitOfWork.GetRepository<Comment>().InsertAsync(newComment);
+
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
             if (!isSuccessful) throw new BadHttpRequestException("CreateFailed");
-
-            // Get the target post
-            var post = await _postService.GetPostById(request.PostId);
-            if (post == null || post.AuthorId == null)
-                throw new BadHttpRequestException("Post not found");
-
-            // Get the commenting user
-            var user = await _userService.GetUserById(request.AuthorId);
-            if (user == null)
-                throw new BadHttpRequestException("User not found");
 
             // Prepare notification for the post author
             var commenter = await _userService.GetUserById(request.AuthorId);
@@ -106,11 +122,42 @@ namespace FPTAlumniConnect.API.Services.Implements
         // Get comment by ID
         public async Task<CommentReponse> GetCommentById(int id)
         {
-            Comment comment = await _unitOfWork.GetRepository<Comment>().SingleOrDefaultAsync(
-                predicate: x => x.CommentId.Equals(id))
-                ?? throw new BadHttpRequestException("CommentNotFound");
+            // Lấy comment gốc
+            var comment = await _unitOfWork.GetRepository<Comment>()
+                .SingleOrDefaultAsync(
+                    predicate: x => x.CommentId == id,
+                    include: q => q.Include(c => c.Author)
+                ) ?? throw new BadHttpRequestException("CommentNotFound");
 
-            return _mapper.Map<CommentReponse>(comment);
+            // Map sang response
+            var response = _mapper.Map<CommentReponse>(comment);
+
+            // Lấy child comments (nhiều cấp)
+            response.ChildComments = await GetChildCommentsAsync(id);
+
+            return response;
+        }
+
+        // Hàm đệ quy lấy child comments
+        private async Task<List<CommentReponse>> GetChildCommentsAsync(int parentId)
+        {
+            // Lấy danh sách comment con của parentId
+            var childComments = await _unitOfWork.GetRepository<Comment>()
+                .GetListAsync(
+                    predicate: x => x.ParentCommentId == parentId,
+                    include: q => q.Include(c => c.Author)
+                );
+
+            // Map sang response
+            var childResponses = _mapper.Map<List<CommentReponse>>(childComments);
+
+            // Với mỗi comment con, lấy tiếp comment cháu (nếu có)
+            foreach (var child in childResponses)
+            {
+                child.ChildComments = await GetChildCommentsAsync(child.CommentId);
+            }
+
+            return childResponses;
         }
 
         // Update existing comment
@@ -132,90 +179,80 @@ namespace FPTAlumniConnect.API.Services.Implements
         // View paginated comments with validation of parent-child relationship
         public async Task<IPaginate<CommentReponse>> ViewAllComment(CommentFilter filter, PagingModel pagingModel)
         {
-            //var comments = await _unitOfWork.GetRepository<Comment>().GetPagingListAsync(
-            //    selector: x => _mapper.Map<CommentReponse>(x),
-            //    filter: filter,
-            //    orderBy: x => x.OrderBy(x => x.CreatedAt),
-            //    page: pagingModel.page,
-            //    size: pagingModel.size
-            //);
-            Expression<Func<Comment, bool>> predicate = x =>
-        (!filter.PostId.HasValue || x.PostId == filter.PostId) &&
-        (!filter.AuthorId.HasValue || x.AuthorId == filter.AuthorId) &&
-        (x.ParentCommentId == filter.ParentCommentId);
+            // 1) Lấy root comments theo filter + paging
+            Expression<Func<Comment, bool>> rootPredicate = x =>
+                (!filter.PostId.HasValue || x.PostId == filter.PostId) &&
+                (!filter.AuthorId.HasValue || x.AuthorId == filter.AuthorId) &&
+                (x.ParentCommentId == filter.ParentCommentId);
 
-            var comments = await _unitOfWork.GetRepository<Comment>().GetPagingListAsync(
+            var rootComments = await _unitOfWork.GetRepository<Comment>().GetPagingListAsync(
                 selector: x => _mapper.Map<CommentReponse>(x),
-                predicate: predicate,
+                predicate: rootPredicate,
                 include: q => q.Include(c => c.Author),
                 orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size
             );
 
-            // If getting root comments, include their direct replies in ChildComments
-            if (filter.ParentCommentId == null)
+            if (!rootComments.Items.Any())
+                return rootComments;
+
+            // 2) Xác định postId (dùng filter nếu có, nếu không thì lấy từ một root comment)
+            var postId = filter.PostId ?? rootComments.Items.First().PostId;
+
+            // 3) Lấy tất cả comment của post trong 1 query (để dựng full tree)
+            var allCommentsEntities = await _unitOfWork.GetRepository<Comment>().GetListAsync(
+                predicate: x => x.PostId == postId,
+                include: q => q.Include(c => c.Author)
+            );
+
+            // 4) Map tất cả sang CommentReponse và tạo dictionary cho lookup nhanh
+            var allMapped = allCommentsEntities
+                .Select(c => _mapper.Map<CommentReponse>(c))
+                .OrderBy(c => c.CreatedAt)
+                .ToDictionary(c => c.CommentId, c => c);
+
+            // 5) Dựng cây: thêm mỗi comment vào ChildComments của parent (nếu có)
+            foreach (var comment in allMapped.Values)
             {
-                var commentIds = comments.Items.Select(c => c.CommentId).ToList();
-
-                var childComments = await _unitOfWork.GetRepository<Comment>().GetListAsync(
-                    predicate: x => commentIds.Contains(x.ParentCommentId.Value),
-                    include: q => q.Include(c => c.Author)
-                );
-
-                var mappedChildComments = childComments
-                    .Select(x => _mapper.Map<CommentReponse>(x))
-                    .ToList();
-
-                // Group child comments by ParentCommentId
-                var groupedReplies = mappedChildComments
-                    .GroupBy(x => x.ParentCommentId)
-                    .ToDictionary(g => g.Key!.Value, g => g.ToList());
-
-                // Assign replies to corresponding root comment
-                foreach (var parent in comments.Items)
+                if (comment.ParentCommentId.HasValue)
                 {
-                    if (groupedReplies.TryGetValue(parent.CommentId, out var replies))
+                    if (allMapped.TryGetValue(comment.ParentCommentId.Value, out var parent))
                     {
-                        parent.ChildComments = replies;
+                        parent.ChildComments ??= new List<CommentReponse>();
+                        parent.ChildComments.Add(comment);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Parent comment not found for CommentId = {CommentId}", comment.CommentId);
                     }
                 }
             }
 
-            var errorMessages = new List<string>();
-
-            foreach (var commentResponse in comments.Items)
+            // 6) Thay từng phần tử root trong Items bằng bản full tree
+            for (int i = 0; i < rootComments.Items.Count; i++)
             {
-                // If comment has a parent, validate its existence and PostId
-                if (commentResponse.ParentCommentId.HasValue)
+                var rootId = rootComments.Items[i].CommentId;
+                if (allMapped.TryGetValue(rootId, out var fullTree))
                 {
-                    var parentComment = await _unitOfWork.GetRepository<Comment>()
-                        .FindAsync(x => x.CommentId == commentResponse.ParentCommentId.Value);
-
-                    if (parentComment == null)
-                    {
-                        errorMessages.Add($"Parent comment not found for CommentId = {commentResponse.CommentId} (ParentCommentId = {commentResponse.ParentCommentId})");
-                        continue;
-                    }
-
-                    if (parentComment.PostId != commentResponse.PostId)
-                    {
-                        errorMessages.Add($"PostId mismatch between comment (ID = {commentResponse.CommentId}, PostId = {commentResponse.PostId}) and its parent (ID = {parentComment.CommentId}, PostId = {parentComment.PostId})");
-                        continue;
-                    }
+                    rootComments.Items[i] = fullTree;
                 }
             }
 
-            // Optional: Log the validation errors
-            if (errorMessages.Any())
+            // 7) Sắp xếp con theo CreatedAt đệ quy
+            void SortChildrenRecursive(CommentReponse node)
             {
-                foreach (var message in errorMessages)
-                {
-                    Console.WriteLine(message); // Or use logger
-                }
+                if (node.ChildComments == null || !node.ChildComments.Any()) return;
+                node.ChildComments = node.ChildComments.OrderBy(c => c.CreatedAt).ToList();
+                foreach (var child in node.ChildComments) SortChildrenRecursive(child);
             }
 
-            return comments;
+            foreach (var root in rootComments.Items)
+            {
+                SortChildrenRecursive(root);
+            }
+
+            return rootComments;
         }
     }
 }
