@@ -4,6 +4,7 @@ using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -13,18 +14,23 @@ namespace FPTAlumniConnect.API.Services.Implements
     public class PhoBertService : BaseService<PhoBertService>, IPhoBertService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiToken = "";
+        private readonly string _apiToken;
         private readonly ICVService _cvService;
         private readonly IJobPostService _jobPostService;
+
         public PhoBertService(
             IUnitOfWork<AlumniConnectContext> unitOfWork,
             ILogger<PhoBertService> logger,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             ICVService cvService,
-            IJobPostService jobPostService)
+            IJobPostService jobPostService,
+            IConfiguration configuration) // Thêm IConfiguration
             : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _apiToken = configuration["HuggingFace:ApiToken"]
+                        ?? Environment.GetEnvironmentVariable("HUGGINGFACE_API_TOKEN")
+                        ?? throw new ArgumentNullException("HuggingFace:ApiToken", "API token is not configured.");
             _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
             _cvService = cvService;
@@ -33,58 +39,26 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<double[]> GenerateEmbedding(EmbeddingRequest text)
         {
-            var requestBody = new { inputs = text };
+            if (string.IsNullOrWhiteSpace(text?.Inputs))
+                throw new ArgumentNullException(nameof(text), "Input text cannot be null or empty.");
+
+            var requestBody = new { inputs = text.Inputs };
             var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
             try
             {
-                // Sử dụng đúng endpoint của mô hình
                 var response = await _httpClient.PostAsync("https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2", content);
-                response.EnsureSuccessStatusCode(); // Kiểm tra thành công của response
+                response.EnsureSuccessStatusCode();
 
-                // Đọc và xử lý phản hồi từ API
                 var responseBody = await response.Content.ReadAsStringAsync();
-                var embedding = JsonSerializer.Deserialize<double[]>(responseBody);
-
-                return embedding ?? throw new Exception("Failed to generate embedding.");
+                var embeddingList = JsonSerializer.Deserialize<List<double[]>>(responseBody);
+                return embeddingList?.FirstOrDefault() ?? throw new Exception("Failed to parse embedding.");
             }
             catch (Exception ex)
             {
-                // Xử lý ngoại lệ nếu có
-                throw new Exception($"Error generating embedding: {ex.Message}");
+                throw new Exception($"Error generating embedding: {ex.Message}", ex);
             }
         }
-
-
-        //public async Task<int?> FindBestMatchingCV(EmbeddingRequest jobDescription)
-        //{
-        //    var jobEmbedding = await GenerateEmbedding(jobDescription);
-        //
-        //    var cvRepository = _unitOfWork.GetRepository<Cv>();
-        //    var cvs = await cvRepository.GetAllAsync();
-        //
-        //    int? bestCvId = null;
-        //    double bestScore = -1.0;
-        //
-        //    foreach (var cv in cvs)
-        //    {
-        //        if (cv.Embedding != null)
-        //        {
-        //            var cvEmbedding = JsonSerializer.Deserialize<double[]>(cv.Embedding);
-        //            if (cvEmbedding != null)
-        //            {
-        //                var similarityScore = CalculateCosineSimilarity(jobEmbedding, cvEmbedding);
-        //                if (similarityScore > bestScore)
-        //                {
-        //                    bestScore = similarityScore;
-        //                    bestCvId = cv.Id;
-        //                }
-        //            }
-        //        }
-        //    }
-        //
-        //    return bestCvId;
-        //}
 
         private double CalculateCosineSimilarity(double[] vecA, double[] vecB)
         {
@@ -101,29 +75,24 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return dotProduct / (magnitudeA * magnitudeB);
         }
+
         private double CalculateScore(Cv cv, JobPostResponse job)
         {
             double score = 0.0;
 
-            double locationScore = cv.City.Equals(job.Location, StringComparison.OrdinalIgnoreCase) ? 1.0 : 0.5;
+            double locationScore = cv.City?.Equals(job.Location, StringComparison.OrdinalIgnoreCase) == true ? 1.0 : 0.5;
             score += locationScore;
 
             double salaryScore = (cv.MinSalary <= job.MaxSalary && cv.MaxSalary >= job.MinSalary) ? 1.0 : 0.5;
             score += salaryScore;
 
-            double languageScore = cv.Language.Equals(job.Requirements, StringComparison.OrdinalIgnoreCase) ? 1.0 : 0.5;
+            double languageScore = cv.Language?.Equals(job.Requirements, StringComparison.OrdinalIgnoreCase) == true ? 1.0 : 0.5;
             score += languageScore;
-
-            //var matchingSkills = cv.SkillJobs.Select(s => s.Skill)
-            //                                 .Intersect(job.Requirements?.Split(',') ?? new string[0], StringComparer.OrdinalIgnoreCase)
-            //                                 .Count();
-            //double skillScore = (double)matchingSkills / Math.Max(1, cv.SkillJobs.Count);
-            //score += skillScore;
 
             double majorScore = (cv.User?.MajorId == job.MajorId) ? 1.0 : 0.0;
             score += majorScore;
 
-            return score / 5.0;
+            return score / 4.0; // Cập nhật số lượng yếu tố (4 thay vì 5 do thiếu skillScore)
         }
 
         public async Task<List<Cv>> RecommendCVForJobPostAsync(int jobPostId)
