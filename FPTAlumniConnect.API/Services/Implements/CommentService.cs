@@ -75,6 +75,8 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Map to entity and insert into database
             Comment newComment = _mapper.Map<Comment>(request);
+            newComment.CreatedAt = TimeHelper.NowInVietnam();
+            newComment.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
             await _unitOfWork.GetRepository<Comment>().InsertAsync(newComment);
 
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
@@ -167,7 +169,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // PostId, AuthorId, and ParentCommentId should not be changed
             comment.Content = string.IsNullOrEmpty(request.Content) ? comment.Content : request.Content;
-            comment.UpdatedAt = DateTime.Now;
+            comment.UpdatedAt = TimeHelper.NowInVietnam();
             comment.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<Comment>().UpdateAsync(comment);
@@ -187,7 +189,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 selector: x => _mapper.Map<CommentReponse>(x),
                 predicate: rootPredicate,
                 include: q => q.Include(c => c.Author),
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size
             );

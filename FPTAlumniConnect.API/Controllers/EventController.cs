@@ -126,15 +126,46 @@ namespace FPTAlumniConnect.API.Controllers
             }
         }
 
+        [HttpGet(ApiEndPointConstant.Event.EventDetailEndPoint)]
+        [ProducesResponseType(typeof(EventDetailResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetEventDetail([FromRoute] int id)
+        {
+            try
+            {
+                var response = await _eventService.GetEventByIdAsync(id);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (NotFoundException nf)
+            {
+                _logger.LogInformation("Event not found: {EventId}", id);
+                return NotFound(new { status = "error", message = nf.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch event detail for {EventId}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { status = "error", message = "Internal server error" });
+            }
+        }
+
         [HttpGet(ApiEndPointConstant.Event.EventJoinedByUserIdEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetEventJoinedByUserId(int id)
+        public async Task<IActionResult> GetEventJoinedByUserId(
+            [FromRoute] int id,
+            [FromQuery] EventFilter filter,
+            [FromQuery] PagingModel pagingModel)
         {
             try
             {
-                var response = await _eventService.GetEventsUserJoined(id);
+                var response = await _eventService.GetEventsUserJoined(id, filter, pagingModel);
                 return Ok(new
                 {
                     status = "success",

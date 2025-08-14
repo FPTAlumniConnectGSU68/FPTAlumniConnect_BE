@@ -38,6 +38,51 @@ namespace FPTAlumniConnect.API.Controllers
             }
         }
 
+        [HttpPost(ApiEndPointConstant.Schedule.AcceptMentorshipEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> AcceptMentorShip([FromBody] ScheduleInfo request)
+        {
+            if (request == null)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
+            try
+            {
+                var id = await _scheduleService.AcceptMentorShip(request);
+                return StatusCode(201, new
+                {
+                    status = "success",
+                    message = "Mentorship accepted and schedule created successfully",
+                    data = new { id }
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message,
+                    errors = new[] { ex.Message }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to accept mentorship or create schedule");
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
+            }
+        }
+
         [HttpGet(ApiEndPointConstant.Schedule.ScheduleMentorEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
@@ -85,10 +130,25 @@ namespace FPTAlumniConnect.API.Controllers
                     data = new { id }
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                // Handle specific service-layer validation errors
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message, // Use the specific error message from the service
+                    errors = new[] { ex.Message }
+                });
+            }
             catch (Exception ex)
             {
+                // Handle unexpected errors
                 _logger.LogError(ex, "Failed to create schedule");
-                return StatusCode(500, new { status = "error", message = "Internal server error" });
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
             }
         }
 
@@ -145,5 +205,82 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        [HttpPatch(ApiEndPointConstant.Schedule.CompleteScheduleEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CompleteSchedule(int id)
+        {
+            try
+            {
+                var isSuccessful = await _scheduleService.CompleteSchedule(id);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Completion failed" });
+                }
+
+                return Ok(new { status = "success", message = "Schedule and mentorship status updated to Completed" });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message,
+                    errors = new[] { ex.Message }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to complete schedule or update mentorship status");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+        [HttpPost(ApiEndPointConstant.Schedule.ScheduleRateMentorEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> RateMentor([FromRoute] int scheduleId, [FromBody] RateMentorRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Comment) || request.Rate < 1 || request.Rate > 5)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Invalid rating data" }
+                });
+            }
+
+            try
+            {
+                var success = await _scheduleService.RateMentor(scheduleId, request.Comment, request.Rate);
+
+                if (!success)
+                {
+                    return Ok(new
+                    {
+                        status = "error",
+                        message = "Rating failed"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Mentor rated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to rate mentor");
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
+            }
+        }
+
     }
 }

@@ -20,6 +20,38 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
         }
 
+        // Accept mentorship and create a new schedule
+        public async Task<int> AcceptMentorShip(ScheduleInfo request)
+        {
+            // Validate mentorship ID in the request
+            if (!request.MentorShipId.HasValue || request.MentorShipId.Value == 0)
+                throw new BadHttpRequestException("MentorShipId is required.");
+
+            // Validate mentorship existence
+            var mentorship = await EnsureMentorshipExists(request.MentorShipId.Value);
+
+            // Ensure mentor ID is provided and valid
+            if (!request.MentorId.HasValue || request.MentorId.Value == 0)
+                throw new BadHttpRequestException("MentorId is required.");
+            await EnsureUserExists(request.MentorId.Value);
+
+            // Create new schedule
+            var newSchedule = _mapper.Map<Schedule>(request);
+            await _unitOfWork.GetRepository<Schedule>().InsertAsync(newSchedule);
+
+            // Update mentorship status
+            mentorship.Status = "Active";
+            mentorship.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            _unitOfWork.GetRepository<Mentorship>().UpdateAsync(mentorship);
+
+            // Commit both operations
+            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            if (!isSuccessful)
+                throw new BadHttpRequestException("Failed to create schedule or update mentorship status.");
+
+            return newSchedule.ScheduleId;
+        }
+
         // Create a new schedule
         public async Task<int> CreateNewSchedule(ScheduleInfo request)
         {
@@ -63,6 +95,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
                 selector: x => _mapper.Map<ScheduleReponse>(x),
                 predicate: x => x.MentorId == id,
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 include: q => q.Include(x => x.Mentor)
                               .Include(x => x.MentorShip)
                               .ThenInclude(m => m.Aumni))
@@ -91,24 +124,6 @@ namespace FPTAlumniConnect.API.Services.Implements
                 schedule.MentorId = request.MentorId.Value;
             }
 
-            // Validate and update time range
-            if (request.StartTime.HasValue)
-            {
-                if (request.StartTime.Value < DateTime.UtcNow)
-                    throw new BadHttpRequestException("StartTime cannot be in the past.");
-
-                schedule.StartTime = request.StartTime.Value;
-            }
-
-            if (request.EndTime.HasValue)
-            {
-                DateTime compareStart = request.StartTime ?? schedule.StartTime;
-                if (request.EndTime.Value < compareStart)
-                    throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
-
-                schedule.EndTime = request.EndTime.Value;
-            }
-
             // Update content and status if available
             if (!string.IsNullOrEmpty(request.Content))
                 schedule.Content = request.Content;
@@ -133,6 +148,27 @@ namespace FPTAlumniConnect.API.Services.Implements
             return await _unitOfWork.CommitAsync() > 0;
         }
 
+        // Complete a schedule by updating status to Completed for both schedule and mentorship
+        public async Task<bool> CompleteSchedule(int id)
+        {
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
+                predicate: x => x.ScheduleId == id)
+                ?? throw new BadHttpRequestException("ScheduleNotFound");
+
+            var mentorship = await EnsureMentorshipExists(schedule.MentorShipId ?? 0);
+
+            schedule.Status = "Completed";
+            schedule.UpdatedAt = DateTime.UtcNow;
+            schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
+
+            mentorship.Status = "Completed";
+            mentorship.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            _unitOfWork.GetRepository<Mentorship>().UpdateAsync(mentorship);
+
+            return await _unitOfWork.CommitAsync() > 0;
+        }
+
         // View paginated list of schedules
         public async Task<IPaginate<ScheduleReponse>> ViewAllSchedule(ScheduleFilter filter, PagingModel pagingModel)
         {
@@ -142,9 +178,28 @@ namespace FPTAlumniConnect.API.Services.Implements
                               .Include(x => x.MentorShip)
                               .ThenInclude(m => m.Aumni),
                 filter: filter,
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size);
+        }
+
+        // Rate mentor for a schedule
+        public async Task<bool> RateMentor(int scheduleId, string comment, int rate)
+        {
+            var schedule = await _unitOfWork.GetRepository<Schedule>().SingleOrDefaultAsync(
+                predicate: x => x.ScheduleId == scheduleId)
+                ?? throw new BadHttpRequestException("ScheduleNotFound");
+
+            if (rate < 0 || rate > 5)
+                throw new BadHttpRequestException("Rating must be between 0 and 5.");
+
+            schedule.Comment = comment;
+            schedule.Rating = rate;
+            schedule.UpdatedAt = DateTime.UtcNow;
+            schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+
+            _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
         // Ensure mentorship exists

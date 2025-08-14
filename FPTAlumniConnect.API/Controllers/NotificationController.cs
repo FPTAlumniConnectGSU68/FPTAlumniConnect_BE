@@ -46,20 +46,11 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         //[ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        public async Task<IActionResult> MarkAsRead(int notificationId, [FromBody] NotificationPayload request)
+        public async Task<IActionResult> MarkAsRead(int notificationId)
         {
             //var result = await _notificationService.MarkAsReadAsync(notificationId);
             //if (result) return Ok("Notification marked as read.");
-            //return BadRequest("Failed to mark notification as read.");
-            if (request == null)
-            {
-                return BadRequest(new
-                {
-                    status = "error",
-                    message = "Bad request",
-                    errors = new[] { "Request body is null or malformed" }
-                });
-            }
+            //return BadRequest("Failed to mark notification as read.")
             try
             {
                 var isSuccessful = await _notificationService.MarkAsReadAsync(notificationId);

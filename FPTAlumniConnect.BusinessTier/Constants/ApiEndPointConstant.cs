@@ -26,6 +26,7 @@
         {
             public const string PostsEndPoint = ApiEndpoint + "/posts";
             public const string PostEndPoint = PostsEndPoint + "/{id}";
+            public const string TopUsersEndPoint = PostsEndPoint + "/top-users";
         }
         public static class PostReport
         {
@@ -47,9 +48,12 @@
         }
         public static class Schedule
         {
-            public const string SchedulesEndPoint = ApiEndpoint + "/schedules";
-            public const string ScheduleEndPoint = SchedulesEndPoint + "/{id}";
-            public const string ScheduleMentorEndPoint = SchedulesEndPoint + "/mentor/{id}";
+            public const string SchedulesEndPoint = "/api/schedules";
+            public const string ScheduleEndPoint = "/api/schedules/{id}";
+            public const string ScheduleMentorEndPoint = "/api/schedules/mentor/{id}";
+            public const string AcceptMentorshipEndPoint = "/api/schedules/mentorship/accept";
+            public const string CompleteScheduleEndPoint = "/api/schedules/complete/{id}";
+            public const string ScheduleRateMentorEndPoint = "api/schedules/rate/{scheduleId}";
         }
         public static class CV
         {
@@ -80,6 +84,7 @@
             public const string EventConflictEndPoint = EventsEndPoint + "/conflict";
             public const string SuggestBestTimeForNewEventEndPoint = EventsEndPoint + "/suggest";
             public const string EventCountByStatusEndPoint = EventsEndPoint + "/count";
+            public const string EventDetailEndPoint = EventsEndPoint + "/detail/{id}";
         }
         public static class UserJoinEvent
         {

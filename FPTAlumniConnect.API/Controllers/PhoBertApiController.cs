@@ -1,5 +1,6 @@
 ﻿using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
+using FPTAlumniConnect.BusinessTier.Payload;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
@@ -17,9 +18,9 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPost(ApiEndPointConstant.PhoBert.FindBestMatchingCVEndpoint)]
         [ProducesResponseType(typeof(int?), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> FindBestMatchingCV(int idJobPost)
+        public async Task<IActionResult> FindBestMatchingCV(int idJobPost, [FromQuery] PagingModel pagingModel)
         {
-            var bestCvId = await _phoBertService.RecommendCVForJobPostAsync(idJobPost);
+            var bestCvId = await _phoBertService.RecommendCVForJobPostAsync(idJobPost, pagingModel);
             if (bestCvId == null)
             {
                 return NotFound("No matching CV found.");
