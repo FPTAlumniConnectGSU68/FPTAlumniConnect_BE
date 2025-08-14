@@ -31,6 +31,5 @@
         public double? AverageRating { get; set; }
 
         public int UserJoinEventCount { get; set; }
-
     }
 }
