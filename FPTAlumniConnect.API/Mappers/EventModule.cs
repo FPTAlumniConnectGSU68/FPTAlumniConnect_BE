@@ -8,12 +8,15 @@ namespace FPTAlumniConnect.API.Mappers
     {
         public EventModule()
         {
-            CreateMap<Event, GetEventResponse>().ForMember(dest => dest.AverageRating,
+            CreateMap<Event, GetEventResponse>()
+                .ForMember(dest => dest.AverageRating,
                        opt => opt.MapFrom(src =>
                            src.UserJoinEvents != null && src.UserJoinEvents.Any()
                                ? src.UserJoinEvents.Average(u => u.Rating ?? 0)
-                               : (double?)null
-                       ));
+                               : (double?)null))
+                .ForMember(dest => dest.UserJoinEventCount,
+                        opt => opt.MapFrom(src => src.UserJoinEvents.Count));
+
             CreateMap<EventInfo, Event>();
             CreateMap<UserJoinEvent, GetEventResponse>()
                 .ForMember(dest => dest.EventId, opt => opt.MapFrom(src => src.Event.EventId))
@@ -33,7 +36,7 @@ namespace FPTAlumniConnect.API.Mappers
                     opt => opt.MapFrom(src => src.Event.UserJoinEvents.Any()
                         ? src.Event.UserJoinEvents.Average(u => u.Rating ?? 0)
                         : (double?)null))
-                .ForMember(dest => dest.UserJoinEventId, opt => opt.MapFrom(src => src.Id));
+                .ForMember(dest => dest.UserJoinEventCount, opt => opt.MapFrom(src => src.Id));
             CreateMap<EventTimeLineInfo, EventTimeLine>();
             CreateMap<Event, EventDetailResponse>()
                 .ForMember(dest => dest.AverageRating,
