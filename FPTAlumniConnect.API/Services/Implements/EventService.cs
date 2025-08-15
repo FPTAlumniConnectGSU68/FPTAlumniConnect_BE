@@ -24,6 +24,14 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<int> CreateNewEvent(EventInfo request)
         {
+            // Kiểm tra lịch trùng
+            var duplicateEvent = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
+                predicate: x => x.EventName == request.EventName
+                             && x.StartDate == request.StartDate);
+
+            if (duplicateEvent != null)
+                throw new BadHttpRequestException("An event with the same name and start date already exists.");
+
             if (request.StartDate.HasValue && request.StartDate.Value < DateTime.UtcNow)
                 throw new BadHttpRequestException("StartDate cannot be in the past.");
 
@@ -42,14 +50,13 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             // Kiểm tra OrganizerId hợp lệ
-            User user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+            var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                 predicate: x => x.UserId == request.OrganizerId)
                 ?? throw new NotFoundException("UserNotFound");
 
             var majorId = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
                 predicate: x => x.MajorId == request.MajorId)
                 ?? throw new NotFoundException("MajorIdNotFound");
-
 
             var newEvent = _mapper.Map<Event>(request);
             var userName = _httpContextAccessor.HttpContext?.User.Identity?.Name;
@@ -435,6 +442,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         // Lấy events sắp xếp theo độ phổ biến (dựa vào số lượng người tham gia)
         public async Task<IEnumerable<EventPopularityDto>> GetEventsByPopularity(int top)
         {
+            if (top <= 0) throw new BadHttpRequestException("Số lượng lớn hơn 0");
             var paginatedEvents = await _unitOfWork.GetRepository<Event>()
                 .GetPagingListAsync(
                     include: x => x.Include(e => e.UserJoinEvents),

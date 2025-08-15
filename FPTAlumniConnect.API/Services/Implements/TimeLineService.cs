@@ -84,6 +84,8 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<IPaginate<TimeLineReponse>> ViewAllTimeLine(TimeLineFilter filter, PagingModel pagingModel)
         {
+            _logger.LogInformation("Viewing all timelines with filter and paging.");
+
             IPaginate<TimeLineReponse> response = await _unitOfWork.GetRepository<EventTimeLine>().GetPagingListAsync(
                 selector: x => _mapper.Map<TimeLineReponse>(x),
                 filter: filter,
@@ -91,11 +93,6 @@ namespace FPTAlumniConnect.API.Services.Implements
                 page: pagingModel.page,
                 size: pagingModel.size
             );
-
-            if (response == null || response.Items.Count == 0)
-            {
-                throw new BadHttpRequestException("No timelines found.");
-            }
 
             return response;
         }
