@@ -12,7 +12,7 @@ services:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
     depends_on:
-      - app
+      - api
     restart: unless-stopped
 
   certbot:
