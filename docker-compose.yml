@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   nginx:
     image: nginx:latest
@@ -9,8 +7,8 @@ services:
       - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
     depends_on:
       - api
     networks:
@@ -21,12 +19,13 @@ services:
     image: certbot/certbot
     container_name: certbot
     volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
       - ./nginx/conf.d:/etc/nginx/conf.d
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - fptalumni-network
-    entrypoint: sh -c "trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; nginx -s reload; done"
+    entrypoint: sh -c "trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; docker kill -s HUP nginx; done"
 
   # SQL Server Database
   sqlserver:
@@ -77,8 +76,6 @@ services:
 
 volumes:
   sqlserver_data:
-  certbot-etc:
-  certbot-var:
 
 networks:
   fptalumni-network:
