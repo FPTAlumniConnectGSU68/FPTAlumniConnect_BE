@@ -2,6 +2,7 @@
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
+using FPTAlumniConnect.BusinessTier.Payload.Post;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
@@ -95,6 +96,15 @@ namespace FPTAlumniConnect.API.Services.Implements
                 );
             return response;
         }
+
+        public async Task<int> CountAllMentorships()
+        {
+            ICollection<MentorshipReponse> mentorships = await _unitOfWork.GetRepository<Mentorship>().GetListAsync(
+                selector: x => _mapper.Map<MentorshipReponse>(x));
+            int count = mentorships.Count();
+            return count;
+        }
+
 
         // Get mentorship statistics by status
         public async Task<Dictionary<string, int>> GetMentorshipStatusStatistics()

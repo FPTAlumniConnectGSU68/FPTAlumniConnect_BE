@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Services.Implements;
+using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
@@ -112,6 +113,29 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        [HttpGet(ApiEndPointConstant.Mentorship.CountEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountAllMentorships()
+        {
+            try
+            {
+                var response = await _mentorshipService.CountAllMentorships();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch mentorship");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
 
         [HttpPatch(ApiEndPointConstant.Mentorship.MentorshipEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]

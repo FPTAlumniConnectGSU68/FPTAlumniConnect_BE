@@ -82,6 +82,28 @@ namespace FPTAlumniConnect.API.Controllers
             }
         }
 
+        [HttpGet(ApiEndPointConstant.User.CountEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountAllUser()
+        {
+            try
+            {
+                var response = await _userService.CountAllUsers();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch user");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
         [HttpGet(ApiEndPointConstant.User.MentorRatingEndPoint)]
         [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(int), StatusCodes.Status500InternalServerError)]

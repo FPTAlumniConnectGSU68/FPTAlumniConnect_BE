@@ -2,6 +2,7 @@
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
+using FPTAlumniConnect.BusinessTier.Payload.User;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
@@ -182,6 +183,15 @@ namespace FPTAlumniConnect.API.Services.Implements
                 page: pagingModel.page,
                 size: pagingModel.size);
         }
+
+        public async Task<int> CountAllSchedules()
+        {
+            ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                selector: x => _mapper.Map<ScheduleReponse>(x));
+            int count = schedules.Count();
+            return count;
+        }
+
 
         // Rate mentor for a schedule
         public async Task<bool> RateMentor(int scheduleId, string comment, int rate)
