@@ -1,6 +1,29 @@
-version: '3.8'
+version: "3.8"
 
 services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    entrypoint: sh -c "trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; nginx -s reload; done"
+
   # SQL Server Database
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -36,8 +59,9 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5000:80"
+      - "5000:5000"
       - "5001:443"
+    container_name: api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__SQLServerDatabase=Server=sqlserver;Database=AlumniConnect;User ID=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
@@ -49,7 +73,9 @@ services:
 
 volumes:
   sqlserver_data:
+  certbot-etc:
+  certbot-var:
 
 networks:
   fptalumni-network:
-    driver: bridge 
+    driver: bridge
