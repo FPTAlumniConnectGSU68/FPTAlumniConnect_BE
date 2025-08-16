@@ -18,6 +18,7 @@
         {
             public const string UsersEndPoint = ApiEndpoint + "/users";
             public const string MentorsEndPoint = ApiEndpoint + "/mentors";
+            public const string CountEndPoint = UsersEndPoint + "/count";
             public const string MentorRatingEndPoint = ApiEndpoint + "/mentors/{id}";
             public const string UserEndPoint = UsersEndPoint + "/{id}";
             public const string UserLoginEndPoint = UsersEndPoint + "/login";
@@ -27,6 +28,7 @@
             public const string PostsEndPoint = ApiEndpoint + "/posts";
             public const string PostEndPoint = PostsEndPoint + "/{id}";
             public const string TopUsersEndPoint = PostsEndPoint + "/top-users";
+            public const string CountEndPoint = PostsEndPoint + "/count";
         }
         public static class PostReport
         {
@@ -45,6 +47,7 @@
             public const string MentorshipAlumniIdEndPoint = MentorshipsEndPoint + "/alumni/{id}";
             public const string MentorshipStatisticsEndPoint = MentorshipsEndPoint + "/statistics";
             public const string MentorshipAutoCancelEndPoint = MentorshipsEndPoint + "/autocancel";
+            public const string CountEndPoint = MentorshipsEndPoint + "/count";
         }
         public static class Schedule
         {
@@ -54,6 +57,7 @@
             public const string AcceptMentorshipEndPoint = "/api/schedules/mentorship/accept";
             public const string CompleteScheduleEndPoint = "/api/schedules/complete/{id}";
             public const string ScheduleRateMentorEndPoint = "api/schedules/rate/{scheduleId}";
+            public const string CountEndPoint = SchedulesEndPoint + "/count";
         }
         public static class CV
         {
@@ -124,6 +128,7 @@
             public const string JobPostsEndPoint = ApiEndpoint + "/jobposts";
             public const string JobPostEndPoint = JobPostsEndPoint + "/{id}";
             public const string SearchJobPostsEndPoint = JobPostsEndPoint + "/search";
+            public const string CountEndPoint = JobPostsEndPoint + "/count";
         }
         public static class JobApplication
         {

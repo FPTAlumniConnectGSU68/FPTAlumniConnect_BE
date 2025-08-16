@@ -10,7 +10,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IPaginate<JobPostResponse>> ViewAllJobPosts(JobPostFilter filter, PagingModel pagingModel);
         Task<bool> UpdateJobPostInfo(int id, JobPostInfo request);
         Task<JobPostResponse> GetJobPostById(int id);
-
+        Task<int> CountAllJobPosts();
         Task<IEnumerable<JobPostResponse>> SearchJobPosts(string keyword, int? minSalary, int? maxSalary);
     }
 }

@@ -283,6 +283,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             return averageRating ?? 0;
         }
 
+        public async Task<int> CountAllUsers()
+        {
+            ICollection<GetUserResponse> users = await _unitOfWork.GetRepository<User>().GetListAsync(
+                selector: x => _mapper.Map<GetUserResponse>(x));
+                int count = users.Count();
+                return count;
+        }
+
         public async Task<GoogleUserResponse> VerifyGoogleTokenAsync(string token)
         {
             try
