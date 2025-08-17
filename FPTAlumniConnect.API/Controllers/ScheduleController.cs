@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Services.Implements;
+using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
@@ -173,6 +174,30 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        [HttpGet(ApiEndPointConstant.Schedule.CountEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountAllSchedules()
+        {
+            try
+            {
+                var response = await _scheduleService.CountAllSchedules();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch schedule");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+
 
         [HttpPatch(ApiEndPointConstant.Schedule.ScheduleEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]

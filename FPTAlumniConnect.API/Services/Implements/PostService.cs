@@ -2,6 +2,7 @@
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Post;
+using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
@@ -95,6 +96,15 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return response;
         }
+
+        public async Task<int> CountAllPosts()
+        {
+            ICollection<PostReponse> posts = await _unitOfWork.GetRepository<Post>().GetListAsync(
+                selector: x => _mapper.Map<PostReponse>(x));
+            int count = posts.Count();
+            return count;
+        }
+
 
         // Helper: Update post fields from request
         private void UpdatePostFields(Post post, PostInfo request)

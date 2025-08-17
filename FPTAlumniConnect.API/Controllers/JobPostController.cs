@@ -4,6 +4,7 @@ using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using FPTAlumniConnect.API.Services.Implements;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -147,6 +148,29 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        [HttpGet(ApiEndPointConstant.JobPost.CountEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountAllJobPosts()
+        {
+            try
+            {
+                var response = await _jobPostService.CountAllJobPosts();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch job post");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
 
         [HttpGet(ApiEndPointConstant.JobPost.SearchJobPostsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]

@@ -2,6 +2,7 @@
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
+using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
 using FPTAlumniConnect.BusinessTier.Utils;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
@@ -162,6 +163,15 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return response;
         }
+
+        public async Task<int> CountAllJobPosts()
+        {
+            ICollection<JobPostResponse> jobPosts = await _unitOfWork.GetRepository<JobPost>().GetListAsync(
+            selector: x => _mapper.Map<JobPostResponse>(x));
+            int count = jobPosts.Count();
+            return count;
+        }
+
 
         private void ValidateSalary(int? minSalary, int? maxSalary)
         {

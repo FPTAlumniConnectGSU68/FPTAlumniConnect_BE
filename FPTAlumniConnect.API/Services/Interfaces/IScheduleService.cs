@@ -14,5 +14,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<int> AcceptMentorShip(ScheduleInfo request);
         Task<bool> CompleteSchedule(int id);
         Task<bool> RateMentor(int scheduleId, string content, int rate);
+        Task<int> CountAllSchedules();
     }
 }
