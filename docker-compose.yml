@@ -14,7 +14,6 @@ services:
     networks:
       - fptalumni-network
     restart: unless-stopped
-
   certbot:
     image: certbot/certbot
     container_name: certbot
@@ -62,20 +61,21 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "5000:80"
       - "5001:443"
     container_name: api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__SQLServerDatabase=Server=sqlserver;Database=AlumniConnect;User ID=sa;Password=YourStrong@Passw0rd ;TrustServerCertificate=True
+      - ConnectionStrings__SQLServerDatabase=Server=sqlserver;Database=AlumniConnect;User ID=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
     depends_on:
-      - sqlserver
+      - db-init
     networks:
       - fptalumni-network
     restart: unless-stopped
 
 volumes:
   sqlserver_data:
+
 
 networks:
   fptalumni-network:
