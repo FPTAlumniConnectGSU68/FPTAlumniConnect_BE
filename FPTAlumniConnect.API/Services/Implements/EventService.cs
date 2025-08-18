@@ -392,6 +392,26 @@ namespace FPTAlumniConnect.API.Services.Implements
             return await _unitOfWork.CommitAsync() > 0;
         }
 
+        public async Task<int> CountAllEvents()
+        {
+            ICollection<EventDetailResponse> events = await _unitOfWork.GetRepository<Event>().GetListAsync(
+            selector: x => _mapper.Map<EventDetailResponse>(x));
+            int count = events.Count();
+            return count;
+        }
+
+        public async Task<int> CountEventsByMonth(int month, int year)
+        {
+            ICollection<EventDetailResponse> events = await _unitOfWork.GetRepository<Event>().GetListAsync(
+            selector: x => _mapper.Map<EventDetailResponse>(x),
+            predicate: x => x.CreatedAt.HasValue
+                    && x.CreatedAt.Value.Year == year
+                    && x.CreatedAt.Value.Month == month);
+            int count = events.Count();
+            return count;
+        }
+
+
         // Đếm số lượng sự kiện theo trạng thái(tận dụng trường Status)
         public async Task<Dictionary<string, int>> GetEventCountByStatus()
         {

@@ -15,5 +15,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<bool> CompleteSchedule(int id);
         Task<bool> RateMentor(int scheduleId, string content, int rate);
         Task<int> CountAllSchedules();
+        Task<int> CountSchedulesByMonth(int month, int year);
     }
 }

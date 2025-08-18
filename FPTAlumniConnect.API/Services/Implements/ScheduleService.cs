@@ -192,6 +192,17 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
+        public async Task<int> CountSchedulesByMonth(int month, int year)
+        {
+            ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                selector: x => _mapper.Map<ScheduleReponse>(x),
+                predicate: x => x.CreatedAt.HasValue
+                    && x.CreatedAt.Value.Year == year
+                    && x.CreatedAt.Value.Month == month);
+            int count = schedules.Count();
+            return count;
+        }
+
 
         // Rate mentor for a schedule
         public async Task<bool> RateMentor(int scheduleId, string comment, int rate)

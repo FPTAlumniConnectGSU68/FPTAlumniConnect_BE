@@ -105,6 +105,17 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
+        public async Task<int> CountMentorshipsByMonth(int month, int year)
+        {
+            ICollection<MentorshipReponse> mentorships = await _unitOfWork.GetRepository<Mentorship>().GetListAsync(
+                selector: x => _mapper.Map<MentorshipReponse>(x),
+                predicate: x => x.CreatedAt.HasValue
+                    && x.CreatedAt.Value.Year == year
+                    && x.CreatedAt.Value.Month == month);
+            int count = mentorships.Count();
+            return count;
+        }
+
 
         // Get mentorship statistics by status
         public async Task<Dictionary<string, int>> GetMentorshipStatusStatistics()

@@ -105,6 +105,18 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
+        public async Task<int> CountPostsByMonth(int month, int year)
+        {
+            ICollection<PostReponse> posts = await _unitOfWork.GetRepository<Post>().GetListAsync(
+                selector: x => _mapper.Map<PostReponse>(x),
+                predicate: x => x.CreatedAt.HasValue
+                    && x.CreatedAt.Value.Year == year
+                    && x.CreatedAt.Value.Month == month);
+            int count = posts.Count();
+            return count;
+        }
+
+
 
         // Helper: Update post fields from request
         private void UpdatePostFields(Post post, PostInfo request)

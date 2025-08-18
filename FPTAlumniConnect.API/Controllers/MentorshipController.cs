@@ -131,11 +131,32 @@ namespace FPTAlumniConnect.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to fetch mentorship");
+                _logger.LogError(ex, "Failed to fetch mentorship count");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
 
+        [HttpGet(ApiEndPointConstant.Mentorship.CountMonthEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountMentorshipsByMonth(int month, int year)
+        {
+            try
+            {
+                var response = await _mentorshipService.CountMentorshipsByMonth(month,year);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch mentorship count by month");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
 
         [HttpPatch(ApiEndPointConstant.Mentorship.MentorshipEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]

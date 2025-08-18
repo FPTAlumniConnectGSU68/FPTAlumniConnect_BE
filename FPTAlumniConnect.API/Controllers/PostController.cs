@@ -164,7 +164,29 @@ namespace FPTAlumniConnect.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to fetch post");
+                _logger.LogError(ex, "Failed to fetch post count");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Post.CountMonthEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountPostsByMonth(int month, int year)
+        {
+            try
+            {
+                var response = await _postService.CountPostsByMonth(month,year);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch post count by month");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
