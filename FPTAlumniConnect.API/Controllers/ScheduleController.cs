@@ -192,12 +192,32 @@ namespace FPTAlumniConnect.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to fetch schedule");
+                _logger.LogError(ex, "Failed to fetch schedule count");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
 
-
+        [HttpGet(ApiEndPointConstant.Schedule.CountMonthEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountSchedulesByMonth(int month, int year)
+        {
+            try
+            {
+                var response = await _scheduleService.CountSchedulesByMonth(month,year);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch schedule count by month");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
 
         [HttpPatch(ApiEndPointConstant.Schedule.ScheduleEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]

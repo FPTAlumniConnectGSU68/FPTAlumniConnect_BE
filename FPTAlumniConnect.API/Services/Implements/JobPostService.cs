@@ -172,6 +172,18 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
+        public async Task<int> CountJobPostsByMonth(int month, int year)
+        {
+            ICollection<JobPostResponse> jobPosts = await _unitOfWork.GetRepository<JobPost>().GetListAsync(
+            selector: x => _mapper.Map<JobPostResponse>(x),
+            predicate: x => x.CreatedAt.HasValue
+                    && x.CreatedAt.Value.Year == year
+                    && x.CreatedAt.Value.Month == month);
+            int count = jobPosts.Count();
+            return count;
+        }
+
+
 
         private void ValidateSalary(int? minSalary, int? maxSalary)
         {

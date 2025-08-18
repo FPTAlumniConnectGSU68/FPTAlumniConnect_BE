@@ -19,6 +19,7 @@
             public const string UsersEndPoint = ApiEndpoint + "/users";
             public const string MentorsEndPoint = ApiEndpoint + "/mentors";
             public const string CountEndPoint = UsersEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
             public const string MentorRatingEndPoint = ApiEndpoint + "/mentors/{id}";
             public const string UserEndPoint = UsersEndPoint + "/{id}";
             public const string UserLoginEndPoint = UsersEndPoint + "/login";
@@ -29,6 +30,7 @@
             public const string PostEndPoint = PostsEndPoint + "/{id}";
             public const string TopUsersEndPoint = PostsEndPoint + "/top-users";
             public const string CountEndPoint = PostsEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
         }
         public static class PostReport
         {
@@ -48,6 +50,7 @@
             public const string MentorshipStatisticsEndPoint = MentorshipsEndPoint + "/statistics";
             public const string MentorshipAutoCancelEndPoint = MentorshipsEndPoint + "/autocancel";
             public const string CountEndPoint = MentorshipsEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
         }
         public static class Schedule
         {
@@ -58,6 +61,7 @@
             public const string CompleteScheduleEndPoint = "/api/schedules/complete/{id}";
             public const string ScheduleRateMentorEndPoint = "api/schedules/rate/{scheduleId}";
             public const string CountEndPoint = SchedulesEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
         }
         public static class CV
         {
@@ -86,8 +90,10 @@
             public const string EventPopularityEndPoint = EventsEndPoint + "/popularity";
             public const string EventSimilarEndPoint = EventsEndPoint + "/similar/{eventId}";
             public const string EventConflictEndPoint = EventsEndPoint + "/conflict";
-            public const string SuggestBestTimeForNewEventEndPoint = EventsEndPoint + "/suggest";
-            public const string EventCountByStatusEndPoint = EventsEndPoint + "/count";
+            public const string SuggestBestTimeForNewEventEndPoint = EventsEndPoint + "/suggest";           
+            public const string CountEndPoint = EventsEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
+            public const string EventCountByStatusEndPoint = CountEndPoint + "/status";
             public const string EventDetailEndPoint = EventsEndPoint + "/detail/{id}";
         }
         public static class UserJoinEvent
@@ -129,6 +135,7 @@
             public const string JobPostEndPoint = JobPostsEndPoint + "/{id}";
             public const string SearchJobPostsEndPoint = JobPostsEndPoint + "/search";
             public const string CountEndPoint = JobPostsEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
         }
         public static class JobApplication
         {

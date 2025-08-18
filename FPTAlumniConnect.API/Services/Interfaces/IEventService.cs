@@ -12,7 +12,8 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<EventDetailResponse> GetEventByIdAsync(int eventId);
         Task<bool> UpdateEventInfo(int id, EventInfo request);
         Task<IPaginate<GetEventResponse>> ViewAllEvent(EventFilter filter, PagingModel pagingModel);
-
+        Task<int> CountAllEvents();
+        Task<int> CountEventsByMonth(int month, int year);
         Task<Dictionary<string, int>> GetEventCountByStatus();
 
         Task<bool> CheckEventConflict(int eventId, DateTime newStart, DateTime newEnd);

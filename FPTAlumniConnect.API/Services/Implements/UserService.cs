@@ -291,6 +291,18 @@ namespace FPTAlumniConnect.API.Services.Implements
                 return count;
         }
 
+        public async Task<int> CountUsersByMonth(int month, int year)
+        {
+            ICollection<GetUserResponse> users = await _unitOfWork.GetRepository<User>().GetListAsync(
+                selector: x => _mapper.Map<GetUserResponse>(x),
+                    predicate: x => x.CreatedAt.HasValue
+                    && x.CreatedAt.Value.Year == year
+                    && x.CreatedAt.Value.Month == month);
+            int count = users.Count();
+            return count;
+        }
+
+
         public async Task<GoogleUserResponse> VerifyGoogleTokenAsync(string token)
         {
             try
