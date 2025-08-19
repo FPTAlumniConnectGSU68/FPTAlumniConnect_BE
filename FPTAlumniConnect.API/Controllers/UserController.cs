@@ -2,6 +2,7 @@
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.User;
+using FPTAlumniConnect.DataTier.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
@@ -122,6 +123,28 @@ namespace FPTAlumniConnect.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch user count by month");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.User.CountRoleEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountUsersByRole(int month, int year, int role)
+        {
+            try
+            {
+                var response = await _userService.CountUsersByRole(month, year, role);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch user count by role");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }

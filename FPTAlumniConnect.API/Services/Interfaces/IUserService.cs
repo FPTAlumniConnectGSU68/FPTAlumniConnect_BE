@@ -1,5 +1,6 @@
 ﻿using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.User;
+using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 
 namespace FPTAlumniConnect.API.Services.Interfaces
@@ -19,5 +20,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<double> GetAverageRatingByMentorId(int id);
         Task<int> CountAllUsers();
         Task<int> CountUsersByMonth(int month, int year);
+        Task<int> CountUsersByRole(int month, int year, int role);
     }
 }
