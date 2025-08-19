@@ -20,6 +20,7 @@
             public const string MentorsEndPoint = ApiEndpoint + "/mentors";
             public const string CountEndPoint = UsersEndPoint + "/count";
             public const string CountMonthEndPoint = CountEndPoint + "/month";
+            public const string CountRoleEndPoint = CountEndPoint + "/role";
             public const string MentorRatingEndPoint = ApiEndpoint + "/mentors/{id}";
             public const string UserEndPoint = UsersEndPoint + "/{id}";
             public const string UserLoginEndPoint = UsersEndPoint + "/login";
