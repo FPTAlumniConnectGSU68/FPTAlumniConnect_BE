@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StringUpdateApi.Services;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
 
@@ -93,6 +94,8 @@ namespace FPTAlumniConnect.API.Extensions
             services.AddScoped<ICvSkillService, CvSkillService>();
             services.AddScoped<IJobPostSkillService, JobPostSkillService>();
 
+            services.AddSingleton<VersionService>();
+            services.AddSingleton<StringCounterService>();
             return services;
         }
 
