@@ -102,6 +102,11 @@
             public const string UserJoinEventsEndPoint = ApiEndpoint + "/user-join-events";
             public const string UserJoinEventEndPoint = UserJoinEventsEndPoint + "/{id}";
             public const string ViewAllUserJoinEventsEndPoint = UserJoinEventsEndPoint + "/view-all";
+            public const string GetTotalParticipantsEndPoint = UserJoinEventsEndPoint + "/event/participants/total/{eventId}";
+            public const string GetTotalParticipantsByRoleEndPoint = UserJoinEventsEndPoint + "/event/participants/by-role/{eventId}";
+            public const string GetTotalParticipantsByDayEndPoint = UserJoinEventsEndPoint + "/event/participants/by-day/{eventId}";
+            public const string GetEvaluationsEndPoint = UserJoinEventsEndPoint + "/event/evaluations/{eventId}";
+            public const string CheckUserParticipationEndPoint = UserJoinEventsEndPoint + "/event/check-user/{eventId}/{userId}";
         }
         public static class EducationHistory
         {
