@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FPTAlumniConnect.API;
 using FPTAlumniConnect.API.Exceptions;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Payload;
@@ -6,6 +7,7 @@ using FPTAlumniConnect.BusinessTier.Payload.UserJoinEvent;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -33,7 +35,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Create record
             UserJoinEvent newJoinEvent = _mapper.Map<UserJoinEvent>(request);
-            newJoinEvent.CreatedAt = DateTime.Now;
+            newJoinEvent.CreatedAt = TimeHelper.NowInVietnam();
             newJoinEvent.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<UserJoinEvent>().InsertAsync(newJoinEvent);
@@ -46,8 +48,11 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<GetUserJoinEventResponse> GetUserJoinEventById(int id)
         {
-            UserJoinEvent userJoinEvent = await _unitOfWork.GetRepository<UserJoinEvent>().SingleOrDefaultAsync(
-                predicate: x => x.Id.Equals(id)) ?? throw new BadHttpRequestException("UserJoinEventNotFound");
+            UserJoinEvent userJoinEvent = await _unitOfWork.GetRepository<UserJoinEvent>()
+                .SingleOrDefaultAsync(
+                    predicate: x => x.Id == id,
+                    include: source => source.Include(x => x.User).ThenInclude(u => u.Role))
+                ?? throw new BadHttpRequestException("UserJoinEventNotFound");
 
             GetUserJoinEventResponse result = _mapper.Map<GetUserJoinEventResponse>(userJoinEvent);
             return result;
@@ -55,15 +60,18 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<bool> UpdateUserJoinEvent(int id, UserJoinEventInfo request)
         {
-            UserJoinEvent userJoinEventToUpdate = await _unitOfWork.GetRepository<UserJoinEvent>().SingleOrDefaultAsync(
-                predicate: x => x.Id.Equals(id)) ?? throw new BadHttpRequestException("UserJoinEventNotFound");
+            UserJoinEvent userJoinEventToUpdate = await _unitOfWork.GetRepository<UserJoinEvent>()
+                .SingleOrDefaultAsync(
+                    predicate: x => x.Id == id,
+                    include: source => source.Include(x => x.User).ThenInclude(u => u.Role))
+                ?? throw new BadHttpRequestException("UserJoinEventNotFound");
 
-            // Phân quyền chỉnh sửa
-            //var currentUsername = _httpContextAccessor.HttpContext?.User.Identity?.Name;
-            //if (!string.Equals(userJoinEventToUpdate.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
-            //{
-            //    throw new UnauthorizedAccessException("You are not allowed to update this record.");
-            //}
+            // Authorization check
+            var currentUsername = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            if (!string.Equals(userJoinEventToUpdate.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("You are not allowed to update this record.");
+            }
 
             UpdateUserJoinEventFields(userJoinEventToUpdate, request);
 
@@ -75,13 +83,18 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<IPaginate<GetUserJoinEventResponse>> ViewAllUserJoinEvents(UserJoinEventFilter filter, PagingModel pagingModel)
         {
-            IPaginate<GetUserJoinEventResponse> response = await _unitOfWork.GetRepository<UserJoinEvent>().GetPagingListAsync(
-                selector: x => _mapper.Map<GetUserJoinEventResponse>(x),
-                  filter: filter,
-                orderBy: x => x.OrderBy(x => x.Id),
-                page: pagingModel.page,
-                size: pagingModel.size
-            );
+            IPaginate<GetUserJoinEventResponse> response = await _unitOfWork.GetRepository<UserJoinEvent>()
+                .GetPagingListAsync(
+                    selector: x => _mapper.Map<GetUserJoinEventResponse>(x),
+                    predicate: x =>
+                        (!filter.UserId.HasValue || x.UserId == filter.UserId) &&
+                        (!filter.EventId.HasValue || x.EventId == filter.EventId) &&
+                        (!filter.Rating.HasValue || x.Rating == filter.Rating),
+                    include: source => source.Include(x => x.User).ThenInclude(u => u.Role),
+                    orderBy: x => x.OrderBy(x => x.Id),
+                    page: pagingModel.page,
+                    size: pagingModel.size
+                );
 
             return response;
         }
@@ -95,7 +108,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             target.Content = string.IsNullOrWhiteSpace(request.Content) ? target.Content : request.Content;
             target.Rating = request.Rating ?? target.Rating;
-            target.UpdatedAt = DateTime.Now;
+            target.UpdatedAt = TimeHelper.NowInVietnam();
             target.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
         }
 
@@ -108,6 +121,56 @@ namespace FPTAlumniConnect.API.Services.Implements
             return ratings.Count == 0 ? 0 : ratings.Average();
         }
 
+        // General Statistics
 
+        public async Task<int> GetTotalParticipants(int eventId)
+        {
+            return await _unitOfWork.GetRepository<UserJoinEvent>().GetListAsync(
+                predicate: x => x.EventId == eventId,
+                selector: x => x.Id).ContinueWith(t => t.Result.Count);
+        }
+
+        public async Task<Dictionary<string, int>> GetTotalParticipantsByRole(int eventId)
+        {
+            var participants = await _unitOfWork.GetRepository<UserJoinEvent>().GetListAsync(
+                predicate: x => x.EventId == eventId,
+                include: source => source.Include(x => x.User).ThenInclude(u => u.Role),
+                selector: x => new { RoleName = x.User.Role.Name});
+
+            return participants
+                .GroupBy(p => p.RoleName)
+                .ToDictionary(g => g.Key ?? "Unknown", g => g.Count());
+        }
+
+        // Daily Statistics
+
+        public async Task<Dictionary<string, int>> GetTotalParticipantsByDay(int eventId)
+        {
+            var participants = await _unitOfWork.GetRepository<UserJoinEvent>().GetListAsync(
+                predicate: x => x.EventId == eventId,
+                selector: x => x.CreatedAt ?? TimeHelper.NowInVietnam());
+
+            return participants
+                .GroupBy(d => d.ToString("yyyy-MM-dd"))
+                .ToDictionary(g => g.Key, g => g.Count());
+        }
+
+        // Feedback and Reviews
+
+        public async Task<IEnumerable<GetUserJoinEventResponse>> GetEvaluations(int eventId)
+        {
+            return await _unitOfWork.GetRepository<UserJoinEvent>().GetListAsync(
+                predicate: x => x.EventId == eventId && (x.Rating.HasValue || !string.IsNullOrEmpty(x.Content)),
+                include: source => source.Include(x => x.User).ThenInclude(u => u.Role),
+                selector: x => _mapper.Map<GetUserJoinEventResponse>(x));
+        }
+
+        // API Functionality
+
+        public async Task<bool> CheckUserParticipation(int userId, int eventId)
+        {
+            return await _unitOfWork.GetRepository<UserJoinEvent>().AnyAsync(
+                x => x.UserId == userId && x.EventId == eventId);
+        }
     }
 }
