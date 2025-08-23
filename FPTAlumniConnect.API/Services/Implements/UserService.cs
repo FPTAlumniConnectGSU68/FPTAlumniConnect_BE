@@ -280,7 +280,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                   throw new BadHttpRequestException("MentorNotFound");
             double? averageRating = schedules.Average(s => s.Rating);
 
-            return averageRating ?? 0;
+            return Math.Round(averageRating ?? 0,2);
         }
 
         public async Task<int> CountAllUsers()
