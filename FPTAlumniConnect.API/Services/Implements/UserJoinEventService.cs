@@ -11,9 +11,14 @@ namespace FPTAlumniConnect.API.Services.Implements
 {
     public class UserJoinEventService : BaseService<UserJoinEventService>, IUserJoinEventService
     {
+        private readonly IPerspectiveService _perspectiveService;
+
         public UserJoinEventService(IUnitOfWork<AlumniConnectContext> unitOfWork, ILogger<UserJoinEventService> logger, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IPerspectiveService perspectiveService)
+            : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _perspectiveService = perspectiveService;
         }
 
         public async Task<int> CreateNewUserJoinEvent(UserJoinEventInfo request)
@@ -65,7 +70,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             //    throw new UnauthorizedAccessException("You are not allowed to update this record.");
             //}
 
-            UpdateUserJoinEventFields(userJoinEventToUpdate, request);
+            await UpdateUserJoinEventFields(userJoinEventToUpdate, request);
 
             _unitOfWork.GetRepository<UserJoinEvent>().UpdateAsync(userJoinEventToUpdate);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
@@ -86,11 +91,18 @@ namespace FPTAlumniConnect.API.Services.Implements
             return response;
         }
 
-        private void UpdateUserJoinEventFields(UserJoinEvent target, UserJoinEventInfo request)
+        private async Task UpdateUserJoinEventFields(UserJoinEvent target, UserJoinEventInfo request)
         {
             if (request.Rating.HasValue && (request.Rating < 1 || request.Rating > 5))
             {
                 throw new BadHttpRequestException("Rating must be between 1 and 5.");
+            }
+
+            // Check content appropriateness using perspective API
+            if (!string.IsNullOrWhiteSpace(request.Content) &&
+                !await _perspectiveService.IsContentAppropriate(request.Content))
+            {
+                throw new BadHttpRequestException("Comment contains inappropriate content.");
             }
 
             target.Content = string.IsNullOrWhiteSpace(request.Content) ? target.Content : request.Content;
