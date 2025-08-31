@@ -590,7 +590,7 @@ public partial class AlumniConnectContext : DbContext
                 .IsRequired(false);
             entity.Property(e => e.GoogleId).HasColumnName("GoogleID");
             entity.Property(e => e.IsMentor)
-                .HasDefaultValueSql("((0))")
+                .HasMaxLength(50) 
                 .HasColumnName("isMentor");
             entity.Property(e => e.LastName).HasMaxLength(255);
             entity.Property(e => e.RoleId).HasColumnName("RoleID");
@@ -688,9 +688,25 @@ public partial class AlumniConnectContext : DbContext
             entity.HasKey(e => e.RecruiterInfoId);
             entity.ToTable("RecruiterInfo");
 
+            entity.Property(e => e.RecruiterInfoId).HasColumnName("RecruiterInfoID");
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.CompanyName).HasMaxLength(255);
+            entity.Property(e => e.CompanyEmail).HasMaxLength(255);
+            entity.Property(e => e.CompanyPhone).HasMaxLength(50);
+            entity.Property(e => e.CompanyLogoUrl).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.CompanyCertificateUrl).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETDATE()");
+
             entity.HasOne(r => r.User)
-            .WithOne(u => u.RecruiterInfos)
-            .HasForeignKey<RecruiterInfo>(r => r.UserId);
+                .WithOne(u => u.RecruiterInfos)
+                .HasForeignKey<RecruiterInfo>(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade); 
         });
 
         modelBuilder.Entity<JobPostSkill>(entity =>

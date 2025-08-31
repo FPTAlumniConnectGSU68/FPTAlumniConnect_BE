@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace FPTAlumniConnect.DataTier.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -94,7 +95,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     RoleID = table.Column<int>(type: "int", nullable: false),
                     MajorId = table.Column<int>(type: "int", nullable: true),
                     GoogleID = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    isMentor = table.Column<bool>(type: "bit", nullable: true, defaultValueSql: "((0))"),
+                    isMentor = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
@@ -447,23 +448,24 @@ namespace FPTAlumniConnect.DataTier.Migrations
                 name: "RecruiterInfo",
                 columns: table => new
                 {
-                    RecruiterInfoId = table.Column<int>(type: "int", nullable: false)
+                    RecruiterInfoID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CompanyEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CompanyPhone = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserID = table.Column<int>(type: "int", nullable: false),
+                    CompanyName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CompanyEmail = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CompanyPhone = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     CompanyLogoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CompanyCertificateUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false, defaultValueSql: "GETDATE()"),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "GETDATE()")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RecruiterInfo", x => x.RecruiterInfoId);
+                    table.PrimaryKey("PK_RecruiterInfo", x => x.RecruiterInfoID);
                     table.ForeignKey(
-                        name: "FK_RecruiterInfo_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_RecruiterInfo_Users_UserID",
+                        column: x => x.UserID,
                         principalTable: "Users",
                         principalColumn: "UserID",
                         onDelete: ReferentialAction.Cascade);
@@ -843,6 +845,11 @@ namespace FPTAlumniConnect.DataTier.Migrations
                 column: "UserID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CvSkills_CvId",
+                table: "CvSkills",
+                column: "CvId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CvSkills_SkillId",
                 table: "CvSkills",
                 column: "SkillId");
@@ -958,9 +965,9 @@ namespace FPTAlumniConnect.DataTier.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RecruiterInfo_UserId",
+                name: "IX_RecruiterInfo_UserID",
                 table: "RecruiterInfo",
-                column: "UserId",
+                column: "UserID",
                 unique: true);
 
             migrationBuilder.CreateIndex(

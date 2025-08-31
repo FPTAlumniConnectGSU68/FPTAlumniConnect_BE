@@ -4,6 +4,8 @@
     {
         public int UserId { get; set; }
 
+        public string? Status { get; set; }
+
         public string? CompanyName { get; set; }
 
         public string? CompanyEmail { get; set; }
@@ -13,6 +15,8 @@
         public string? CompanyLogoUrl { get; set; }
 
         public string? CompanyCertificateUrl { get; set; }
+
+
     }
 
 }

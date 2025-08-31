@@ -238,6 +238,8 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
                     b.HasKey("CvId", "SkillId");
 
+                    b.HasIndex("CvId");
+
                     b.HasIndex("SkillId");
 
                     b.ToTable("CvSkills");
@@ -1081,7 +1083,8 @@ namespace FPTAlumniConnect.DataTier.Migrations
                 {
                     b.Property<int>("RecruiterInfoId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("RecruiterInfoID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecruiterInfoId"));
 
@@ -1089,25 +1092,37 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CompanyEmail")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("CompanyLogoUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CompanyName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("CompanyPhone")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("UserID");
 
                     b.HasKey("RecruiterInfoId");
 
@@ -1392,11 +1407,10 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("GoogleID");
 
-                    b.Property<bool?>("IsMentor")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasColumnName("isMentor")
-                        .HasDefaultValueSql("((0))");
+                    b.Property<string>("IsMentor")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("isMentor");
 
                     b.Property<string>("LastName")
                         .IsRequired()
