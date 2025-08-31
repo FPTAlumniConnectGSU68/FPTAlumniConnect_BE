@@ -13,6 +13,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<PostReponse> GetPostById(int id);
         Task<IEnumerable<object>> GetTopUsersByNumberOfPosts(int topN = 10);
         Task<int> CountAllPosts();
-        Task<CountByMonthResponse> CountPostsByMonth(int month, int year);
+        Task<ICollection<CountByMonthResponse>> CountPostsByMonth(int? month, int? year);
     }
 }
