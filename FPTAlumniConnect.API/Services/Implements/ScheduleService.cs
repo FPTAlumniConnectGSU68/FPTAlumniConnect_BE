@@ -3,7 +3,6 @@ using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
-using FPTAlumniConnect.BusinessTier.Payload.User;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
@@ -193,20 +192,28 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
-        public async Task<CountByMonthResponse> CountSchedulesByMonth(int month, int year)
+        public async Task<ICollection<CountByMonthResponse>> CountSchedulesByMonth(int? month, int? year)
         {
-            ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
-                selector: x => _mapper.Map<ScheduleReponse>(x),
-                predicate: x => x.CreatedAt.HasValue
-                    && x.CreatedAt.Value.Year == year
-                    && x.CreatedAt.Value.Month == month);
-            CountByMonthResponse count = new CountByMonthResponse
+            int targetYear = (year == null || year == 0) ? DateTime.Now.Year : year.Value;
+            int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
+            int endMonth = (targetYear == DateTime.Now.Year) ? DateTime.Now.Month : 12;
+            var result = new List<CountByMonthResponse>();
+            for (int m = startMonth; m <= endMonth; m++)
             {
-                Month = month,
-                Year = year,
-                Count = schedules.Count()
-            };
-            return count;
+                var users = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
+                    selector: x => _mapper.Map<ScheduleReponse>(x),
+                    predicate: x => x.CreatedAt.HasValue
+                                    && x.CreatedAt.Value.Year == targetYear
+                                    && x.CreatedAt.Value.Month == m
+                );
+                result.Add(new CountByMonthResponse
+                {
+                    Month = m,
+                    Year = targetYear,
+                    Count = users.Count()
+                });
+            }
+            return result;
         }
 
 
