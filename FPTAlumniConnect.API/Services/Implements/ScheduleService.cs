@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 using FPTAlumniConnect.BusinessTier.Payload.User;
@@ -192,14 +193,19 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
-        public async Task<int> CountSchedulesByMonth(int month, int year)
+        public async Task<CountByMonthResponse> CountSchedulesByMonth(int month, int year)
         {
             ICollection<ScheduleReponse> schedules = await _unitOfWork.GetRepository<Schedule>().GetListAsync(
                 selector: x => _mapper.Map<ScheduleReponse>(x),
                 predicate: x => x.CreatedAt.HasValue
                     && x.CreatedAt.Value.Year == year
                     && x.CreatedAt.Value.Month == month);
-            int count = schedules.Count();
+            CountByMonthResponse count = new CountByMonthResponse
+            {
+                Month = month,
+                Year = year,
+                Count = schedules.Count()
+            };
             return count;
         }
 
