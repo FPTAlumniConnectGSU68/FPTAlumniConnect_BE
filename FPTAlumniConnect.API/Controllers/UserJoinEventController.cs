@@ -111,9 +111,11 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPut(ApiEndPointConstant.UserJoinEvent.UserJoinEventEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateUserJoinEvent(int id, [FromBody] UserJoinEventInfo request)
         {
+            // Validate request body
             if (request == null)
             {
                 return BadRequest(new
@@ -123,20 +125,46 @@ namespace FPTAlumniConnect.API.Controllers
                     errors = new[] { "Request body is null or malformed" }
                 });
             }
+
             try
             {
                 var isSuccessful = await _userJoinEventService.UpdateUserJoinEvent(id, request);
                 if (!isSuccessful)
                 {
-                    return Ok(new { status = "error", message = "Update failed" });
+                    // Return 404 if the record was not found or could not be updated
+                    return NotFound(new
+                    {
+                        status = "error",
+                        message = "UserJoinEvent not found or update failed"
+                    });
                 }
 
-                return Ok(new { status = "success", message = "Update successful" });
+                // Return success response
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Update successful"
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                // Handle client errors (e.g., invalid rating or inappropriate content)
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { ex.Message }
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to update user");
-                return StatusCode(500, new { status = "error", message = "Internal server error" });
+                // Log unexpected errors and return 500
+                _logger.LogError(ex, "Failed to update UserJoinEvent with ID {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
             }
         }
 
