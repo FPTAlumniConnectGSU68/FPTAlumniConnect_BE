@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.BusinessTier.Payload;
+﻿using FPTAlumniConnect.BusinessTier;
+using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using FPTAlumniConnect.DataTier.Paginate;
 
@@ -12,6 +13,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<JobPostResponse> GetJobPostById(int id);
         Task<int> CountAllJobPosts();
         Task<IEnumerable<JobPostResponse>> SearchJobPosts(string keyword, int? minSalary, int? maxSalary);
-        Task<int> CountJobPostsByMonth(int month, int year);
+        Task<CountByMonthResponse> CountJobPostsByMonth(int month, int year);
     }
 }

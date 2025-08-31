@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 using FPTAlumniConnect.BusinessTier.Payload.User;
@@ -291,18 +292,23 @@ namespace FPTAlumniConnect.API.Services.Implements
                 return count;
         }
 
-        public async Task<int> CountUsersByMonth(int month, int year)
+        public async Task<CountByMonthResponse> CountUsersByMonth(int month, int year)
         {
             ICollection<GetUserResponse> users = await _unitOfWork.GetRepository<User>().GetListAsync(
                 selector: x => _mapper.Map<GetUserResponse>(x),
                     predicate: x => x.CreatedAt.HasValue
                     && x.CreatedAt.Value.Year == year
                     && x.CreatedAt.Value.Month == month);
-            int count = users.Count();
+            CountByMonthResponse count = new CountByMonthResponse
+            {
+                Month = month,
+                Year = year,
+                Count = users.Count()
+            };
             return count;
         }
 
-        public async Task<int> CountUsersByRole(int month, int year, int role)
+        public async Task<CountByRoleResponse> CountUsersByRole(int month, int year, int role)
         {
             ICollection<GetUserResponse> users = await _unitOfWork.GetRepository<User>().GetListAsync(
                 selector: x => _mapper.Map<GetUserResponse>(x),
@@ -310,7 +316,13 @@ namespace FPTAlumniConnect.API.Services.Implements
                     && x.CreatedAt.Value.Year == year
                     && x.CreatedAt.Value.Month == month
                     && x.RoleId == role);
-            int count = users.Count();
+            CountByRoleResponse count = new CountByRoleResponse
+            {
+                Month = month,
+                Year = year,
+                Role = role,
+                Count = users.Count()
+            };
             return count;
         }
 

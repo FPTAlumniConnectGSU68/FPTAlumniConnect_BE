@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
@@ -10,6 +11,7 @@ using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
+using static Microsoft.IO.RecyclableMemoryStreamManager;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -172,14 +174,19 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
-        public async Task<int> CountJobPostsByMonth(int month, int year)
+        public async Task<CountByMonthResponse> CountJobPostsByMonth(int month, int year)
         {
             ICollection<JobPostResponse> jobPosts = await _unitOfWork.GetRepository<JobPost>().GetListAsync(
             selector: x => _mapper.Map<JobPostResponse>(x),
             predicate: x => x.CreatedAt.HasValue
                     && x.CreatedAt.Value.Year == year
                     && x.CreatedAt.Value.Month == month);
-            int count = jobPosts.Count();
+            CountByMonthResponse count = new CountByMonthResponse
+            {
+                Month = month,
+                Year = year,
+                Count = jobPosts.Count()
+            };
             return count;
         }
 

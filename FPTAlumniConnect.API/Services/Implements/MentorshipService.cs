@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
 using FPTAlumniConnect.BusinessTier.Payload.Post;
@@ -105,14 +106,19 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
-        public async Task<int> CountMentorshipsByMonth(int month, int year)
+        public async Task<CountByMonthResponse> CountMentorshipsByMonth(int month, int year)
         {
             ICollection<MentorshipReponse> mentorships = await _unitOfWork.GetRepository<Mentorship>().GetListAsync(
                 selector: x => _mapper.Map<MentorshipReponse>(x),
                 predicate: x => x.CreatedAt.HasValue
                     && x.CreatedAt.Value.Year == year
                     && x.CreatedAt.Value.Month == month);
-            int count = mentorships.Count();
+            CountByMonthResponse count = new CountByMonthResponse
+            {
+                Month = month,
+                Year = year,
+                Count = mentorships.Count()
+            };
             return count;
         }
 

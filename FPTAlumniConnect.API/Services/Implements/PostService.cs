@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Post;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
@@ -105,14 +106,19 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
-        public async Task<int> CountPostsByMonth(int month, int year)
+        public async Task<CountByMonthResponse> CountPostsByMonth(int month, int year)
         {
             ICollection<PostReponse> posts = await _unitOfWork.GetRepository<Post>().GetListAsync(
                 selector: x => _mapper.Map<PostReponse>(x),
                 predicate: x => x.CreatedAt.HasValue
                     && x.CreatedAt.Value.Year == year
                     && x.CreatedAt.Value.Month == month);
-            int count = posts.Count();
+            CountByMonthResponse count = new CountByMonthResponse
+            {
+                Month = month,
+                Year = year,
+                Count = posts.Count()
+            };
             return count;
         }
 

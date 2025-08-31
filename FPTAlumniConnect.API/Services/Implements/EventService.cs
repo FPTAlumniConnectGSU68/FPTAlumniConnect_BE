@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Exceptions;
 using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Event;
 using FPTAlumniConnect.BusinessTier.Payload.EventTimeLine;
@@ -401,14 +402,19 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
-        public async Task<int> CountEventsByMonth(int month, int year)
+        public async Task<CountByMonthResponse> CountEventsByMonth(int month, int year)
         {
             ICollection<EventDetailResponse> events = await _unitOfWork.GetRepository<Event>().GetListAsync(
             selector: x => _mapper.Map<EventDetailResponse>(x),
             predicate: x => x.CreatedAt.HasValue
                     && x.CreatedAt.Value.Year == year
                     && x.CreatedAt.Value.Month == month);
-            int count = events.Count();
+            CountByMonthResponse count = new CountByMonthResponse
+            {
+                Month = month,
+                Year = year,
+                Count = events.Count()
+            };              
             return count;
         }
 
