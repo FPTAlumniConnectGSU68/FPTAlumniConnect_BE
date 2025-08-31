@@ -103,6 +103,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             // Map to EventDetailResponse
             var result = _mapper.Map<EventDetailResponse>(eventEntity);
             result.Total = await _userJoinEventService.GetTotalParticipants(eventId);
+            result.AverageRating = await _userJoinEventService.GetAverageRatingOfEvent(eventId);
 
             return result;
         }

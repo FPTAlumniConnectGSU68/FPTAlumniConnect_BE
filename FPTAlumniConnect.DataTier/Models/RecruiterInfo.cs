@@ -19,6 +19,8 @@ namespace FPTAlumniConnect.DataTier.Models
 
         public string? CompanyCertificateUrl { get; set; }
 
+        public string? Status { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }

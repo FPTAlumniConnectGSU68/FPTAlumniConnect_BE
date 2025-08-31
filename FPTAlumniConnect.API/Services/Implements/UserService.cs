@@ -260,7 +260,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             Func<IQueryable<User>, IIncludableQueryable<User, object>> include = q => q.Include(u => u.Role).Include(u => u.Major);
             IPaginate<GetMentorResponse> mentorList = await _unitOfWork.GetRepository<User>().GetPagingListAsync(
                 selector: x => _mapper.Map<GetMentorResponse>(x),
-                predicate: x => x.IsMentor == true,
+                predicate: x => x.IsMentor.Equals("true"),
                 filter: filter,
                 include: include,
                 page: pagingModel.page,

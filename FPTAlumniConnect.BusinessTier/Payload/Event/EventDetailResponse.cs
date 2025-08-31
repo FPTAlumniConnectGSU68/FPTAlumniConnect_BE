@@ -28,7 +28,6 @@ namespace FPTAlumniConnect.BusinessTier.Payload.Event
 
         public double? AverageRating { get; set; }
         public int? Total { get; set; }
-        public int? UserJoinEventId { get; set; }
 
         public List<EventTimeLineResponse> EventTimeLines { get; set; } = new();
     }

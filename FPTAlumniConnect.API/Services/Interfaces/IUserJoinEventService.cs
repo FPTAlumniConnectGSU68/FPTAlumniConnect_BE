@@ -14,6 +14,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<Dictionary<string, int>> GetTotalParticipantsByRole(int eventId);
         Task<Dictionary<string, int>> GetTotalParticipantsByDay(int eventId);
         Task<IEnumerable<GetUserJoinEventResponse>> GetEvaluations(int eventId);
-        Task<bool> CheckUserParticipation(int userId, int eventId);
+        Task<GetUserJoinEventResponse> CheckUserParticipation(int userId, int eventId);
+        Task<double> GetAverageRatingOfEvent(int eventId);
     }
 }

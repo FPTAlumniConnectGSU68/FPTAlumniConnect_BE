@@ -22,7 +22,7 @@
         public string Email { get; set; } = null!;
         public int RoleId { get; set; }
         public string RoleName { get; set; }
-        public bool? IsMentor { get; set; }
+        public string? IsMentor { get; set; }
         public string? GoogleId { get; set; }
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;

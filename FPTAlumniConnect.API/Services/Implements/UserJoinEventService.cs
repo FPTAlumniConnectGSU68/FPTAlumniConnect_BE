@@ -179,10 +179,21 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         // API Functionality
 
-        public async Task<bool> CheckUserParticipation(int userId, int eventId)
+        // Checks if a user has joined a specific event and returns the participation details
+        public async Task<GetUserJoinEventResponse> CheckUserParticipation(int userId, int eventId)
         {
-            return await _unitOfWork.GetRepository<UserJoinEvent>().AnyAsync(
-                x => x.UserId == userId && x.EventId == eventId);
+            try
+            {
+                return await _unitOfWork.GetRepository<UserJoinEvent>().SingleOrDefaultAsync(
+                    predicate: x => x.EventId == eventId && x.UserId == userId,
+                    include: source => source.Include(x => x.User).ThenInclude(u => u.Role),
+                    selector: x => _mapper.Map<GetUserJoinEventResponse>(x));
+            }
+            catch (Exception ex)
+            {
+                // Log the error (use your preferred logging mechanism, e.g., ILogger)
+                throw new Exception($"Error checking user participation for UserId {userId} and EventId {eventId}: {ex.Message}", ex);
+            }
         }
     }
 }
