@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.BusinessTier.Payload;
+﻿using FPTAlumniConnect.BusinessTier;
+using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 using FPTAlumniConnect.DataTier.Paginate;
 
@@ -15,6 +16,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<bool> CompleteSchedule(int id);
         Task<bool> RateMentor(int scheduleId, string content, int rate);
         Task<int> CountAllSchedules();
-        Task<int> CountSchedulesByMonth(int month, int year);
+        Task<CountByMonthResponse> CountSchedulesByMonth(int month, int year);
     }
 }
