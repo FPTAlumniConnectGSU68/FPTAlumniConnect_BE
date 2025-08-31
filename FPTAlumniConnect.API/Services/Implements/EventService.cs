@@ -15,11 +15,11 @@ namespace FPTAlumniConnect.API.Services.Implements
 {
     public class EventService : BaseService<EventService>, IEventService
     {
-
+        private readonly IUserJoinEventService _userJoinEventService;
         public EventService(IUnitOfWork<AlumniConnectContext> unitOfWork, ILogger<EventService> logger, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor, IUserJoinEventService userJoinEventService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
-
+            _userJoinEventService = userJoinEventService;
         }
 
         public async Task<int> CreateNewEvent(EventInfo request)
@@ -101,6 +101,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Map to EventDetailResponse
             var result = _mapper.Map<EventDetailResponse>(eventEntity);
+            result.Total = await _userJoinEventService.GetTotalParticipants(eventId);
 
             return result;
         }
