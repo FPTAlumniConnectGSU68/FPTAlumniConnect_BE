@@ -71,13 +71,6 @@ namespace FPTAlumniConnect.API.Services.Implements
                     include: source => source.Include(x => x.User).ThenInclude(u => u.Role))
                 ?? throw new BadHttpRequestException("UserJoinEventNotFound");
 
-            // Authorization check
-            var currentUsername = _httpContextAccessor.HttpContext?.User.Identity?.Name;
-            if (!string.Equals(userJoinEventToUpdate.CreatedBy, currentUsername, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new UnauthorizedAccessException("You are not allowed to update this record.");
-            }
-
             await UpdateUserJoinEventFields(userJoinEventToUpdate, request);
 
             _unitOfWork.GetRepository<UserJoinEvent>().UpdateAsync(userJoinEventToUpdate);
@@ -106,9 +99,9 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         private async Task UpdateUserJoinEventFields(UserJoinEvent target, UserJoinEventInfo request)
         {
-            if (request.Rating.HasValue && (request.Rating < 1 || request.Rating > 5))
+            if (!request.Rating.HasValue || request.Rating < 1 || request.Rating > 5)
             {
-                throw new BadHttpRequestException("Rating must be between 1 and 5.");
+                throw new BadHttpRequestException("Rating is required and must be between 1 and 5.");
             }
 
             // Check content appropriateness using perspective API
