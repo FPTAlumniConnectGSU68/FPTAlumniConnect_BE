@@ -13,6 +13,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<JobPostResponse> GetJobPostById(int id);
         Task<int> CountAllJobPosts();
         Task<IEnumerable<JobPostResponse>> SearchJobPosts(string keyword, int? minSalary, int? maxSalary);
-        Task<CountByMonthResponse> CountJobPostsByMonth(int month, int year);
+        Task<ICollection<CountByMonthResponse>> CountJobPostsByMonth(int? month, int? year);
     }
 }

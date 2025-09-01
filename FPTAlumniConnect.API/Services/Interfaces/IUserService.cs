@@ -21,7 +21,8 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IPaginate<GetMentorResponse>> ViewAllMentor(MentorFilter filter, PagingModel pagingModel);
         Task<double> GetAverageRatingByMentorId(int id);
         Task<int> CountAllUsers();
-        Task<CountByMonthResponse> CountUsersByMonth(int month, int year);
-        Task<CountByRoleResponse> CountUsersByRole(int month, int year, int role);
+        //Task<CountByMonthResponse> CountUsersByMonth(int month, int year);
+        Task<ICollection<CountByMonthResponse>> CountUsersByMonth(int? month, int? year);
+        Task<ICollection<CountByRoleResponse>> CountUsersByRole(int? month, int? year, int role);
     }
 }
