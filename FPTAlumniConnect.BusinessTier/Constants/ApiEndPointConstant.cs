@@ -24,6 +24,7 @@
             public const string MentorRatingEndPoint = ApiEndpoint + "/mentors/{id}";
             public const string UserEndPoint = UsersEndPoint + "/{id}";
             public const string UserLoginEndPoint = UsersEndPoint + "/login";
+            public const string MentorStatusEndPoint = UsersEndPoint + "/mentor-status/{id}";
         }
         public static class Post
         {
@@ -177,6 +178,7 @@
         {
             public const string PhoBertEndpoint = ApiEndpoint + "/phobert";
             public const string FindBestMatchingCVEndpoint = PhoBertEndpoint + "/find-best-matching-cv";
+            public const string RecommendJobsEndPoint = PhoBertEndpoint + "/recommend-jobs/{cvId}";
         }
         public static class Education
         {
@@ -201,9 +203,10 @@
 
         public static class RecruiterInfo
         {
-            public const string RecruiterInfosEndPoint = ApiEndpoint + "/recruiterinfos";
-            public const string RecruiterInfoEndPoint = RecruiterInfosEndPoint + "/{id}";
-            public const string RecruiterInfoUserEndPoint = RecruiterInfosEndPoint + "/user/{id}";
+            public const string RecruiterInfosEndPoint = "/api/recruiter-info";
+            public const string RecruiterInfoEndPoint = "/api/recruiter-info/{id}";
+            public const string RecruiterInfoUserEndPoint = "/api/recruiter-info/user/{id}";
+            public const string RecruiterInfoStatusEndPoint = "/api/recruiter-info/status/{id}"; 
         }
 
         public static class CvSkill

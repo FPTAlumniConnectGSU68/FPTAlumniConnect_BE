@@ -196,6 +196,75 @@ namespace FPTAlumniConnect.API.Services.Implements
                 Items = items
             };
         }
+        public async Task<object> RecommendJobForCVAsync(int cvId, PagingModel pagingModel)
+        {
+            if (cvId <= 0)
+            {
+                _logger.LogWarning("Invalid CV ID: {CvId}", cvId);
+                throw new BadHttpRequestException("Invalid CV ID. ID must be greater than 0.");
+            }
 
+            if (pagingModel == null || pagingModel.page <= 0 || pagingModel.size <= 0)
+            {
+                _logger.LogWarning("Invalid pagination parameters: Page={Page}, Size={Size}", pagingModel?.page, pagingModel?.size);
+                throw new BadHttpRequestException("Invalid pagination parameters.");
+            }
+
+            _logger.LogInformation("Recommending job posts for CV ID: {CvId}", cvId);
+
+            var cv = await _unitOfWork.GetRepository<Cv>()
+                .SingleOrDefaultAsync(
+                    predicate: c => c.Id == cvId,
+                    include: query => query
+                        .Include(c => c.CvSkills).ThenInclude(cs => cs.Skill)
+                        .Include(c => c.Major));
+            if (cv == null)
+            {
+                _logger.LogWarning("CV not found: {CvId}", cvId);
+                throw new BadHttpRequestException($"CV with ID {cvId} not found.");
+            }
+
+            var jobPostRepository = _unitOfWork.GetRepository<JobPost>();
+            var jobPosts = await jobPostRepository.GetListAsync(
+                predicate: j =>
+                    j.MajorId.HasValue &&
+                    cv.MajorId.HasValue &&
+                    j.MajorId == cv.MajorId &&
+                    j.Status == "Open",
+                include: q => q.Include(j => j.User).ThenInclude(u => u.RecruiterInfos)
+                  .Include(j => j.Major)
+                  .Include(j => j.JobPostSkills).ThenInclude(jps => jps.Skill)
+            );
+
+
+            var scored = jobPosts
+                .Select(job => new { Job = job, Score = CalculateScore(cv, _mapper.Map<JobPostResponse>(job)) })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .ToList();
+
+            var total = scored.Count;
+            var items = scored
+                .Skip((pagingModel.page - 1) * pagingModel.size)
+                .Take(pagingModel.size)
+                .Select(x => _mapper.Map<JobPostResponse>(x.Job))
+                .ToList();
+
+            var paginatedResult = new Paginate<JobPostResponse>
+            {
+                Page = pagingModel.page,
+                Size = pagingModel.size,
+                Total = total,
+                TotalPages = (int)Math.Ceiling(total / (double)pagingModel.size),
+                Items = items
+            };
+
+            return new
+            {
+                status = "success",
+                message = "Job recommendations retrieved successfully",
+                data = paginatedResult
+            };
+        }
     }
 }

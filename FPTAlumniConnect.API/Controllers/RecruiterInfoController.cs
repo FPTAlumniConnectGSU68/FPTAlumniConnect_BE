@@ -170,5 +170,49 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+        // Update recruiter status
+        [HttpPatch(ApiEndPointConstant.RecruiterInfo.RecruiterInfoStatusEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateRecruiterStatus(int id, [FromBody] string status)
+        {
+            // Validate input
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Status cannot be null or empty" }
+                });
+            }
+
+            try
+            {
+                var isSuccessful = await _recruiterService.UpdateRecruiterStatus(id, status);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update status failed" });
+                }
+
+                return Ok(new { status = "success", message = "Status updated successfully" });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Bad request while updating recruiter status for ID: {Id}", id);
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { ex.Message }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update recruiter status for ID: {Id}", id);
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
     }
 }

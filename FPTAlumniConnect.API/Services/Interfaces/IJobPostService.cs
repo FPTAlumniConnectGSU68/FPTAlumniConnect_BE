@@ -7,7 +7,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
 {
     public interface IJobPostService
     {
-        Task<int> CreateNewJobPost(JobPostInfo request);
+        Task<int> CreateNewJobPost(int idUser, JobPostInfo request);
         Task<IPaginate<JobPostResponse>> ViewAllJobPosts(JobPostFilter filter, PagingModel pagingModel);
         Task<bool> UpdateJobPostInfo(int id, JobPostInfo request);
         Task<JobPostResponse> GetJobPostById(int id);

@@ -16,5 +16,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<RecruiterInfoResponse> GetRecruiterInfoById(int id);
 
         Task<bool> DeleteRecruiterInfo(int id);
+
+        Task<bool> UpdateRecruiterStatus(int id, string status);
     }
 }

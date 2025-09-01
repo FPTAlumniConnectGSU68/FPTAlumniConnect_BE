@@ -203,6 +203,59 @@ namespace FPTAlumniConnect.API.Controllers
             }
         }
 
+        [HttpPatch(ApiEndPointConstant.User.MentorStatusEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateUserMentorStatus(int id, [FromQuery] string? isMentor)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Invalid user ID" }
+                });
+            }
 
+            try
+            {
+                var isSuccessful = await _userService.UpdateUserMentorStatus(id, isMentor);
+                if (!isSuccessful)
+                {
+                    return Ok(new
+                    {
+                        status = "error",
+                        message = "Update mentor status failed"
+                    });
+                }
+
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Mentor status updated successfully"
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Failed to update mentor status for user ID: {UserId}", id);
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { ex.Message }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update mentor status for user ID: {UserId}", id);
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
+            }
+        }
     }
 }
