@@ -19,7 +19,10 @@ namespace FPTAlumniConnect.API.Mappers
                             SkillId = jps.Skill.SkillId,
                             Name = jps.Skill.Name
                         }).ToList()
-                        : new List<SkillResponse>()));
+                        : new List<SkillResponse>()))
+                .ForMember(dest => dest.RecruiterInfoId, opt => opt.MapFrom(src => src.User != null && src.User.RecruiterInfos != null ? src.User.RecruiterInfos.RecruiterInfoId : (int?)null))
+                .ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.User != null && src.User.RecruiterInfos != null ? src.User.RecruiterInfos.CompanyName : null))
+                .ForMember(dest => dest.CompanyLogoUrl, opt => opt.MapFrom(src => src.User != null && src.User.RecruiterInfos != null ? src.User.RecruiterInfos.CompanyLogoUrl : null));
 
             // Mapping JobPostInfo → JobPost (for Create/Update)
             CreateMap<JobPostInfo, JobPost>()

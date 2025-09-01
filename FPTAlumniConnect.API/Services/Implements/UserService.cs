@@ -237,6 +237,30 @@ namespace FPTAlumniConnect.API.Services.Implements
             return isSuccesful;
         }
 
+        public async Task<bool> UpdateUserMentorStatus(int id, string isMentor)
+        {
+            _logger.LogInformation("Updating mentor status for user ID: {UserId}, IsMentor: {IsMentor}", id, isMentor);
+
+            if (id <= 0)
+                throw new BadHttpRequestException("Invalid user ID. User ID must be greater than 0.");
+
+            var user = await _unitOfWork.GetRepository<User>()
+                .SingleOrDefaultAsync(predicate: x => x.UserId == id)
+                ?? throw new BadHttpRequestException("User not found.");
+
+            // Validate IsMentor value (e.g., allow "true", "false", or null)
+            if (isMentor != null && isMentor != "true" && isMentor != "false")
+                throw new BadHttpRequestException("Invalid mentor status. Must be 'true', 'false', or null.");
+
+            // Update IsMentor field
+            user.IsMentor = isMentor;
+            user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+
+            _unitOfWork.GetRepository<User>().UpdateAsync(user);
+            return await _unitOfWork.CommitAsync() > 0;
+        }
+
         public async Task<IPaginate<GetUserResponse>> ViewAllUser(UserFilter filter, PagingModel pagingModel)
         {
             // Define include to include the Role entity

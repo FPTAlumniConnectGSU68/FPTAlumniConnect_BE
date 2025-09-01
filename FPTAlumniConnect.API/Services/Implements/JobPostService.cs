@@ -3,15 +3,12 @@ using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
-using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
-using FPTAlumniConnect.BusinessTier.Utils;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
-using static Microsoft.IO.RecyclableMemoryStreamManager;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -22,19 +19,39 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
         }
 
-        public async Task<int> CreateNewJobPost(JobPostInfo request)
+        public async Task<int> CreateNewJobPost(int idUser, JobPostInfo request)
         {
-            _logger.LogInformation("Creating new job post: {JobTitle}", request.JobTitle);
+            _logger.LogInformation("Creating new job post: {JobTitle} for user ID: {UserId}", request.JobTitle, idUser);
+
+            // Validate user ID
+            if (idUser <= 0)
+                throw new BadHttpRequestException("Invalid user ID. User ID must be greater than 0.");
+
+            // Check if user exists and has active recruiter status
+            var user = await _unitOfWork.GetRepository<User>()
+                .SingleOrDefaultAsync(
+                    predicate: x => x.UserId == idUser,
+                    include: q => q.Include(u => u.RecruiterInfos))
+                ?? throw new BadHttpRequestException("User not found.");
+
+            if (user.RecruiterInfos == null || user.RecruiterInfos.Status == null)
+                throw new BadHttpRequestException("User is not an active recruiter.");
+
+            // Validate salary
             ValidateSalary(request.MinSalary, request.MaxSalary);
 
+            // Map JobPostInfo to JobPost and set UserId
             JobPost newJobPost = _mapper.Map<JobPost>(request);
-            newJobPost.CreatedAt = DateTime.UtcNow;
+            newJobPost.UserId = idUser;
+            newJobPost.CreatedAt = TimeHelper.NowInVietnam();
             newJobPost.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
+            // Insert job post
             await _unitOfWork.GetRepository<JobPost>().InsertAsync(newJobPost);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessful) throw new BadHttpRequestException("CreateFailed");
+            if (!isSuccessful) throw new BadHttpRequestException("Failed to create job post.");
 
+            // Add associated skills
             if (request.SkillIds != null && request.SkillIds.Any())
             {
                 foreach (var skillId in request.SkillIds)
@@ -43,13 +60,13 @@ namespace FPTAlumniConnect.API.Services.Implements
                     {
                         JobPostId = newJobPost.JobPostId,
                         SkillId = skillId,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        CreatedAt = TimeHelper.NowInVietnam(),
+                        UpdatedAt = TimeHelper.NowInVietnam()
                     };
                     await _unitOfWork.GetRepository<JobPostSkill>().InsertAsync(jobPostSkill);
                 }
                 isSuccessful = await _unitOfWork.CommitAsync() > 0;
-                if (!isSuccessful) throw new BadHttpRequestException("Failed to add JobPost skills");
+                if (!isSuccessful) throw new BadHttpRequestException("Failed to add job post skills.");
             }
 
             return newJobPost.JobPostId;
@@ -57,9 +74,17 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<JobPostResponse> GetJobPostById(int id)
         {
-            var jobPost = await _unitOfWork.GetRepository<JobPost>().SingleOrDefaultAsync(
-                predicate: x => x.JobPostId == id,
-                include: q => q.Include(x => x.Major).Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill))
+            if (id <= 0)
+                throw new ArgumentException("Invalid ID. ID must be greater than 0.", nameof(id));
+
+            _logger.LogInformation("Retrieving job post by ID: {Id}", id);
+
+            var jobPost = await _unitOfWork.GetRepository<JobPost>()
+                .SingleOrDefaultAsync(
+                    predicate: x => x.JobPostId == id,
+                    include: q => q.Include(j => j.User).ThenInclude(u => u.RecruiterInfos)
+                                  .Include(j => j.Major)
+                                  .Include(j => j.JobPostSkills).ThenInclude(jps => jps.Skill))
                 ?? throw new BadHttpRequestException("JobPostNotFound");
 
             return _mapper.Map<JobPostResponse>(jobPost);
@@ -69,9 +94,10 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             ValidateSalary(request.MinSalary, request.MaxSalary);
 
-            var jobPost = await _unitOfWork.GetRepository<JobPost>().SingleOrDefaultAsync(
-                predicate: x => x.JobPostId == id,
-                include: q => q.Include(j => j.JobPostSkills))
+            var jobPost = await _unitOfWork.GetRepository<JobPost>()
+                .SingleOrDefaultAsync(
+                    predicate: x => x.JobPostId == id,
+                    include: q => q.Include(j => j.JobPostSkills))
                 ?? throw new BadHttpRequestException("JobPostNotFound");
 
             jobPost.JobTitle = request.JobTitle ?? jobPost.JobTitle;
@@ -116,8 +142,9 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<bool> DeleteJobPost(int id)
         {
-            var jobPost = await _unitOfWork.GetRepository<JobPost>().SingleOrDefaultAsync(
-                predicate: x => x.JobPostId == id)
+            var jobPost = await _unitOfWork.GetRepository<JobPost>()
+                .SingleOrDefaultAsync(
+                    predicate: x => x.JobPostId == id)
                 ?? throw new BadHttpRequestException("JobPostNotFound");
 
             jobPost.UpdatedAt = DateTime.UtcNow;
@@ -142,7 +169,9 @@ namespace FPTAlumniConnect.API.Services.Implements
                 .GetListAsync(
                     predicate: predicate,
                     selector: x => _mapper.Map<JobPostResponse>(x),
-                    include: q => q.Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill),
+                    include: q => q.Include(j => j.User).ThenInclude(u => u.RecruiterInfos)
+                                  .Include(j => j.Major)
+                                  .Include(j => j.JobPostSkills).ThenInclude(jps => jps.Skill),
                     orderBy: x => x.OrderByDescending(x => x.CreatedAt));
 
             return jobPosts;
@@ -153,7 +182,9 @@ namespace FPTAlumniConnect.API.Services.Implements
             _logger.LogInformation("Viewing all job posts with filter and paging.");
 
             Func<IQueryable<JobPost>, IIncludableQueryable<JobPost, object>> include =
-                q => q.Include(x => x.Major).Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill);
+                q => q.Include(j => j.User).ThenInclude(u => u.RecruiterInfos)
+                      .Include(j => j.Major)
+                      .Include(j => j.JobPostSkills).ThenInclude(jps => jps.Skill);
 
             IPaginate<JobPostResponse> response = await _unitOfWork.GetRepository<JobPost>().GetPagingListAsync(
                 selector: x => _mapper.Map<JobPostResponse>(x),
@@ -168,29 +199,28 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<int> CountAllJobPosts()
         {
-            ICollection<JobPostResponse> jobPosts = await _unitOfWork.GetRepository<JobPost>().GetListAsync(
-            selector: x => _mapper.Map<JobPostResponse>(x));
-            int count = jobPosts.Count();
+            _logger.LogInformation("Counting all job posts.");
+
+            int count = await _unitOfWork.GetRepository<JobPost>().CountAsync(predicate: x => true);
             return count;
         }
 
         public async Task<CountByMonthResponse> CountJobPostsByMonth(int month, int year)
         {
-            ICollection<JobPostResponse> jobPosts = await _unitOfWork.GetRepository<JobPost>().GetListAsync(
-            selector: x => _mapper.Map<JobPostResponse>(x),
-            predicate: x => x.CreatedAt.HasValue
-                    && x.CreatedAt.Value.Year == year
-                    && x.CreatedAt.Value.Month == month);
-            CountByMonthResponse count = new CountByMonthResponse
+            _logger.LogInformation("Counting job posts for month: {Month}, year: {Year}", month, year);
+
+            int count = await _unitOfWork.GetRepository<JobPost>().CountAsync(
+                predicate: x => x.CreatedAt.HasValue
+                            && x.CreatedAt.Value.Year == year
+                            && x.CreatedAt.Value.Month == month);
+
+            return new CountByMonthResponse
             {
                 Month = month,
                 Year = year,
-                Count = jobPosts.Count()
+                Count = count
             };
-            return count;
         }
-
-
 
         private void ValidateSalary(int? minSalary, int? maxSalary)
         {
@@ -207,7 +237,9 @@ namespace FPTAlumniConnect.API.Services.Implements
             var jobPosts = await _unitOfWork.GetRepository<JobPost>().GetListAsync(
                 predicate: x => x.Status.Equals(status, StringComparison.OrdinalIgnoreCase),
                 selector: x => _mapper.Map<JobPostResponse>(x),
-                include: q => q.Include(x => x.JobPostSkills).ThenInclude(jps => jps.Skill));
+                include: q => q.Include(j => j.User).ThenInclude(u => u.RecruiterInfos)
+                              .Include(j => j.Major)
+                              .Include(j => j.JobPostSkills).ThenInclude(jps => jps.Skill));
 
             return jobPosts;
         }

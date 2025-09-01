@@ -35,7 +35,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("RecruiterInfoAlreadyExists");
 
             var entity = _mapper.Map<RecruiterInfo>(request);
-            entity.CreatedAt = DateTime.UtcNow;
+            entity.CreatedAt = TimeHelper.NowInVietnam();
             //entity.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<RecruiterInfo>().InsertAsync(entity);
@@ -117,6 +117,59 @@ namespace FPTAlumniConnect.API.Services.Implements
             return await _unitOfWork.GetRepository<RecruiterInfo>()
                 .GetQueryable()
                 .CountAsync();
+        }
+
+        // Constants for error messages
+        private static class ErrorMessages
+        {
+            public const string UserNotFound = "User with the specified ID does not exist.";
+            public const string RecruiterInfoAlreadyExists = "Recruiter information already exists for this user.";
+            public const string RecruiterInfoNotFound = "Recruiter information with the specified ID does not exist.";
+            public const string CreateFailed = "Failed to create recruiter information.";
+            public const string InvalidStatus = "Status must be one of: Active, Inactive, Pending.";
+            public const string UpdateStatusFailed = "Failed to update recruiter status.";
+        }
+
+        // Update recruiter status by ID
+        public async Task<bool> UpdateRecruiterStatus(int id, string status)
+        {
+            // Validate input
+            if (id <= 0)
+                throw new ArgumentException("Invalid ID. ID must be greater than 0.", nameof(id));
+            if (string.IsNullOrWhiteSpace(status))
+                throw new ArgumentException("Status cannot be null or empty.", nameof(status));
+
+            // Validate status value
+            var validStatuses = new[] { "Active", "Inactive", "Pending" };
+            if (!validStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Invalid status provided: {Status}", status);
+                throw new BadHttpRequestException(ErrorMessages.InvalidStatus);
+            }
+
+            _logger.LogInformation("Updating status for recruiter info ID: {Id} to {Status}", id, status);
+
+            // Retrieve recruiter info
+            var entity = await _unitOfWork.GetRepository<RecruiterInfo>().SingleOrDefaultAsync(
+                predicate: x => x.RecruiterInfoId == id)
+                ?? throw new BadHttpRequestException(ErrorMessages.RecruiterInfoNotFound);
+
+            // Update status and audit fields
+            entity.Status = status;
+            entity.UpdatedAt = TimeHelper.NowInVietnam();
+
+            // Update the entity
+            _unitOfWork.GetRepository<RecruiterInfo>().UpdateAsync(entity);
+            bool isSuccess = await _unitOfWork.CommitAsync() > 0;
+
+            if (!isSuccess)
+            {
+                _logger.LogError("Failed to update status for recruiter info ID: {Id}", id);
+                throw new BadHttpRequestException(ErrorMessages.UpdateStatusFailed);
+            }
+
+            _logger.LogInformation("Successfully updated status for recruiter info ID: {Id} to {Status}", id, status);
+            return isSuccess;
         }
     }
 }

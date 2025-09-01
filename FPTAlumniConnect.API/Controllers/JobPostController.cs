@@ -51,20 +51,21 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> CreateNewJobPost([FromBody] JobPostInfo request)
+        public async Task<IActionResult> CreateNewJobPost([FromQuery] int idUser, [FromBody] JobPostInfo request)
         {
-            if (request == null)
+            if (request == null || idUser <= 0)
             {
                 return BadRequest(new
                 {
                     status = "error",
                     message = "Bad request",
-                    errors = new[] { "Request body is null or malformed" }
+                    errors = new[] { request == null ? "Request body is null or malformed" : "Invalid user ID" }
                 });
             }
+
             try
             {
-                var id = await _jobPostService.CreateNewJobPost(request);
+                var id = await _jobPostService.CreateNewJobPost(idUser, request);
                 return StatusCode(201, new
                 {
                     status = "success",
@@ -72,15 +73,24 @@ namespace FPTAlumniConnect.API.Controllers
                     data = new { id }
                 });
             }
-            catch (BadHttpRequestException badEx)
+            catch (BadHttpRequestException ex)
             {
-                _logger.LogError(badEx, "Bad request");
-                return BadRequest(new { status = "error", message = badEx.Message });
+                _logger.LogWarning(ex, "Failed to create job post for user ID: {UserId}", idUser);
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { ex.Message }
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create job post");
-                return StatusCode(500, new { status = "error", message = "Internal server error" });
+                _logger.LogError(ex, "Failed to create job post for user ID: {UserId}", idUser);
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
             }
         }
 
@@ -198,9 +208,9 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SearchJobPosts(
-    [FromQuery] string keyword,
-    [FromQuery] int? minSalary = null,
-    [FromQuery] int? maxSalary = null)
+            [FromQuery] string keyword,
+            [FromQuery] int? minSalary = null,
+            [FromQuery] int? maxSalary = null)
         {
             try
             {

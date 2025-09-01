@@ -12,6 +12,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IPaginate<GetUserResponse>> ViewAllUser(UserFilter filter, PagingModel pagingModel);
         //Task<LoginResponse> LoginUser(LoginFirebaseRequest request);
         Task<bool> UpdateUserInfo(int id, UserInfo request);
+        Task<bool> UpdateUserMentorStatus(int id, string isMentor);
         Task<GetUserResponse> GetUserById(int id);
         //Task<LoginResponse> LoginUser(LoginFirebaseRequest request);
         Task<LoginResponse> Login(LoginRequest loginRequest);

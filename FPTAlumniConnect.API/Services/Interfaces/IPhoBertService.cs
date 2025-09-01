@@ -8,5 +8,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
     public interface IPhoBertService
     {
         Task<IPaginate<CVResponse>> RecommendCVForJobPostAsync(int jobPostId, PagingModel pagingModel);
+        Task<object> RecommendJobForCVAsync(int cvId, PagingModel pagingModel);
     }
 }
