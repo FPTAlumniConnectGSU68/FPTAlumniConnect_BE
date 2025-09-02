@@ -20,7 +20,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         public async Task<int> CreatePrivacySetting(PrivacySettingInfo request)
         {
             var newPrivacySetting = _mapper.Map<PrivacySetting>(request);
-            newPrivacySetting.CreatedAt = DateTime.Now;
+            newPrivacySetting.CreatedAt = TimeHelper.NowInVietnam();
             newPrivacySetting.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<PrivacySetting>().InsertAsync(newPrivacySetting);
@@ -54,7 +54,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             privacySetting.VisibleToMajor = request.VisibleToMajor ?? privacySetting.VisibleToMajor;
             privacySetting.VisibleToEmail = request.VisibleToEmail ?? privacySetting.VisibleToEmail;
             privacySetting.VisibleToAlumni = request.VisibleToAlumni ?? privacySetting.VisibleToAlumni;
-            privacySetting.UpdatedAt = DateTime.Now;
+            privacySetting.UpdatedAt = TimeHelper.NowInVietnam();
             privacySetting.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<PrivacySetting>().UpdateAsync(privacySetting);

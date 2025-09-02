@@ -21,12 +21,12 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             if (request.Birthday.HasValue)
             {
-                int age = DateTime.UtcNow.Year - request.Birthday.Value.Year;
-                if (request.Birthday.Value.Date > DateTime.UtcNow.Date.AddYears(-age)) age--;
+                int age = TimeHelper.NowInVietnam().Year - request.Birthday.Value.Year;
+                if (request.Birthday.Value.Date > TimeHelper.NowInVietnam().Date.AddYears(-age)) age--;
                 if (age < 18) throw new BadHttpRequestException("Birthday must indicate age 18 or older.");
             }
 
-            if (request.StartAt.HasValue && request.StartAt.Value > DateTime.UtcNow)
+            if (request.StartAt.HasValue && request.StartAt.Value > TimeHelper.NowInVietnam())
                 throw new BadHttpRequestException("StartAt cannot be in the future.");
             if (request.EndAt.HasValue && request.StartAt.HasValue && request.EndAt.Value < request.StartAt.Value)
                 throw new BadHttpRequestException("EndAt cannot be earlier than StartAt.");
@@ -53,7 +53,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             Cv newCV = _mapper.Map<Cv>(request);
-            newCV.CreatedAt = DateTime.UtcNow;
+            newCV.CreatedAt = TimeHelper.NowInVietnam();
             newCV.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
             newCV.CvSkills = new List<CvSkill>();
 
@@ -69,8 +69,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                     {
                         CvId = newCV.Id,
                         SkillId = skillId,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        CreatedAt = TimeHelper.NowInVietnam(),
+                        UpdatedAt = TimeHelper.NowInVietnam()
                     };
                     await _unitOfWork.GetRepository<CvSkill>().InsertAsync(cvSkill);
                 }
@@ -132,13 +132,13 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             if (request.Birthday.HasValue)
             {
-                int age = DateTime.UtcNow.Year - request.Birthday.Value.Year;
-                if (request.Birthday.Value.Date > DateTime.UtcNow.Date.AddYears(-age)) age--;
+                int age = TimeHelper.NowInVietnam().Year - request.Birthday.Value.Year;
+                if (request.Birthday.Value.Date > TimeHelper.NowInVietnam().Date.AddYears(-age)) age--;
                 if (age < 18) throw new BadHttpRequestException("Birthday must indicate age 18 or older.");
                 cv.Birthday = request.Birthday.Value;
             }
 
-            if (request.StartAt.HasValue && request.StartAt.Value > DateTime.UtcNow)
+            if (request.StartAt.HasValue && request.StartAt.Value > TimeHelper.NowInVietnam())
                 throw new BadHttpRequestException("StartAt cannot be in the future.");
             if (request.EndAt.HasValue && request.StartAt.HasValue && request.EndAt.Value < request.StartAt.Value)
                 throw new BadHttpRequestException("EndAt cannot be earlier than StartAt.");
@@ -191,14 +191,14 @@ namespace FPTAlumniConnect.API.Services.Implements
                     {
                         CvId = id,
                         SkillId = skillId,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        CreatedAt = TimeHelper.NowInVietnam(),
+                        UpdatedAt = TimeHelper.NowInVietnam()
                     };
                     await _unitOfWork.GetRepository<CvSkill>().InsertAsync(cvSkill);
                 }
             }
 
-            cv.UpdatedAt = DateTime.UtcNow;
+            cv.UpdatedAt = TimeHelper.NowInVietnam();
             cv.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<Cv>().UpdateAsync(cv);

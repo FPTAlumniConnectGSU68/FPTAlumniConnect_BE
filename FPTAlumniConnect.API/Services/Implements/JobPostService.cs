@@ -112,7 +112,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             jobPost.Email = request.Email ?? jobPost.Email;
             jobPost.MajorId = request.MajorId ?? jobPost.MajorId;
             jobPost.IsDeal = request.IsDeal ?? jobPost.IsDeal;
-            jobPost.UpdatedAt = DateTime.UtcNow;
+            jobPost.UpdatedAt = TimeHelper.NowInVietnam();
             jobPost.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             if (request.SkillIds != null)
@@ -129,8 +129,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                     {
                         JobPostId = id,
                         SkillId = skillId,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        CreatedAt = TimeHelper.NowInVietnam(),
+                        UpdatedAt = TimeHelper.NowInVietnam()
                     };
                     await _unitOfWork.GetRepository<JobPostSkill>().InsertAsync(jobPostSkill);
                 }
@@ -147,7 +147,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                     predicate: x => x.JobPostId == id)
                 ?? throw new BadHttpRequestException("JobPostNotFound");
 
-            jobPost.UpdatedAt = DateTime.UtcNow;
+            jobPost.UpdatedAt = TimeHelper.NowInVietnam();
             jobPost.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
             _unitOfWork.GetRepository<JobPost>().UpdateAsync(jobPost);
 
@@ -207,9 +207,9 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<ICollection<CountByMonthResponse>> CountJobPostsByMonth(int? month, int? year)
         {
-            int targetYear = (year == null || year == 0) ? DateTime.Now.Year : year.Value;
+            int targetYear = (year == null || year == 0) ? TimeHelper.NowInVietnam().Year : year.Value;
             int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
-            int endMonth = (targetYear == DateTime.Now.Year) ? DateTime.Now.Month : 12;
+            int endMonth = (targetYear == TimeHelper.NowInVietnam().Year) ? TimeHelper.NowInVietnam().Month : 12;
             var result = new List<CountByMonthResponse>();
             for (int m = startMonth; m <= endMonth; m++)
             {

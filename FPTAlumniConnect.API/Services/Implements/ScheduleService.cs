@@ -60,7 +60,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             await EnsureUserExists(request.MentorId ?? 0);
 
             // Validate StartTime and EndTime
-            if (request.StartTime.HasValue && request.StartTime.Value < DateTime.UtcNow)
+            if (request.StartTime.HasValue && request.StartTime.Value < TimeHelper.NowInVietnam())
                 throw new BadHttpRequestException("StartTime cannot be in the past.");
 
             if (request.StartTime.HasValue && request.EndTime.HasValue &&
@@ -142,7 +142,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             // Update audit info
-            schedule.UpdatedAt = DateTime.Now;
+            schedule.UpdatedAt = TimeHelper.NowInVietnam();
             schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
@@ -159,7 +159,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             var mentorship = await EnsureMentorshipExists(schedule.MentorShipId ?? 0);
 
             schedule.Status = "Completed";
-            schedule.UpdatedAt = DateTime.UtcNow;
+            schedule.UpdatedAt = TimeHelper.NowInVietnam();
             schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
             _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);
 
@@ -194,9 +194,9 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<ICollection<CountByMonthResponse>> CountSchedulesByMonth(int? month, int? year)
         {
-            int targetYear = (year == null || year == 0) ? DateTime.Now.Year : year.Value;
+            int targetYear = (year == null || year == 0) ? TimeHelper.NowInVietnam().Year : year.Value;
             int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
-            int endMonth = (targetYear == DateTime.Now.Year) ? DateTime.Now.Month : 12;
+            int endMonth = (targetYear == TimeHelper.NowInVietnam().Year) ? TimeHelper.NowInVietnam().Month : 12;
             var result = new List<CountByMonthResponse>();
             for (int m = startMonth; m <= endMonth; m++)
             {
@@ -229,7 +229,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             schedule.Comment = comment;
             schedule.Rating = rate;
-            schedule.UpdatedAt = DateTime.UtcNow;
+            schedule.UpdatedAt = TimeHelper.NowInVietnam();
             schedule.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<Schedule>().UpdateAsync(schedule);

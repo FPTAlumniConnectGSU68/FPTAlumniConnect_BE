@@ -36,8 +36,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("JobPost-Skill association already exists");
 
             JobPostSkill newJobPostSkill = _mapper.Map<JobPostSkill>(request);
-            newJobPostSkill.CreatedAt = DateTime.Now;
-            newJobPostSkill.UpdatedAt = DateTime.Now;
+            newJobPostSkill.CreatedAt = TimeHelper.NowInVietnam();
+            newJobPostSkill.UpdatedAt = TimeHelper.NowInVietnam();
 
             await _unitOfWork.GetRepository<JobPostSkill>().InsertAsync(newJobPostSkill);
 
@@ -89,7 +89,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             _mapper.Map(request, jobPostSkill);
-            jobPostSkill.UpdatedAt = DateTime.Now;
+            jobPostSkill.UpdatedAt = TimeHelper.NowInVietnam();
 
             _unitOfWork.GetRepository<JobPostSkill>().UpdateAsync(jobPostSkill);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;

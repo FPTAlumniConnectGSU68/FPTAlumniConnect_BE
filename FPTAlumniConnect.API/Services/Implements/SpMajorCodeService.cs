@@ -36,7 +36,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
 
             SpMajorCode newSpMajorCode = _mapper.Map<SpMajorCode>(request);
-            newSpMajorCode.CreatedAt = DateTime.Now;
+            newSpMajorCode.CreatedAt = TimeHelper.NowInVietnam();
             newSpMajorCode.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<SpMajorCode>().InsertAsync(newSpMajorCode);
@@ -82,7 +82,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             spMajorCode.MajorId = request.MajorId;
             spMajorCode.MajorName = string.IsNullOrEmpty(request.MajorName) ? spMajorCode.MajorName : request.MajorName;
-            spMajorCode.UpdatedAt = DateTime.Now;
+            spMajorCode.UpdatedAt = TimeHelper.NowInVietnam();
             spMajorCode.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<SpMajorCode>().UpdateAsync(spMajorCode);

@@ -31,7 +31,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             var newTag = _mapper.Map<TagJob>(request);
-            newTag.CreatedAt = DateTime.Now;
+            newTag.CreatedAt = TimeHelper.NowInVietnam();
             newTag.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<TagJob>().InsertAsync(newTag);
@@ -81,7 +81,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             tag.Tag = string.IsNullOrEmpty(request.Tag) ? tag.Tag : request.Tag;
-            tag.UpdatedAt = DateTime.Now;
+            tag.UpdatedAt = TimeHelper.NowInVietnam();
             tag.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<TagJob>().UpdateAsync(tag);

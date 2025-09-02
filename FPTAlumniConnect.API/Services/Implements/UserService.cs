@@ -174,7 +174,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Secure password hashing (Assume HashPassword is a helper method)
             newUser.PasswordHash = request.Password; // Replace with actual hashing method
-            newUser.CreatedAt = DateTime.UtcNow;
+            newUser.CreatedAt = TimeHelper.NowInVietnam();
             newUser.CreatedBy = "System";
 
             // Insert new user into the database
@@ -225,7 +225,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             user.LastName = string.IsNullOrEmpty(request.LastName) ? user.LastName : request.LastName;
             user.ProfilePicture = string.IsNullOrEmpty(request.ProfilePicture) ? user.ProfilePicture : request.ProfilePicture;
             user.IsMentor = request.IsMentor;
-            user.UpdatedAt = DateTime.Now;
+            user.UpdatedAt = TimeHelper.NowInVietnam();
             user.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             // Perform the update in the repository
@@ -254,7 +254,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Update IsMentor field
             user.IsMentor = isMentor;
-            user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedAt = TimeHelper.NowInVietnam();
             user.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<User>().UpdateAsync(user);
@@ -333,9 +333,9 @@ namespace FPTAlumniConnect.API.Services.Implements
         //}
         public async Task<ICollection<CountByMonthResponse>> CountUsersByMonth(int? month, int? year)
         {
-            int targetYear = (year == null || year == 0) ? DateTime.Now.Year : year.Value;
+            int targetYear = (year == null || year == 0) ? TimeHelper.NowInVietnam().Year : year.Value;
             int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
-            int endMonth = (targetYear == DateTime.Now.Year) ? DateTime.Now.Month : 12;
+            int endMonth = (targetYear == TimeHelper.NowInVietnam().Year) ? TimeHelper.NowInVietnam().Month : 12;
             var result = new List<CountByMonthResponse>();
             for (int m = startMonth; m <= endMonth; m++)
             {
@@ -357,9 +357,9 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<ICollection<CountByRoleResponse>> CountUsersByRole(int? month, int? year, int role)
         {
-            int targetYear = (year == null || year == 0) ? DateTime.Now.Year : year.Value;
+            int targetYear = (year == null || year == 0) ? TimeHelper.NowInVietnam().Year : year.Value;
             int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
-            int endMonth = (targetYear == DateTime.Now.Year) ? DateTime.Now.Month : 12;
+            int endMonth = (targetYear == TimeHelper.NowInVietnam().Year) ? TimeHelper.NowInVietnam().Month : 12;
             var result = new List<CountByRoleResponse>();
             for (int m = startMonth; m <= endMonth; m++)
             {
@@ -438,7 +438,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                     GoogleId = uid,
                     FirstName = googleUser.FirstName,
                     LastName = googleUser.LastName,
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = TimeHelper.NowInVietnam(),
                     PasswordHash = "Google",
                     CreatedBy = "System",
                     RoleId = 2
