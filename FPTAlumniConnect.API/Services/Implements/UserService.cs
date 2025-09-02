@@ -249,8 +249,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 ?? throw new BadHttpRequestException("User not found.");
 
             // Validate IsMentor value (e.g., allow "true", "false", or null)
-            if (isMentor != null && isMentor != "true" && isMentor != "false")
-                throw new BadHttpRequestException("Invalid mentor status. Must be 'true', 'false', or null.");
+            if (isMentor != "Pending" && isMentor != "true" && isMentor != "false")
+                throw new BadHttpRequestException("Invalid mentor status. Must be 'true', 'false', or 'Pending'.");
 
             // Update IsMentor field
             user.IsMentor = isMentor;
@@ -472,6 +472,61 @@ namespace FPTAlumniConnect.API.Services.Implements
             };
         }
 
+        public async Task<CreateRecruiterResponse> CreateRecruiter(CreateRecruiterRequest request)
+        {
+            _logger.LogInformation("Creating new recruiter with email: {Email}", request.Email);
 
+            // Check if email already exists
+            var existingUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: x => x.Email.Equals(request.Email)
+            );
+            if (existingUser != null)
+                throw new BadHttpRequestException($"Email {request.Email} already registered.");
+
+            try
+            {
+                // Create new User
+                var newUser = _mapper.Map<User>(request);
+                newUser.PasswordHash = request.Password; // Replace with actual hashing method
+                newUser.RoleId = 4; // Set RoleId to 4 (Recruiter)
+                newUser.CreatedAt = TimeHelper.NowInVietnam();
+                newUser.CreatedBy = "System";
+                newUser.EmailVerified = false; // Default value for non-nullable field
+
+                await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
+                await _unitOfWork.CommitAsync();
+                // Create RecruiterInfo
+                var recruiterInfo = _mapper.Map<RecruiterInfo>(request);
+                recruiterInfo.UserId = newUser.UserId;
+                recruiterInfo.CreatedAt = TimeHelper.NowInVietnam();
+
+                await _unitOfWork.GetRepository<RecruiterInfo>().InsertAsync(recruiterInfo);
+
+                // Commit all changes (single transaction handled by DbContext)
+                bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+                if (!isSuccessful)
+                    throw new BadHttpRequestException($"Failed to create recruiter with email {request.Email}.");
+
+                _logger.LogInformation("Successfully created recruiter with user ID: {UserId} and recruiter info ID: {RecruiterInfoId}",
+                    newUser.UserId, recruiterInfo.RecruiterInfoId);
+
+                // Return response
+                return new CreateRecruiterResponse
+                {
+                    UserId = newUser.UserId,
+                    Email = newUser.Email,
+                    FirstName = newUser.FirstName,
+                    LastName = newUser.LastName,
+                    RecruiterInfoId = recruiterInfo.RecruiterInfoId,
+                    CompanyName = recruiterInfo.CompanyName,
+                    CreatedAt = newUser.CreatedAt.Value
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating recruiter for email: {Email}", request.Email);
+                throw;
+            }
+        }
     }
 }

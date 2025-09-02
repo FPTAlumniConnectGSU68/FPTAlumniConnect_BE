@@ -379,7 +379,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return await _unitOfWork.GetRepository<Event>().GetPagingListAsync(
                 selector: x => _mapper.Map<GetEventResponse>(x),
                 predicate: predicate,
-                orderBy: x => x.OrderByDescending(x => x.EndDate),
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 include: q => q.Include(e => e.UserJoinEvents),
                 page: pagingModel.page,
                 size: pagingModel.size
