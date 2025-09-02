@@ -12,7 +12,7 @@ namespace FPTAlumniConnect.API.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<MentorshipCleanupService> _logger;
-        private readonly TimeSpan _interval = TimeSpan.FromHours(12); // Run every 6 hours
+        private readonly TimeSpan _interval = TimeSpan.FromHours(12); // Run every 12 hours
 
         public MentorshipCleanupService(
             IServiceProvider serviceProvider,

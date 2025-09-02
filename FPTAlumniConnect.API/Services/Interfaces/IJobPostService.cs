@@ -14,5 +14,6 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<int> CountAllJobPosts();
         Task<IEnumerable<JobPostResponse>> SearchJobPosts(string keyword, int? minSalary, int? maxSalary);
         Task<ICollection<CountByMonthResponse>> CountJobPostsByMonth(int? month, int? year);
+        Task<int> AutoCloseExpiredJobPosts();
     }
 }
