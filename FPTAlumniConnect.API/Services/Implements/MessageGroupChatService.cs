@@ -60,7 +60,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             messageToUpdate.Content = string.IsNullOrEmpty(request.Content) ? messageToUpdate.Content : request.Content;
             messageToUpdate.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
-            messageToUpdate.UpdatedAt = DateTime.UtcNow;
+            messageToUpdate.UpdatedAt = TimeHelper.NowInVietnam();
 
             _unitOfWork.GetRepository<MessageGroupChat>().UpdateAsync(messageToUpdate);
             return await _unitOfWork.CommitAsync() > 0;

@@ -18,7 +18,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         public async Task<int> CreateNotificationSetting(NotificationSettingInfo request)
         {
             var newNotificationSetting = _mapper.Map<NotificationSetting>(request);
-            newNotificationSetting.CreatedAt = DateTime.Now;
+            newNotificationSetting.CreatedAt = TimeHelper.NowInVietnam();
             newNotificationSetting.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<NotificationSetting>().InsertAsync(newNotificationSetting);
@@ -50,7 +50,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             notificationSetting.ReceiveInAppNotifications = request.ReceiveInAppNotifications ?? notificationSetting.ReceiveInAppNotifications;
             notificationSetting.JobNotifications = request.JobNotifications ?? notificationSetting.JobNotifications;
             notificationSetting.MessageNotifications = request.MessageNotifications ?? notificationSetting.MessageNotifications;
-            notificationSetting.UpdatedAt = DateTime.Now;
+            notificationSetting.UpdatedAt = TimeHelper.NowInVietnam();
             notificationSetting.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<NotificationSetting>().UpdateAsync(notificationSetting);

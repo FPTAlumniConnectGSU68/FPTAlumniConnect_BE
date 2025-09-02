@@ -27,7 +27,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("Title cannot be empty");
 
             Post newPost = _mapper.Map<Post>(request);
-            newPost.CreatedAt = DateTime.Now;
+            newPost.CreatedAt = TimeHelper.NowInVietnam();
             // newPost.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<Post>().InsertAsync(newPost);
@@ -107,9 +107,9 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<ICollection<CountByMonthResponse>> CountPostsByMonth(int? month, int? year)
         {
-            int targetYear = (year == null || year == 0) ? DateTime.Now.Year : year.Value;
+            int targetYear = (year == null || year == 0) ? TimeHelper.NowInVietnam().Year : year.Value;
             int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
-            int endMonth = (targetYear == DateTime.Now.Year) ? DateTime.Now.Month : 12;
+            int endMonth = (targetYear == TimeHelper.NowInVietnam().Year) ? TimeHelper.NowInVietnam().Month : 12;
             var result = new List<CountByMonthResponse>();
             for (int m = startMonth; m <= endMonth; m++)
             {
@@ -139,7 +139,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             post.IsPrivate = request.IsPrivate ?? post.IsPrivate;
             post.MajorId = request.MajorId ?? post.MajorId;
             post.AuthorId = request.AuthorId ?? post.AuthorId;
-            post.UpdatedAt = DateTime.Now;
+            post.UpdatedAt = TimeHelper.NowInVietnam();
             post.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
         }
 

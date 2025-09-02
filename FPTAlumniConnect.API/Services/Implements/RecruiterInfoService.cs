@@ -80,7 +80,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             entity.CompanyLogoUrl = request.CompanyLogoUrl ?? entity.CompanyLogoUrl;
             entity.CompanyCertificateUrl = request.CompanyCertificateUrl ?? entity.CompanyCertificateUrl;
             entity.Status = request.Status ?? entity.Status;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = TimeHelper.NowInVietnam();
             //entity.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<RecruiterInfo>().UpdateAsync(entity);

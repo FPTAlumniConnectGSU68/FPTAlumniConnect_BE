@@ -26,7 +26,7 @@
                 {
                     UserId = notificationPayload.UserId,
                     Message = notificationPayload.Message,
-                    Timestamp = DateTime.Now,
+                    Timestamp = TimeHelper.NowInVietnam(),
                     IsRead = notificationPayload.IsRead
                 };
 

@@ -41,7 +41,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 predicate: x => x.Id.Equals(id)) ?? throw new BadHttpRequestException("GroupChatNotFound");
 
             groupChat.RoomName = string.IsNullOrEmpty(request.RoomName) ? groupChat.RoomName : request.RoomName;
-            groupChat.UpdatedAt = DateTime.Now;
+            groupChat.UpdatedAt = TimeHelper.NowInVietnam();
             groupChat.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
             _unitOfWork.GetRepository<GroupChat>().UpdateAsync(groupChat);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
@@ -89,7 +89,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             {
                 GroupChatId = groupId,
                 UserId = userId,
-                //JoinedAt = DateTime.UtcNow
+                //JoinedAt = TimeHelper.NowInVietnam()
             };
 
             await _unitOfWork.GetRepository<GroupChatMember>().InsertAsync(member);

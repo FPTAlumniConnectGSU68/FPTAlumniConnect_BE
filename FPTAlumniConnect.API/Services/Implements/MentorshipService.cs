@@ -3,7 +3,6 @@ using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
-using FPTAlumniConnect.BusinessTier.Payload.Post;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
@@ -98,6 +97,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return response;
         }
 
+        // Count all mentorships
         public async Task<int> CountAllMentorships()
         {
             ICollection<MentorshipReponse> mentorships = await _unitOfWork.GetRepository<Mentorship>().GetListAsync(
@@ -106,11 +106,12 @@ namespace FPTAlumniConnect.API.Services.Implements
             return count;
         }
 
+        // Count mentorships by month
         public async Task<ICollection<CountByMonthResponse>> CountMentorshipsByMonth(int? month, int? year)
         {
-            int targetYear = (year == null || year == 0) ? DateTime.Now.Year : year.Value;
+            int targetYear = (year == null || year == 0) ? TimeHelper.NowInVietnam().Year : year.Value;
             int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
-            int endMonth = (targetYear == DateTime.Now.Year) ? DateTime.Now.Month : 12;
+            int endMonth = (targetYear == TimeHelper.NowInVietnam().Year) ? TimeHelper.NowInVietnam().Month : 12;
             var result = new List<CountByMonthResponse>();
             for (int m = startMonth; m <= endMonth; m++)
             {
@@ -147,7 +148,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         // Automatically cancel expired mentorships after 2 days
         public async Task<int> AutoCancelExpiredMentorships()
         {
-            var now = DateTime.UtcNow;
+            var now = TimeHelper.NowInVietnam();
             var expiredMentorships = await _unitOfWork.GetRepository<Mentorship>().FindAllAsync(
                 predicate: x => x.Status == "Pending" && x.CreatedAt.HasValue && x.CreatedAt.Value.AddDays(2) < now
             );

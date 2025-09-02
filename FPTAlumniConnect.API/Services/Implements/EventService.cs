@@ -33,7 +33,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             if (duplicateEvent != null)
                 throw new BadHttpRequestException("An event with the same name and start date already exists.");
 
-            if (request.StartDate.HasValue && request.StartDate.Value < DateTime.UtcNow)
+            if (request.StartDate.HasValue && request.StartDate.Value < TimeHelper.NowInVietnam())
                 throw new BadHttpRequestException("StartDate cannot be in the past.");
 
             if (request.EndDate.HasValue && request.StartDate.HasValue &&
@@ -211,7 +211,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             eventToUpdate.StartDate = request.StartDate ?? eventToUpdate.StartDate;
             eventToUpdate.EndDate = request.EndDate ?? eventToUpdate.EndDate;
             eventToUpdate.Img = string.IsNullOrEmpty(request.Img) ? eventToUpdate.Img : request.Img;
-            eventToUpdate.UpdatedAt = DateTime.UtcNow;
+            eventToUpdate.UpdatedAt = TimeHelper.NowInVietnam();
             eventToUpdate.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             // --- helper local functions ---
@@ -406,9 +406,9 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<ICollection<CountByMonthResponse>> CountEventsByMonth(int? month, int? year)
         {
-            int targetYear = (year == null || year == 0) ? DateTime.Now.Year : year.Value;
+            int targetYear = (year == null || year == 0) ? TimeHelper.NowInVietnam().Year : year.Value;
             int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
-            int endMonth = (targetYear == DateTime.Now.Year) ? DateTime.Now.Month : 12;
+            int endMonth = (targetYear == TimeHelper.NowInVietnam().Year) ? TimeHelper.NowInVietnam().Month : 12;
             var result = new List<CountByMonthResponse>();
             for (int m = startMonth; m <= endMonth; m++)
             {
@@ -500,7 +500,7 @@ namespace FPTAlumniConnect.API.Services.Implements
         private static float CalculatePopularityScore(Event e)
         {
             // Tính điểm phổ biến dựa trên số người tham gia và thời gian còn lại
-            var timeFactor = (e.StartDate - DateTime.Now).TotalDays > 30 ? 1.2f : 1.0f;
+            var timeFactor = (e.StartDate - TimeHelper.NowInVietnam()).TotalDays > 30 ? 1.2f : 1.0f;
             return e.UserJoinEvents.Count * timeFactor;
         }
 
@@ -509,7 +509,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             var organizerEvents = await _unitOfWork.GetRepository<Event>()
                 .GetListAsync(predicate: x => x.OrganizerId == organizerId);
             var timeSlots = new Dictionary<DateTime, int>();
-            var startDate = DateTime.Now.AddDays(7);
+            var startDate = TimeHelper.NowInVietnam().AddDays(7);
             var endDate = startDate.AddDays(30);
             for (var date = startDate; date <= endDate; date = date.AddDays(1))
             {
