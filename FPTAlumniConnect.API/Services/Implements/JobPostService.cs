@@ -112,7 +112,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             jobPost.Email = request.Email ?? jobPost.Email;
             jobPost.MajorId = request.MajorId ?? jobPost.MajorId;
             jobPost.IsDeal = request.IsDeal ?? jobPost.IsDeal;
-            jobPost.UpdatedAt = DateTime.UtcNow;
+            jobPost.UpdatedAt = TimeHelper.NowInVietnam();
             jobPost.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             if (request.SkillIds != null)
@@ -147,7 +147,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                     predicate: x => x.JobPostId == id)
                 ?? throw new BadHttpRequestException("JobPostNotFound");
 
-            jobPost.UpdatedAt = DateTime.UtcNow;
+            jobPost.UpdatedAt = TimeHelper.NowInVietnam();
             jobPost.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
             _unitOfWork.GetRepository<JobPost>().UpdateAsync(jobPost);
 
