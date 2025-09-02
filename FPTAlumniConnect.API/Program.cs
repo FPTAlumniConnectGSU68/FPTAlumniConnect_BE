@@ -55,7 +55,10 @@ builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddConfigSwagger();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddHostedService<MentorshipCleanupService>(); // Register background service
+builder.Services.AddHostedService<JobPostCleanupService>();
+
 builder.Services.AddSingleton<ITimeService, TimeService>();
 
 

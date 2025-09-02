@@ -250,5 +250,35 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return jobPosts;
         }
+
+        public async Task<int> AutoCloseExpiredJobPosts()
+        {
+            _logger.LogInformation("Starting auto-close for expired job posts.");
+
+            var now = TimeHelper.NowInVietnam();
+            var repo = _unitOfWork.GetRepository<JobPost>();
+
+            // Get all active job posts that should be closed
+            var jobPosts = await repo.GetListAsync(
+                predicate: x => x.Status == "Open" && x.Time != null && x.Time < TimeHelper.NowInVietnam()
+            );
+
+            int updatedCount = 0;
+            foreach (var job in jobPosts)
+            {
+                job.Status = "Closed";
+                job.UpdatedAt = TimeHelper.NowInVietnam();
+                job.UpdatedBy = "SystemAutoClose";
+                repo.UpdateAsync(job);
+                updatedCount++;
+            }
+
+            if (updatedCount > 0)
+                await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation("Auto-close finished. {Count} job posts updated.", updatedCount);
+            return updatedCount;
+        }
+
     }
 }

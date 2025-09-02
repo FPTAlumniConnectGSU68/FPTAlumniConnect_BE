@@ -103,7 +103,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             return dotProduct / (magnitudeA * magnitudeB);
         }
 
-        private async Task<double> CalculateScore(Cv cv, JobPostResponse job)
+        private double CalculateScore(Cv cv, JobPostResponse job)
         {
             double score = 0.0;
             int factorCount = 0;
@@ -129,12 +129,14 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             var cvSkills = cv.CvSkills?.Select(s => s.Skill?.Name?.Trim())
                 .Where(name => !string.IsNullOrEmpty(name))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? new HashSet<string>();
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                ?? new HashSet<string>();
 
             var jobSkills = job.Skills?
                 .Select(s => s.Name?.Trim())
                 .Where(name => !string.IsNullOrEmpty(name))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? new HashSet<string>();
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                ?? new HashSet<string>();
 
             if (jobSkills.Count > 0)
             {
@@ -147,17 +149,6 @@ namespace FPTAlumniConnect.API.Services.Implements
             if (cv.MajorId.HasValue && job.MajorId.HasValue)
             {
                 score += (cv.MajorId == job.MajorId) ? 1.0 : 0.0;
-                factorCount++;
-            }
-
-            if (!string.IsNullOrEmpty(cv.PrimaryDuties) && !string.IsNullOrEmpty(job.JobDescription))
-            {
-                var cvText = $"{cv.PrimaryDuties} {cv.DesiredJob} {cv.AdditionalContent}";
-                var jobText = $"{job.JobDescription} {job.Requirements}";
-                var cvEmbedding = await GenerateEmbedding(new EmbeddingRequest { Inputs = cvText });
-                var jobEmbedding = await GenerateEmbedding(new EmbeddingRequest { Inputs = jobText });
-                double textSimilarity = CalculateCosineSimilarity(cvEmbedding, jobEmbedding);
-                score += textSimilarity;
                 factorCount++;
             }
 
@@ -183,13 +174,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                     .Include(c => c.Major)
             );
 
-            var scoredTasks = cvs.Select(async cv => new
-            {
-                Cv = cv,
-                Score = await CalculateScore(cv, jobPost)
-            }).ToList();
-
-            var scored = (await Task.WhenAll(scoredTasks))
+            var scored = cvs
+                .Select(cv => new { Cv = cv, Score = CalculateScore(cv, jobPost) })
                 .Where(x => x.Score > 0)
                 .OrderByDescending(x => x.Score)
                 .ToList();
@@ -251,13 +237,8 @@ namespace FPTAlumniConnect.API.Services.Implements
             );
 
 
-            var scoredTasks = jobPosts.Select(async job => new
-            {
-                Job = job,
-                Score = await CalculateScore(cv, _mapper.Map<JobPostResponse>(job))
-            }).ToList();
-
-            var scored = (await Task.WhenAll(scoredTasks))
+            var scored = jobPosts
+                .Select(job => new { Job = job, Score = CalculateScore(cv, _mapper.Map<JobPostResponse>(job)) })
                 .Where(x => x.Score > 0)
                 .OrderByDescending(x => x.Score)
                 .ToList();
