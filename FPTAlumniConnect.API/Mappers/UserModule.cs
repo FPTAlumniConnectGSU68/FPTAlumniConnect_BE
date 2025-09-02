@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using FirebaseAdmin.Auth.Hash;
+using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.User;
 using FPTAlumniConnect.DataTier.Models;
 
@@ -17,6 +19,20 @@ namespace FPTAlumniConnect.API.Mappers
             CreateMap<RegisterRequest, User>()
                  .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
                  .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+
+            // New mappings for CreateRecruiterRequest
+            CreateMap<CreateRecruiterRequest, User>()
+                .ForMember(dest => dest.RoleId, opt => opt.Ignore()) // RoleId will be set manually
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Set in service
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()); // Set in service
+
+            CreateMap<CreateRecruiterRequest, RecruiterInfo>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Set in service
+                .ForMember(dest => dest.UserId, opt => opt.Ignore()); // Set in service
+
+            CreateMap<User, CreateRecruiterResponse>()
+                .ForMember(dest => dest.RecruiterInfoId, opt => opt.Ignore()) // Set in service
+                .ForMember(dest => dest.CompanyName, opt => opt.Ignore()); // Set in service
         }
     }
 }

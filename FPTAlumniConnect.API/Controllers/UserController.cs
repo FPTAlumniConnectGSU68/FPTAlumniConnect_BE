@@ -3,6 +3,7 @@ using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.User;
 using FPTAlumniConnect.DataTier.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FPTAlumniConnect.API.Controllers
@@ -250,6 +251,53 @@ namespace FPTAlumniConnect.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update mentor status for user ID: {UserId}", id);
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
+            }
+        }
+        [HttpPost(ApiEndPointConstant.User.RecruitersEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateRecruiter([FromBody] CreateRecruiterRequest request)
+        {
+            if (request == null)
+            {
+                _logger.LogWarning("CreateRecruiter request body is null or malformed");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or malformed" }
+                });
+            }
+
+            try
+            {
+                var response = await _userService.CreateRecruiter(request);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Recruiter created successfully",
+                    data = response
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Failed to create recruiter for email: {Email}", request.Email);
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { ex.Message }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create recruiter for email: {Email}", request.Email);
                 return StatusCode(500, new
                 {
                     status = "error",

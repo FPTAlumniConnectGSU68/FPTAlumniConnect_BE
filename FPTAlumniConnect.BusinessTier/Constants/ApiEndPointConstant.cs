@@ -25,6 +25,7 @@
             public const string UserEndPoint = UsersEndPoint + "/{id}";
             public const string UserLoginEndPoint = UsersEndPoint + "/login";
             public const string MentorStatusEndPoint = UsersEndPoint + "/mentor-status/{id}";
+            public const string RecruitersEndPoint = UsersEndPoint + "/recruiters";
         }
         public static class Post
         {

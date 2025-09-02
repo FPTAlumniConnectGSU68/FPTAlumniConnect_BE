@@ -28,6 +28,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             Post newPost = _mapper.Map<Post>(request);
             newPost.CreatedAt = TimeHelper.NowInVietnam();
+            newPost.Views = 0;
             // newPost.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<Post>().InsertAsync(newPost);
@@ -52,6 +53,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("PostNotFound");
 
             PostReponse result = _mapper.Map<PostReponse>(post);
+            result.Views = (result.Views ?? 0) + 1; // Increment view count
             return result;
         }
 
