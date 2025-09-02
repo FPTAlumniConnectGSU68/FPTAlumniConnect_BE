@@ -60,6 +60,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 ?? throw new NotFoundException("MajorIdNotFound");
 
             var newEvent = _mapper.Map<Event>(request);
+            newEvent.CreatedAt = TimeHelper.NowInVietnam();
             var userName = _httpContextAccessor.HttpContext?.User.Identity?.Name;
             newEvent.UpdatedBy = string.IsNullOrEmpty(userName) ? "system" : userName;
 
