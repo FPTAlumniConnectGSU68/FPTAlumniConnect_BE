@@ -84,7 +84,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             if (!string.IsNullOrEmpty(jobApplication.LetterCover) && jobApplication.LetterCover.Length > 2000)
                 throw new BadHttpRequestException("Letter cover cannot exceed 2000 characters.");
 
-            jobApplication.UpdatedAt = DateTime.Now;
+            jobApplication.UpdatedAt = TimeHelper.NowInVietnam();
             jobApplication.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<JobApplication>().UpdateAsync(jobApplication);

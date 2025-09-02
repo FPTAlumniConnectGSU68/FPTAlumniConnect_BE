@@ -71,7 +71,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Update content
             rp.TypeOfReport = string.IsNullOrEmpty(request.TypeOfReport) ? rp.TypeOfReport : request.TypeOfReport;
-            rp.UpdatedAt = DateTime.Now;
+            rp.UpdatedAt = TimeHelper.NowInVietnam();
             rp.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<PostReport>().UpdateAsync(rp);

@@ -28,8 +28,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("Skill with this name already exists");
 
             Skill newSkill = _mapper.Map<Skill>(request);
-            newSkill.CreatedAt = DateTime.Now;
-            newSkill.UpdatedAt = DateTime.Now;
+            newSkill.CreatedAt = TimeHelper.NowInVietnam();
+            newSkill.UpdatedAt = TimeHelper.NowInVietnam();
 
             await _unitOfWork.GetRepository<Skill>().InsertAsync(newSkill);
 
@@ -72,7 +72,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             _mapper.Map(request, skill);
-            skill.UpdatedAt = DateTime.Now;
+            skill.UpdatedAt = TimeHelper.NowInVietnam();
 
             _unitOfWork.GetRepository<Skill>().UpdateAsync(skill);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
