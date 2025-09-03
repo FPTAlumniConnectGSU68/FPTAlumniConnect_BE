@@ -10,10 +10,15 @@ namespace FPTAlumniConnect.API.Mappers
         {
             CreateMap<Event, GetEventResponse>()
                 .ForMember(dest => dest.AverageRating,
-                       opt => opt.MapFrom(src =>
-                           src.UserJoinEvents != null && src.UserJoinEvents.Any()
-                               ? src.UserJoinEvents.Average(u => u.Rating ?? 0)
-                               : (double?)null))
+                    opt => opt.MapFrom(src =>
+                        src.UserJoinEvents != null && src.UserJoinEvents.Any(u => u.Rating.HasValue)
+                            ? Math.Round(
+                                src.UserJoinEvents
+                                   .Where(u => u.Rating.HasValue)
+                                   .Average(u => u.Rating.Value),
+                                1)
+                            : (double?)null))
+
                 .ForMember(dest => dest.UserJoinEventCount,
                         opt => opt.MapFrom(src => src.UserJoinEvents.Count));
 
@@ -43,10 +48,14 @@ namespace FPTAlumniConnect.API.Mappers
             CreateMap<Event, EventDetailResponse>()
                 .ForMember(dest => dest.AverageRating,
                     opt => opt.MapFrom(src =>
-                        src.UserJoinEvents != null && src.UserJoinEvents.Any()
-                            ? src.UserJoinEvents.Average(u => u.Rating ?? 0)
-                            : (double?)null
-                    ))
+                        src.UserJoinEvents != null && src.UserJoinEvents.Any(u => u.Rating.HasValue)
+                            ? Math.Round(
+                                src.UserJoinEvents
+                                   .Where(u => u.Rating.HasValue)
+                                   .Average(u => u.Rating.Value),
+                                1)
+                            : (double?)null))
+
                 .ForMember(dest => dest.OrganizerName, opt => opt.MapFrom(
                     src => src.Organizer != null
                         ? src.Organizer.FirstName + " " + src.Organizer.LastName
