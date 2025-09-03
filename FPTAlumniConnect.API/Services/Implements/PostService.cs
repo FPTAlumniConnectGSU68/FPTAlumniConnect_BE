@@ -51,9 +51,11 @@ namespace FPTAlumniConnect.API.Services.Implements
             Post post = await _unitOfWork.GetRepository<Post>().SingleOrDefaultAsync(
                 predicate: x => x.PostId.Equals(id), include: include) ??
                 throw new BadHttpRequestException("PostNotFound");
+            post.Views = (post.Views ?? 0) + 1; // Increment view count
+            _unitOfWork.GetRepository<Post>().UpdateAsync(post);
+            _unitOfWork.CommitAsync().Wait();
 
             PostReponse result = _mapper.Map<PostReponse>(post);
-            result.Views = (result.Views ?? 0) + 1; // Increment view count
             return result;
         }
 
