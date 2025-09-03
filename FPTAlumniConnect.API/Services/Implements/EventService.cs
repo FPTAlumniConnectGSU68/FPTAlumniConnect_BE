@@ -136,14 +136,16 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<bool> UpdateEventInfo(int id, EventInfo request)
         {
+            // Include related timelines for update
             Func<IQueryable<Event>, IIncludableQueryable<Event, object>> include = q => q.Include(e => e.EventTimeLines);
 
+            // Fetch event or throw
             Event eventToUpdate = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
                 predicate: x => x.EventId.Equals(id),
                 include: include)
                 ?? throw new BadHttpRequestException("EventNotFound");
 
-            // Validate ngày tháng 
+            // Validate dates
             if (request.StartDate.HasValue && request.EndDate.HasValue)
             {
                 if (request.EndDate.Value < request.StartDate.Value)
@@ -160,6 +162,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                     throw new BadHttpRequestException("New EndDate cannot be earlier than the existing StartDate.");
             }
 
+            // Update OrganizerId if provided
             if (request.OrganizerId.HasValue)
             {
                 var user = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
@@ -169,6 +172,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 eventToUpdate.OrganizerId = request.OrganizerId.Value;
             }
 
+            // Update MajorId if provided
             if (request.MajorId.HasValue)
             {
                 var major = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
@@ -178,7 +182,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 eventToUpdate.MajorId = request.MajorId.Value;
             }
 
-            // Validate và cập nhật các trường string/date khác 
+            // Update basic fields with validation
             if (!string.IsNullOrWhiteSpace(request.EventName))
             {
                 if (request.EventName.Length < 3 || request.EventName.Length > 100)
@@ -208,119 +212,120 @@ namespace FPTAlumniConnect.API.Services.Implements
                 eventToUpdate.Status = request.Status;
             }
 
+            // Apply date and other non-validated updates
             eventToUpdate.StartDate = request.StartDate ?? eventToUpdate.StartDate;
             eventToUpdate.EndDate = request.EndDate ?? eventToUpdate.EndDate;
             eventToUpdate.Img = string.IsNullOrEmpty(request.Img) ? eventToUpdate.Img : request.Img;
             eventToUpdate.UpdatedAt = TimeHelper.NowInVietnam();
-            eventToUpdate.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            eventToUpdate.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name ?? "System";  // Fallback if no context
 
-            // --- helper local functions ---
+            // --- Helper local functions ---
+
+            // Parse string to TimeSpan with validation (time-of-day: 00:00 to 23:59:59)
             TimeSpan ParseTimeSpanOrThrow(string input, string fieldName)
             {
                 if (TimeSpan.TryParse(input, out var ts))
-                    return ts;
-
-                // Try common exact formats
-                var formats = new[] { "h\\:mm", "hh\\:mm", "hh\\:mm\\:ss", "h\\:mm\\:ss" };
-                foreach (var f in formats)
                 {
-                    if (TimeSpan.TryParseExact(input, f, null, out ts))
-                        return ts;
+                    ValidateTimeSpan(ts, fieldName);
+                    return ts;
                 }
 
-                // Try ISO duration (PT...) as fallback
-                if (input.StartsWith("P", StringComparison.OrdinalIgnoreCase) ||
-                    input.StartsWith("PT", StringComparison.OrdinalIgnoreCase))
+                // Try exact formats
+                var formats = new[] { "h\\:mm", "hh\\:mm", "hh\\:mm\\:ss", "h\\:mm\\:ss" };
+                foreach (var format in formats)
                 {
-                    try
+                    if (TimeSpan.TryParseExact(input, format, null, out ts))
                     {
-                        return System.Xml.XmlConvert.ToTimeSpan(input);
+                        ValidateTimeSpan(ts, fieldName);
+                        return ts;
                     }
-                    catch { }
                 }
 
                 throw new BadHttpRequestException($"Invalid {fieldName} format: '{input}'. Expected formats: 'HH:mm' or 'HH:mm:ss'.");
             }
 
+            // Validate TimeSpan is a valid time-of-day (non-negative, < 24 hours)
+            void ValidateTimeSpan(TimeSpan ts, string fieldName)
+            {
+                if (ts < TimeSpan.Zero)
+                    throw new BadHttpRequestException($"{fieldName} cannot be negative.");
+
+                if (ts.TotalHours >= 24)
+                    throw new BadHttpRequestException($"{fieldName} must be less than 24 hours (use format for time-of-day).");
+            }
+
+            // Resolve the next valid DateTime for a given time-of-day, ensuring it's >= minAllowed and within event range
             DateTime GetNextDateTimeForTime(Event e, TimeSpan timeOfDay, DateTime minAllowed)
             {
-                // start searching from minAllowed.Date
-                var candidate = new DateTime(minAllowed.Year, minAllowed.Month, minAllowed.Day, timeOfDay.Hours, timeOfDay.Minutes, timeOfDay.Seconds);
+                // Start from minAllowed's date with the time-of-day applied
+                var candidate = minAllowed.Date.Add(timeOfDay);
 
-                // if candidate < minAllowed, move forward by days until >= minAllowed
+                // Advance by full days if candidate < minAllowed
                 while (candidate < minAllowed)
                     candidate = candidate.AddDays(1);
 
-                // now ensure candidate is within event range
+                // Ensure it's within the event's overall range
                 if (candidate < e.StartDate || candidate > e.EndDate)
                     throw new BadHttpRequestException($"Timeline time {timeOfDay} (resolved to {candidate:u}) is outside event range [{e.StartDate:u} - {e.EndDate:u}].");
 
                 return candidate;
             }
 
-            // Handle timelines (parse string -> TimeSpan -> validate DateTime in event range)
+            // Handle timelines: update existing, add new, remove not provided
             if (request.TimeLines != null)
             {
                 var existingTimeLines = eventToUpdate.EventTimeLines.ToList();
+                var timelineRepo = _unitOfWork.GetRepository<EventTimeLine>();
 
                 foreach (var tlInfo in request.TimeLines)
                 {
                     if (tlInfo.EventTimeLineId.HasValue)
                     {
-                        var existing = existingTimeLines.FirstOrDefault(t => t.EventTimeLineId == tlInfo.EventTimeLineId.Value);
-                        if (existing == null)
-                            throw new BadHttpRequestException("TimeLineNotFound");
+                        // Update existing timeline
+                        var existing = existingTimeLines.FirstOrDefault(t => t.EventTimeLineId == tlInfo.EventTimeLineId.Value)
+                            ?? throw new BadHttpRequestException("TimeLineNotFound");
 
                         existing.Title = string.IsNullOrEmpty(tlInfo.Title) ? existing.Title : tlInfo.Title;
                         existing.Description = string.IsNullOrEmpty(tlInfo.Description) ? existing.Description : tlInfo.Description;
 
-                        // parse provided start/end strings if present; otherwise keep existing TimeSpan values
-                        TimeSpan startTs = existing.StartTime;
-                        TimeSpan endTs = existing.EndTime;
+                        // Parse new times if provided, otherwise keep existing
+                        var startTs = existing.StartTime;
+                        var endTs = existing.EndTime;
 
                         DateTime startDt;
                         DateTime endDt;
 
                         if (!string.IsNullOrWhiteSpace(tlInfo.StartTime))
                         {
-                            startTs = ParseTimeSpanOrThrow(tlInfo.StartTime!, "StartTime");
+                            startTs = ParseTimeSpanOrThrow(tlInfo.StartTime, "StartTime");
                         }
-                        // resolve start date/time (earliest >= event.StartDate)
                         startDt = GetNextDateTimeForTime(eventToUpdate, startTs, eventToUpdate.StartDate);
 
                         if (!string.IsNullOrWhiteSpace(tlInfo.EndTime))
                         {
-                            endTs = ParseTimeSpanOrThrow(tlInfo.EndTime!, "EndTime");
-                            // resolve end date/time as earliest >= startDt (allows crossing midnight to next day)
-                            endDt = GetNextDateTimeForTime(eventToUpdate, endTs, startDt);
+                            endTs = ParseTimeSpanOrThrow(tlInfo.EndTime, "EndTime");
                         }
-                        else
-                        {
-                            // use existing endTs and ensure end >= start by resolving relative to startDt
-                            endDt = GetNextDateTimeForTime(eventToUpdate, endTs, startDt);
-                        }
+                        endDt = GetNextDateTimeForTime(eventToUpdate, endTs, startDt);
 
                         if (endDt < startDt)
                             throw new BadHttpRequestException("Timeline EndTime cannot be earlier than StartTime.");
 
-                        // update persisted TimeSpan values
+                        // Update TimeSpan values
                         existing.StartTime = startTs;
                         existing.EndTime = endTs;
 
-                        _unitOfWork.GetRepository<EventTimeLine>().UpdateAsync(existing);
+                        timelineRepo.UpdateAsync(existing);
                     }
                     else
                     {
-                        // New timeline -> require both start and end strings
+                        // Add new timeline (require both StartTime and EndTime)
                         if (string.IsNullOrWhiteSpace(tlInfo.StartTime) || string.IsNullOrWhiteSpace(tlInfo.EndTime))
                             throw new BadHttpRequestException("StartTime and EndTime are required for new timeline entries and must be non-empty strings.");
 
-                        var startTsNew = ParseTimeSpanOrThrow(tlInfo.StartTime!, "StartTime");
-                        var endTsNew = ParseTimeSpanOrThrow(tlInfo.EndTime!, "EndTime");
+                        var startTsNew = ParseTimeSpanOrThrow(tlInfo.StartTime, "StartTime");
+                        var endTsNew = ParseTimeSpanOrThrow(tlInfo.EndTime, "EndTime");
 
-                        // resolve startDt as earliest >= event.StartDate
                         var startDtNew = GetNextDateTimeForTime(eventToUpdate, startTsNew, eventToUpdate.StartDate);
-                        // resolve endDt as earliest >= startDtNew (allows next-day end)
                         var endDtNew = GetNextDateTimeForTime(eventToUpdate, endTsNew, startDtNew);
 
                         if (endDtNew < startDtNew)
@@ -328,31 +333,37 @@ namespace FPTAlumniConnect.API.Services.Implements
 
                         var newTL = new EventTimeLine
                         {
-                            EventId = id, // ensure relation
+                            EventId = id,
                             Title = tlInfo.Title,
                             Description = tlInfo.Description,
                             StartTime = startTsNew,
                             EndTime = endTsNew
                         };
 
-                        await _unitOfWork.GetRepository<EventTimeLine>().InsertAsync(newTL);
-                        eventToUpdate.EventTimeLines.Add(newTL); // keep in-memory consistent
+                        await timelineRepo.InsertAsync(newTL);
+                        eventToUpdate.EventTimeLines.Add(newTL);
                     }
                 }
 
-                // Remove timelines not provided in the request (existing ones)
-                var providedIds = request.TimeLines.Where(t => t.EventTimeLineId.HasValue).Select(t => t.EventTimeLineId!.Value).ToList();
+                // Remove timelines not in request
+                var providedIds = request.TimeLines
+                    .Where(t => t.EventTimeLineId.HasValue)
+                    .Select(t => t.EventTimeLineId.Value)
+                    .ToHashSet();  // For efficient lookup
+
                 var toRemove = existingTimeLines.Where(t => !providedIds.Contains(t.EventTimeLineId)).ToList();
 
                 foreach (var tr in toRemove)
                 {
-                    _unitOfWork.GetRepository<EventTimeLine>().DeleteAsync(tr);
-                    var inMem = eventToUpdate.EventTimeLines.FirstOrDefault(x => x.EventTimeLineId == tr.EventTimeLineId);
-                    if (inMem != null) eventToUpdate.EventTimeLines.Remove(inMem);
+                    timelineRepo.DeleteAsync(tr);
+                    eventToUpdate.EventTimeLines.Remove(tr);
                 }
             }
 
+            // Update the event entity
             _unitOfWork.GetRepository<Event>().UpdateAsync(eventToUpdate);
+
+            // Commit changes
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
 
             return isSuccessful;

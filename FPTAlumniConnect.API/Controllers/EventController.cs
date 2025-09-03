@@ -58,7 +58,7 @@ namespace FPTAlumniConnect.API.Controllers
                     (int)eventDuration
                 );
                 // 5. Kiểm tra validation timeline
-                if (timelineSuggestions != null && timelineSuggestions.Any(t => t.EndTime > request.EndDate.Value))
+                if (timelineSuggestions != null)
                 {
                     return StatusCode(201, new
                     {

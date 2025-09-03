@@ -6,7 +6,7 @@
         public int EventId { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public TimeSpan StartTime { get; set; }
-        public TimeSpan EndTime { get; set; }
+        public string StartTime { get; set; } // Format: HH:mm:ss
+        public string EndTime { get; set; } // Format: HH:mm:ss
     }
 }
