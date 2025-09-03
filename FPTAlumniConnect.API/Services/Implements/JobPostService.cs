@@ -24,13 +24,13 @@ namespace FPTAlumniConnect.API.Services.Implements
             _logger.LogInformation("Creating new job post: {JobTitle} for user ID: {UserId}", request.JobTitle, idUser);
 
             // Validate user ID
-            if (idUser <= 0)
+            if (request.UserId <= 0)
                 throw new BadHttpRequestException("Invalid user ID. User ID must be greater than 0.");
 
             // Check if user exists and has active recruiter status
             var user = await _unitOfWork.GetRepository<User>()
                 .SingleOrDefaultAsync(
-                    predicate: x => x.UserId == idUser,
+                    predicate: x => x.UserId == request.UserId,
                     include: q => q.Include(u => u.RecruiterInfos))
                 ?? throw new BadHttpRequestException("User not found.");
 
