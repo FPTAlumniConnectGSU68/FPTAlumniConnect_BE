@@ -51,9 +51,9 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> CreateNewJobPost([FromQuery] int idUser, [FromBody] JobPostInfo request)
+        public async Task<IActionResult> CreateNewJobPost([FromBody] JobPostInfo request)
         {
-            if (request == null || idUser <= 0)
+            if (request == null || request.UserId <= 0)
             {
                 return BadRequest(new
                 {
@@ -65,7 +65,7 @@ namespace FPTAlumniConnect.API.Controllers
 
             try
             {
-                var id = await _jobPostService.CreateNewJobPost(idUser, request);
+                var id = await _jobPostService.CreateNewJobPost(request.UserId.Value, request);
                 return StatusCode(201, new
                 {
                     status = "success",
@@ -75,7 +75,7 @@ namespace FPTAlumniConnect.API.Controllers
             }
             catch (BadHttpRequestException ex)
             {
-                _logger.LogWarning(ex, "Failed to create job post for user ID: {UserId}", idUser);
+                _logger.LogWarning(ex, "Failed to create job post for user ID: {UserId}", request.UserId);
                 return BadRequest(new
                 {
                     status = "error",
@@ -85,7 +85,7 @@ namespace FPTAlumniConnect.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create job post for user ID: {UserId}", idUser);
+                _logger.LogError(ex, "Failed to create job post for user ID: {UserId}", request.UserId);
                 return StatusCode(500, new
                 {
                     status = "error",
