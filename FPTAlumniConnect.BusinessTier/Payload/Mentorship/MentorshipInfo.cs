@@ -6,7 +6,7 @@ public class MentorshipInfo
 
     public string? RequestMessage { get; set; }
 
-    public string? Type { get; set; }
+    public string? ResultMessage { get; set; }
 
     public string? Status { get; set; }
 }

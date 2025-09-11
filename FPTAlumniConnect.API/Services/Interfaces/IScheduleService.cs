@@ -14,6 +14,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<ICollection<ScheduleReponse>> GetSchedulesByMentorId(int id);
         Task<int> AcceptMentorShip(ScheduleInfo request);
         Task<bool> CompleteSchedule(int id);
+        Task<bool> FailSchedule(int id, string message);
         Task<bool> RateMentor(int scheduleId, string content, int rate);
         Task<int> CountAllSchedules();
         Task<ICollection<CountByMonthResponse>> CountSchedulesByMonth(int? month, int? year);

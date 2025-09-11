@@ -54,6 +54,7 @@
             public const string MentorshipAutoCancelEndPoint = MentorshipsEndPoint + "/autocancel";
             public const string CountEndPoint = MentorshipsEndPoint + "/count";
             public const string CountMonthEndPoint = CountEndPoint + "/month";
+            public const string CancelRequestEndPoint = MentorshipsEndPoint + "/cancel/{id}";
         }
         public static class Schedule
         {
@@ -62,6 +63,7 @@
             public const string ScheduleMentorEndPoint = "/api/schedules/mentor/{id}";
             public const string AcceptMentorshipEndPoint = "/api/schedules/mentorship/accept";
             public const string CompleteScheduleEndPoint = "/api/schedules/complete/{id}";
+            public const string FailScheduleEndPoint = "/api/schedules/fail/{id}";
             public const string ScheduleRateMentorEndPoint = "api/schedules/rate/{scheduleId}";
             public const string CountEndPoint = SchedulesEndPoint + "/count";
             public const string CountMonthEndPoint = CountEndPoint + "/month";
