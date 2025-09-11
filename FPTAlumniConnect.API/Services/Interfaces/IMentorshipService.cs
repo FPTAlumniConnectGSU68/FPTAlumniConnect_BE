@@ -10,11 +10,13 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<int> CreateNewMentorship(MentorshipInfo request);
         Task<IPaginate<MentorshipReponse>> ViewAllMentorship(MentorshipFilter filter, PagingModel pagingModel);
         Task<bool> UpdateMentorshipInfo(int id, MentorshipInfo request);
+        Task<bool> CancelRequest(int id, string message);
         Task<MentorshipReponse> GetMentorshipById(int id);
         Task<List<MentorshipReponse>> GetMentorshipsByAlumniId(int alumniId);
         Task<Dictionary<string, int>> GetMentorshipStatusStatistics();
         Task<int> CountAllMentorships();
         Task<ICollection<CountByMonthResponse>> CountMentorshipsByMonth(int? month, int? year);
         Task<int> AutoCancelExpiredMentorships();
+
     }
 }

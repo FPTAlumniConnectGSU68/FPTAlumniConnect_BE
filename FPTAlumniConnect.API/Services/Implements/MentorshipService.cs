@@ -22,15 +22,28 @@ namespace FPTAlumniConnect.API.Services.Implements
         {
             await EnsureAlumniExists(request.AumniId);
 
+            var today = TimeHelper.NowInVietnam().Date;
+            var repo = _unitOfWork.GetRepository<Mentorship>();
+
+            bool existsToday = await repo.AnyAsync(m =>
+                m.AumniId == request.AumniId &&
+                m.CreatedAt.HasValue &&
+                m.CreatedAt.Value.Date == today);
+
+            if (existsToday)
+                throw new BadHttpRequestException("Only one mentorship can be created per alumnus each day.");
+
             var newMentorship = _mapper.Map<Mentorship>(request);
+            newMentorship.CreatedAt = TimeHelper.NowInVietnam();
 
-            await _unitOfWork.GetRepository<Mentorship>().InsertAsync(newMentorship);
+            await repo.InsertAsync(newMentorship);
 
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessful) throw new BadHttpRequestException("CreateFailed");
+            if (await _unitOfWork.CommitAsync() <= 0)
+                throw new BadHttpRequestException("CreateFailed");
 
             return newMentorship.Id;
         }
+
 
         // Get mentorship by ID
         public async Task<MentorshipReponse> GetMentorshipById(int id)
@@ -72,6 +85,10 @@ namespace FPTAlumniConnect.API.Services.Implements
                 ? mentorship.RequestMessage
                 : request.RequestMessage;
 
+            mentorship.ResultMessage = string.IsNullOrEmpty(request.ResultMessage)
+                ? mentorship.ResultMessage
+                : request.ResultMessage;
+
             mentorship.Status = string.IsNullOrEmpty(request.Status)
                 ? mentorship.Status
                 : request.Status;
@@ -80,6 +97,23 @@ namespace FPTAlumniConnect.API.Services.Implements
             mentorship.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<Mentorship>().UpdateAsync(mentorship);
+            return await _unitOfWork.CommitAsync() > 0;
+        }
+
+        public async Task<bool> CancelRequest(int id, string message)
+        {
+            var repo = _unitOfWork.GetRepository<Mentorship>();
+            var mentorship = await repo.SingleOrDefaultAsync(predicate: x => x.Id.Equals(id)) ??
+                throw new BadHttpRequestException("MentorshipNotFound");
+
+            if (mentorship.Status == "Cancelled")
+                throw new BadHttpRequestException("This mentorship is already cancelled.");
+
+            mentorship.Status = "Cancelled";
+            mentorship.ResultMessage = message;
+            mentorship.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+
+            repo.UpdateAsync(mentorship);
             return await _unitOfWork.CommitAsync() > 0;
         }
 
@@ -156,6 +190,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             foreach (var item in expiredMentorships)
             {
                 item.Status = "Cancelled";
+                item.ResultMessage = "Automatically cancelled due to no response within 2 days.";
                 item.UpdatedBy = "System";
                 _unitOfWork.GetRepository<Mentorship>().UpdateAsync(item);
             }
