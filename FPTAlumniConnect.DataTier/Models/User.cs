@@ -22,7 +22,7 @@ public partial class User
 
     public string? GoogleId { get; set; }
 
-    public string? IsMentor { get; set; }
+    public string? MentorStatus { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 

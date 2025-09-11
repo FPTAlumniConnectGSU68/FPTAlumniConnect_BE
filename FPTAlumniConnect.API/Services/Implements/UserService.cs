@@ -94,7 +94,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                     RoleName = user.Role?.Name ?? "No Role Assigned",  // Safely access Role.Name
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    IsMentor = user.IsMentor
+                    IsMentor = user.MentorStatus
                 }
             };
 
@@ -224,7 +224,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             user.Email = string.IsNullOrEmpty(request.Email) ? user.Email : request.Email;
             user.LastName = string.IsNullOrEmpty(request.LastName) ? user.LastName : request.LastName;
             user.ProfilePicture = string.IsNullOrEmpty(request.ProfilePicture) ? user.ProfilePicture : request.ProfilePicture;
-            user.IsMentor = request.IsMentor;
+            user.MentorStatus = request.IsMentor;
             user.UpdatedAt = TimeHelper.NowInVietnam();
             user.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
@@ -253,7 +253,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("Invalid mentor status. Must be 'true', 'false', or 'Pending'.");
 
             // Update IsMentor field
-            user.IsMentor = isMentor;
+            user.MentorStatus = isMentor;
             user.UpdatedAt = TimeHelper.NowInVietnam();
             user.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
@@ -284,7 +284,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             Func<IQueryable<User>, IIncludableQueryable<User, object>> include = q => q.Include(u => u.Role).Include(u => u.Major);
             IPaginate<GetMentorResponse> mentorList = await _unitOfWork.GetRepository<User>().GetPagingListAsync(
                 selector: x => _mapper.Map<GetMentorResponse>(x),
-                predicate: x => x.IsMentor.Equals("true"),
+                predicate: x => x.MentorStatus.Equals("true"),
                 filter: filter,
                 include: include,
                 page: pagingModel.page,
