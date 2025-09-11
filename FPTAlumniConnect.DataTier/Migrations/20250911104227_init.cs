@@ -95,7 +95,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     RoleID = table.Column<int>(type: "int", nullable: false),
                     MajorId = table.Column<int>(type: "int", nullable: true),
                     GoogleID = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    isMentor = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    MentorStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
@@ -131,11 +131,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     Email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     City = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    Company = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    PrimaryDuties = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    JobLevel = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    StartAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
-                    EndAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
+                    Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Language = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     LanguageLevel = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     MinSalary = table.Column<int>(type: "int", nullable: false, defaultValueSql: "((0))"),
@@ -149,7 +145,12 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     Position = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MajorId = table.Column<int>(type: "int", nullable: true),
                     AdditionalContent = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    SchoolName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Degree = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FieldOfStudy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GraduationYear = table.Column<int>(type: "int", nullable: true),
+                    EducationDescription = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -230,6 +231,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     StartDate = table.Column<DateTime>(type: "datetime", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime", nullable: false),
                     Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Speaker = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
@@ -287,6 +289,9 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     MinSalary = table.Column<int>(type: "int", nullable: true, defaultValueSql: "((0))"),
                     MaxSalary = table.Column<int>(type: "int", nullable: true, defaultValueSql: "((0))"),
                     IsDeal = table.Column<bool>(type: "bit", nullable: false),
+                    RecruitmentQuantity = table.Column<int>(type: "int", nullable: true),
+                    WorkType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    WorkHours = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Requirements = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Benefits = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Time = table.Column<DateTime>(type: "datetime", nullable: false),
@@ -324,6 +329,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "(getdate())"),
                     RequestMessage = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ResultMessage = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     UpdatedBy = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
@@ -392,7 +398,7 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     PostID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     AuthorID = table.Column<int>(type: "int", nullable: true),
-                    Content = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Views = table.Column<int>(type: "int", nullable: true, defaultValueSql: "((0))"),
                     MajorId = table.Column<int>(type: "int", nullable: true),
@@ -547,6 +553,31 @@ namespace FPTAlumniConnect.DataTier.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "EmploymentHistories",
+                columns: table => new
+                {
+                    EmploymentHistoryId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CvId = table.Column<int>(type: "int", nullable: false),
+                    CompanyName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    PrimaryDuties = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    JobLevel = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime", nullable: true),
+                    IsCurrentJob = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmploymentHistories", x => x.EmploymentHistoryId);
+                    table.ForeignKey(
+                        name: "FK_EmploymentHistories_CV_CvId",
+                        column: x => x.CvId,
+                        principalTable: "CV",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TagJob",
                 columns: table => new
                 {
@@ -578,8 +609,10 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     EventId = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Speaker = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     StartTime = table.Column<TimeSpan>(type: "time", nullable: false),
-                    EndTime = table.Column<TimeSpan>(type: "time", nullable: false)
+                    EndTime = table.Column<TimeSpan>(type: "time", nullable: false),
+                    Day = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -865,6 +898,16 @@ namespace FPTAlumniConnect.DataTier.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_EmploymentHistories_CvId",
+                table: "EmploymentHistories",
+                column: "CvId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmploymentHistories_IsCurrentJob",
+                table: "EmploymentHistories",
+                column: "IsCurrentJob");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Events_MajorId",
                 table: "Events",
                 column: "MajorId");
@@ -1035,6 +1078,9 @@ namespace FPTAlumniConnect.DataTier.Migrations
 
             migrationBuilder.DropTable(
                 name: "Educations");
+
+            migrationBuilder.DropTable(
+                name: "EmploymentHistories");
 
             migrationBuilder.DropTable(
                 name: "EventTimeLines");

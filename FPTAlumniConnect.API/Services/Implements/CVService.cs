@@ -157,9 +157,6 @@ namespace FPTAlumniConnect.API.Services.Implements
             cv.Email = string.IsNullOrEmpty(request.Email) ? cv.Email : request.Email;
             cv.Phone = string.IsNullOrEmpty(request.Phone) ? cv.Phone : request.Phone;
             cv.City = string.IsNullOrEmpty(request.City) ? cv.City : request.City;
-            cv.Company = string.IsNullOrEmpty(request.Company) ? cv.Company : request.Company;
-            cv.PrimaryDuties = string.IsNullOrEmpty(request.PrimaryDuties) ? cv.PrimaryDuties : request.PrimaryDuties;
-            cv.JobLevel = string.IsNullOrEmpty(request.JobLevel) ? cv.JobLevel : request.JobLevel;
             cv.Language = string.IsNullOrEmpty(request.Language) ? cv.Language : request.Language;
             cv.LanguageLevel = string.IsNullOrEmpty(request.LanguageLevel) ? cv.LanguageLevel : request.LanguageLevel;
             cv.MinSalary = request.MinSalary ?? cv.MinSalary;
@@ -243,7 +240,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 ?? throw new BadHttpRequestException("CVNotFound");
 
             string skills = string.Join(", ", cv.CvSkills.Select(cs => cs.SkillId));
-            string content = $"Name: {cv.FullName}\nEmail: {cv.Email}\nPhone: {cv.Phone}\nSkills: {skills}\nExperience: {cv.PrimaryDuties}";
+            string content = $"Name: {cv.FullName}\nEmail: {cv.Email}\nPhone: {cv.Phone}\nSkills: {skills}\nExperience: ";
 
             // Placeholder for PDF generation
             return null; // Replace with actual PDF bytes later

@@ -24,12 +24,6 @@ namespace FPTAlumniConnect.BusinessTier.Payload.CV
         {
             var predicate = PredicateBuilder.True<Cv>();
 
-            if (StartAt.HasValue)
-                predicate = predicate.And(x => x.StartAt >= StartAt.Value);
-
-            if (EndAt.HasValue)
-                predicate = predicate.And(x => x.EndAt <= EndAt.Value);
-
             if (!string.IsNullOrEmpty(Status))
             {
                 if (Enum.TryParse<CVStatus>(Status, out var parsedStatus))
@@ -41,9 +35,6 @@ namespace FPTAlumniConnect.BusinessTier.Payload.CV
 
             if (!string.IsNullOrEmpty(City))
                 predicate = predicate.And(x => x.City == City);
-
-            if (!string.IsNullOrEmpty(JobLevel))
-                predicate = predicate.And(x => x.JobLevel == JobLevel);
 
             if (MinSalary.HasValue)
                 predicate = predicate.And(x => x.MinSalary >= MinSalary.Value);

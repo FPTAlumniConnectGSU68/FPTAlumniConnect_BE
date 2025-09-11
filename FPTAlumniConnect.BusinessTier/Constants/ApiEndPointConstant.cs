@@ -221,5 +221,12 @@
             public const string JobPostSkillsEndPoint = ApiEndpoint + "/jobpostskills";
             public const string JobPostSkillEndPoint = JobPostSkillsEndPoint + "/{jobPostId}/{skillId}";
         }
+
+        public static class EmploymentHistory
+        {
+            public const string EmploymentHistoriesEndPoint = "employment-histories";
+            public const string EmploymentHistoryEndPoint = "employment-histories/{id}";
+            public const string EmploymentHistoriesByCvEndPoint = "cvs/employment-histories/{cvId}";
+        }
     }
 }
