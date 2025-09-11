@@ -681,6 +681,9 @@ namespace FPTAlumniConnect.DataTier.Migrations
                         .HasColumnType("int")
                         .HasDefaultValueSql("((0))");
 
+                    b.Property<int?>("RecruitmentQuantity")
+                        .HasColumnType("int");
+
                     b.Property<string>("Requirements")
                         .HasColumnType("nvarchar(max)");
 
@@ -706,6 +709,12 @@ namespace FPTAlumniConnect.DataTier.Migrations
                     b.Property<int?>("UserId")
                         .HasColumnType("int")
                         .HasColumnName("UserID");
+
+                    b.Property<string>("WorkHours")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WorkType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("JobPostId")
                         .HasName("PK__JobPost__57689C5A3E8D6828");

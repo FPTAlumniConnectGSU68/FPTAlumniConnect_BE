@@ -94,6 +94,8 @@ namespace FPTAlumniConnect.API.Extensions
             services.AddScoped<ICvSkillService, CvSkillService>();
             services.AddScoped<IJobPostSkillService, JobPostSkillService>();
 
+            services.AddScoped<IEmploymentHistoryService, EmploymentHistoryService>();
+
             services.AddSingleton<VersionService>();
             services.AddSingleton<StringCounterService>();
             return services;
