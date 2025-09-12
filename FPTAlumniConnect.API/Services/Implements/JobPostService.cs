@@ -107,6 +107,10 @@ namespace FPTAlumniConnect.API.Services.Implements
             jobPost.Benefits = request.Benefits ?? jobPost.Benefits;
             jobPost.MinSalary = request.MinSalary ?? jobPost.MinSalary;
             jobPost.MaxSalary = request.MaxSalary ?? jobPost.MaxSalary;
+            jobPost.City = request.City ?? jobPost.City;
+            jobPost.RecruitmentQuantity = request.RecruitmentQuantity ?? jobPost.RecruitmentQuantity;
+            jobPost.WorkType = request.WorkType ?? jobPost.WorkType;
+            jobPost.WorkHours = request.WorkHours ?? jobPost.WorkHours;
             jobPost.Time = request.Time ?? jobPost.Time;
             jobPost.Status = request.Status ?? jobPost.Status;
             jobPost.Email = request.Email ?? jobPost.Email;

@@ -22,6 +22,10 @@ public class JobPostResponse
 
     public string? Benefits { get; set; }
 
+    public int? RecruitmentQuantity { get; set; }
+    public string? WorkType { get; set; }
+    public string? WorkHours { get; set; }
+
     public DateTime Time { get; set; }
 
     public string Status { get; set; } = null!;
