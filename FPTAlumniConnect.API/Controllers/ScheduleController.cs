@@ -88,7 +88,7 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> FailSchedule(int id, [FromQuery] string message)
+        public async Task<IActionResult> FailSchedule(int id, [FromBody] string message)
         {
             if (string.IsNullOrWhiteSpace(message))
                 return BadRequest(new { status = "error", message = "Failure reason is required" });
