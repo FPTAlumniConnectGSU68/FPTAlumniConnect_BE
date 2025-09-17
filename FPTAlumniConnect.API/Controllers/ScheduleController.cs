@@ -88,16 +88,20 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> FailSchedule(int id, [FromBody] string message)
+        public async Task<IActionResult> FailSchedule(int id, [FromBody] FailScheduleRequest request)
         {
-            if (string.IsNullOrWhiteSpace(message))
+            if (request == null || string.IsNullOrWhiteSpace(request.Message))
+            {
                 return BadRequest(new { status = "error", message = "Failure reason is required" });
+            }
 
             try
             {
-                var result = await _scheduleService.FailSchedule(id, message);
+                var result = await _scheduleService.FailSchedule(id, request.Message);
                 if (!result)
+                {
                     return BadRequest(new { status = "error", message = "Fail schedule operation failed" });
+                }
 
                 return Ok(new { status = "success", message = "Schedule marked as failed" });
             }
@@ -112,6 +116,7 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
 
         [HttpGet(ApiEndPointConstant.Schedule.ScheduleMentorEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
