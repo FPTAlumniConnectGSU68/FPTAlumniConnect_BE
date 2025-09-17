@@ -192,16 +192,17 @@ namespace FPTAlumniConnect.API.Controllers
         [HttpPatch(ApiEndPointConstant.Mentorship.CancelRequestEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CancelMentorshipRequest(int id, [FromBody] string Message)
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CancelMentorshipRequest(int id, [FromBody] CancelMentorshipRequest request)
         {
-            if (Message == null)
+            if (request == null || string.IsNullOrWhiteSpace(request.Message))
             {
                 return BadRequest(new { status = "error", message = "Cancel message is required" });
             }
 
             try
             {
-                await _mentorshipService.CancelRequest(id, Message);
+                await _mentorshipService.CancelRequest(id, request.Message);
                 return Ok(new { status = "success", message = "Request cancelled successfully" });
             }
             catch (Exception ex)
@@ -210,6 +211,7 @@ namespace FPTAlumniConnect.API.Controllers
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
 
 
         [HttpGet(ApiEndPointConstant.Mentorship.MentorshipStatisticsEndPoint)]
