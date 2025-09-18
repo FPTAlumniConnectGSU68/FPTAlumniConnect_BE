@@ -56,11 +56,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddConfigSwagger();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddHostedService<MentorshipCleanupService>(); // Register background service
-builder.Services.AddHostedService<JobPostCleanupService>();
-
-builder.Services.AddSingleton<ITimeService, TimeService>();
-
+// Configure MentorshipCleanupOptions
+builder.Services.Configure<MentorshipCleanupOptions>(builder.Configuration.GetSection("MentorshipCleanup"));
+builder.Services.Configure<JobPostCleanupOptions>(builder.Configuration.GetSection("JobPostCleanup"));
 
 builder.Services.AddControllers()
     .AddJsonOptions(opts =>

@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.API.Services.Implements;
+﻿using FPTAlumniConnect.API.Services;
+using FPTAlumniConnect.API.Services.Implements;
 using FPTAlumniConnect.API.Services.Implements.FPTAlumniConnect.API.Services.Implements;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.DataTier.Models;
@@ -95,6 +96,14 @@ namespace FPTAlumniConnect.API.Extensions
             services.AddScoped<IJobPostSkillService, JobPostSkillService>();
 
             services.AddScoped<IEmploymentHistoryService, EmploymentHistoryService>();
+
+            services.AddHostedService<JobPostCleanupService>();
+            services.AddSingleton<JobPostCleanupService>();
+
+            services.AddSingleton<MentorshipCleanupService>();
+            services.AddHostedService<MentorshipCleanupService>();
+
+            services.AddSingleton<ITimeService, TimeService>();
 
             services.AddSingleton<VersionService>();
             services.AddSingleton<StringCounterService>();
