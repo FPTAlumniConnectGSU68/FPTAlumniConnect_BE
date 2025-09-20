@@ -46,6 +46,13 @@ namespace FPTAlumniConnect.BusinessTier.Payload.CV
 
         public string? AdditionalContent { get; set; }
 
+        // New fields for school/university history
+        public string? SchoolName { get; set; } // Name of the school or university
+        public string? Degree { get; set; } // Degree earned (e.g., Bachelor, Master)
+        public string? FieldOfStudy { get; set; } // Field of study or major
+        public int? GraduationYear { get; set; } // Year of graduation
+        public string? EducationDescription { get; set; } // Additional details about education
+
         public string? Status { get; set; }
         public DateTime? StartAt { get; set; }
 

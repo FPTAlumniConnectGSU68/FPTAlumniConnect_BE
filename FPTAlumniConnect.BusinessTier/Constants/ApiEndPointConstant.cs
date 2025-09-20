@@ -230,5 +230,15 @@
             public const string EmploymentHistoryEndPoint = "employment-histories/{id}";
             public const string EmploymentHistoriesByCvEndPoint = "cvs/employment-histories/{cvId}";
         }
+
+        public static class MentorshipCleanup
+        {
+            public const string IntervalEndPoint = "api/MentorshipCleanup/interval";
+        }
+
+        public static class JobPostCleanup
+        {
+            public const string IntervalEndPoint = "api/JobPostCleanup/interval";
+        }
     }
 }
