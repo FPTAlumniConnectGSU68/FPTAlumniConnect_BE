@@ -490,47 +490,52 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Example timeline templates that can be adjusted based on event duration
             var baseTemplates = new List<SuggestedTimelineDto>
-    {
-        new SuggestedTimelineDto
-        {
-            Title = "Opening Ceremony",
-            Day = eventStartTime.Date,
-            StartTime = eventStartTime.AddHours(0),
-            EndTime = eventStartTime.AddHours(1),
-            Description = "Welcome speech and introductions"
-        },
-        new SuggestedTimelineDto
-        {
-            Title = "Keynote Session",
-            Day = eventStartTime.Date,
-            StartTime = eventStartTime.AddHours(1),
-            EndTime = eventStartTime.AddHours(2),
-            Description = "Main presentation by keynote speaker"
-        },
-        new SuggestedTimelineDto
-        {
-            Title     = "Break",
-            Day = eventStartTime.Date,
-            StartTime = eventStartTime.AddHours(2),
-            EndTime = eventStartTime.AddHours(2.5),
-            Description = "Networking and refreshments"
-        },
-        new SuggestedTimelineDto
-        {
-            Title     = "Workshop Session",
-            Day = eventStartTime.Date,
-            StartTime = eventStartTime.AddHours(2.5),
-            EndTime = eventStartTime.AddHours(4),
-            Description = "Interactive workshop activities"
-        },
-        new SuggestedTimelineDto
-        {
-            Title = "Closing Remarks",
-            Day = eventStartTime.Date,
-            StartTime = eventStartTime.AddHours(4),
-            EndTime = eventStartTime.AddHours(4.5),
-            Description = "Final thoughts and thank yous"
-        }
+            {
+            new SuggestedTimelineDto
+            {
+                Title = "Lễ Khai Mạc",
+                Day = eventStartTime.Date,
+                StartTime = eventStartTime.AddHours(0),
+                EndTime = eventStartTime.AddHours(1),
+                Description = "Diễn văn chào mừng và giới thiệu",
+                Speaker = "Người dẫn chương trình"
+            },
+            new SuggestedTimelineDto
+            {
+                Title = "Phiên Khai Đề",
+                Day = eventStartTime.Date,
+                StartTime = eventStartTime.AddHours(1),
+                EndTime = eventStartTime.AddHours(2),
+                Description = "Bài thuyết trình chính của diễn giả khai đề",
+                Speaker = "Diễn giả"
+            },
+            new SuggestedTimelineDto
+            {
+                Title = "Giải Lao",
+                Day = eventStartTime.Date,
+                StartTime = eventStartTime.AddHours(2),
+                EndTime = eventStartTime.AddHours(2.5),
+                Description = "Kết nối và dùng trà nước",
+                Speaker = "Không có"
+            },
+            new SuggestedTimelineDto
+            {
+                Title = "Phiên Hội Thảo",
+                Day = eventStartTime.Date,
+                StartTime = eventStartTime.AddHours(2.5),
+                EndTime = eventStartTime.AddHours(4),
+                Description = "Các hoạt động hội thảo tương tác",
+                Speaker = "Diễn giả"
+            },
+            new SuggestedTimelineDto
+            {
+                Title = "Lời Kết",
+                Day = eventStartTime.Date,
+                StartTime = eventStartTime.AddHours(4),
+                EndTime = eventStartTime.AddHours(4.5),
+                Description = "Những suy nghĩ cuối cùng và lời cảm ơn",
+                Speaker = "Diễn giả"
+            }
     };
 
             // Adjust timelines based on event duration
@@ -543,7 +548,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                     Day = template.Day,
                     StartTime = eventStartTime.AddHours(template.StartTime.Hour * scaleFactor),
                     EndTime = eventStartTime.AddHours(template.EndTime.Hour * scaleFactor),
-                    Description = template.Description
+                    Description = template.Description,
+                    Speaker = template.Speaker
                 });
             }
 
