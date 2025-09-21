@@ -17,6 +17,6 @@
 
         public string? GoogleId { get; set; }
 
-        public string? IsMentor { get; set; }
+        public string? MentorStatus { get; set; }
     }
 }
