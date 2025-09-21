@@ -248,8 +248,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 .SingleOrDefaultAsync(predicate: x => x.UserId == id)
                 ?? throw new BadHttpRequestException("User not found.");
 
-            if (isMentor != "Pending" && isMentor != "Active" && isMentor != "Inactive")
-                throw new BadHttpRequestException("Invalid mentor status. Must be 'Active', 'Inactive', or 'Pending'.");
+            if (isMentor != "Pending" && isMentor != "Active" && isMentor != "Suspended")
+                throw new BadHttpRequestException("Invalid mentor status. Must be 'Active', 'Pending', or 'Suspended'.");
 
             // Update IsMentor field
             user.MentorStatus = isMentor;
