@@ -94,7 +94,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                     RoleName = user.Role?.Name ?? "No Role Assigned",  // Safely access Role.Name
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    IsMentor = user.MentorStatus
+                    MentorStatus = user.MentorStatus
                 }
             };
 
@@ -224,7 +224,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             user.Email = string.IsNullOrEmpty(request.Email) ? user.Email : request.Email;
             user.LastName = string.IsNullOrEmpty(request.LastName) ? user.LastName : request.LastName;
             user.ProfilePicture = string.IsNullOrEmpty(request.ProfilePicture) ? user.ProfilePicture : request.ProfilePicture;
-            user.MentorStatus = request.IsMentor;
+            user.MentorStatus = request.MentorStatus;
             user.UpdatedAt = TimeHelper.NowInVietnam();
             user.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 

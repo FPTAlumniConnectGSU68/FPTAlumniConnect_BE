@@ -9,7 +9,7 @@
 
         public string Email { get; set; } = null!;
 
-        public string IsMentor { get; set; }
+        public string MentorStatus { get; set; }
         public string? ProfilePicture { get; set; }
 
     }
