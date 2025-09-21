@@ -248,7 +248,6 @@ namespace FPTAlumniConnect.API.Services.Implements
                 .SingleOrDefaultAsync(predicate: x => x.UserId == id)
                 ?? throw new BadHttpRequestException("User not found.");
 
-            // Validate IsMentor value (e.g., allow "true", "false", or null)
             if (isMentor != "Pending" && isMentor != "Active" && isMentor != "Inactive")
                 throw new BadHttpRequestException("Invalid mentor status. Must be 'Active', 'Inactive', or 'Pending'.");
 
@@ -284,7 +283,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             Func<IQueryable<User>, IIncludableQueryable<User, object>> include = q => q.Include(u => u.Role).Include(u => u.Major);
             IPaginate<GetMentorResponse> mentorList = await _unitOfWork.GetRepository<User>().GetPagingListAsync(
                 selector: x => _mapper.Map<GetMentorResponse>(x),
-                predicate: x => x.MentorStatus.Equals("true"),
+                predicate: x => x.MentorStatus.Equals("Active"),
                 filter: filter,
                 include: include,
                 page: pagingModel.page,

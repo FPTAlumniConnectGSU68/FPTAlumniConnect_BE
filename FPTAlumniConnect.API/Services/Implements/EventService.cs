@@ -262,7 +262,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                             Title = tl.Title,
                             Description = tl.Description,
                             Speaker = tl.Speaker,
-                            Day = startDt.Date,
+                            Day = tl.Day,
                             StartTime = startTs,
                             EndTime = endTs
                         };

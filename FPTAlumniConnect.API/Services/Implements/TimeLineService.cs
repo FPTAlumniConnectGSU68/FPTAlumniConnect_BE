@@ -40,6 +40,18 @@ namespace FPTAlumniConnect.API.Services.Implements
                     throw new BadHttpRequestException("Description cannot exceed 1000 characters.");
             }
 
+            if (!string.IsNullOrWhiteSpace(request.Speaker))
+            {
+                if (request.Speaker.Length > 200)
+                    throw new BadHttpRequestException("Speaker cannot exceed 200 characters.");
+            }
+            // Additional validation for Day can be added if needed
+            if (request.Day.HasValue)
+            {
+                if (request.Day.Value.Date < eventEntity.StartDate.Date || request.Day.Value.Date > eventEntity.EndDate.Date)
+                    throw new BadHttpRequestException("Timeline Day must be within the event's StartDate and EndDate.");
+            }
+
             // Validate and parse StartTime and EndTime
             if (string.IsNullOrWhiteSpace(request.StartTime) || string.IsNullOrWhiteSpace(request.EndTime))
                 throw new BadHttpRequestException("StartTime and EndTime are required and must be non-empty strings.");
@@ -60,6 +72,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 EventId = request.EventId,
                 Title = request.Title,
                 Description = request.Description,
+                Speaker = request.Speaker,
+                Day = startDt,
                 StartTime = startTs,
                 EndTime = endTs
             };
