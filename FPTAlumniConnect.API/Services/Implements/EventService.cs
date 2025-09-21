@@ -179,6 +179,13 @@ namespace FPTAlumniConnect.API.Services.Implements
                 eventToUpdate.Description = request.Description;
             }
 
+            if (!string.IsNullOrWhiteSpace(request.Speaker))
+            {
+                if (request.Speaker.Length > 200)
+                    throw new BadHttpRequestException("Speaker cannot exceed 200 characters.");
+                eventToUpdate.Speaker = request.Speaker;
+            }
+
             if (!string.IsNullOrWhiteSpace(request.Location))
             {
                 if (request.Location.Length > 200)
@@ -296,7 +303,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 (!filter.OrganizerId.HasValue || x.OrganizerId == filter.OrganizerId) &&
                 (!filter.MajorId.HasValue || x.MajorId == filter.MajorId) &&
                 (string.IsNullOrEmpty(filter.Location) || x.Location.Contains(filter.Location)) &&
-                (string.IsNullOrEmpty(filter.CreatedBy) || x.CreatedBy.Contains(filter.CreatedBy));
+                (string.IsNullOrEmpty(filter.CreatedBy) || x.CreatedBy.Contains(filter.CreatedBy)) &&
+                (string.IsNullOrEmpty(filter.Status) || x.Status.Contains(filter.Status));
 
             return await _unitOfWork.GetRepository<Event>().GetPagingListAsync(
                 selector: x => _mapper.Map<GetEventResponse>(x),
