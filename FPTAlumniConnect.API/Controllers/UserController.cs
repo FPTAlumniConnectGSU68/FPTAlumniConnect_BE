@@ -208,7 +208,7 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateUserMentorStatus(int id, [FromQuery] string? isMentor)
+        public async Task<IActionResult> UpdateUserMentorStatus(int id, [FromBody] UpdateMentorStatusRequest request)
         {
             if (id <= 0)
             {
@@ -220,9 +220,20 @@ namespace FPTAlumniConnect.API.Controllers
                 });
             }
 
+            // Validate request payload
+            if (request == null || string.IsNullOrEmpty(request.MentorStatus))
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "MentorStatus is required" }
+                });
+            }
+
             try
             {
-                var isSuccessful = await _userService.UpdateUserMentorStatus(id, isMentor);
+                var isSuccessful = await _userService.UpdateUserMentorStatus(id, request.MentorStatus);
                 if (!isSuccessful)
                 {
                     return Ok(new
@@ -258,6 +269,7 @@ namespace FPTAlumniConnect.API.Controllers
                 });
             }
         }
+
         [HttpPost(ApiEndPointConstant.User.RecruitersEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]

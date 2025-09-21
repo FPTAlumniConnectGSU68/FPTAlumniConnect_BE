@@ -249,8 +249,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 ?? throw new BadHttpRequestException("User not found.");
 
             // Validate IsMentor value (e.g., allow "true", "false", or null)
-            if (isMentor != "Pending" && isMentor != "true" && isMentor != "false")
-                throw new BadHttpRequestException("Invalid mentor status. Must be 'true', 'false', or 'Pending'.");
+            if (isMentor != "Pending" && isMentor != "Active" && isMentor != "Inactive")
+                throw new BadHttpRequestException("Invalid mentor status. Must be 'Active', 'Inactive', or 'Pending'.");
 
             // Update IsMentor field
             user.MentorStatus = isMentor;
