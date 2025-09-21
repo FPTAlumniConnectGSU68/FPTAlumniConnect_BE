@@ -38,6 +38,8 @@ namespace FPTAlumniConnect.BusinessTier.Payload.Event
         public int EventTimeLineId { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
+        public string? Speaker { get; set; }
+        public DateTime? Day { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
     }
