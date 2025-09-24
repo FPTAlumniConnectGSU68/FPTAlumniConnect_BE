@@ -142,12 +142,14 @@ namespace FPTAlumniConnect.API.Services.Implements
                 predicate: x => x.EventId == id,
                 include: include) ?? throw new BadHttpRequestException("EventNotFound");
 
+            if (request.StartDate.HasValue)
+            {
+                if (request.StartDate.Value.Date < TimeHelper.NowInVietnam().Date)
+                    throw new BadHttpRequestException("StartDate cannot be earlier than today.");
+            }
+
             if (request.StartDate.HasValue && request.EndDate.HasValue && request.EndDate < request.StartDate)
                 throw new BadHttpRequestException("EndDate cannot be earlier than StartDate.");
-            if (request.StartDate.HasValue && request.StartDate > eventToUpdate.EndDate)
-                throw new BadHttpRequestException("New StartDate cannot be later than existing EndDate.");
-            if (request.EndDate.HasValue && request.EndDate < eventToUpdate.StartDate)
-                throw new BadHttpRequestException("New EndDate cannot be earlier than existing StartDate.");
 
             if (request.OrganizerId.HasValue)
             {
