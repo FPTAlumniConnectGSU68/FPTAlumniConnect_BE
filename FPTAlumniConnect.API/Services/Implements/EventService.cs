@@ -176,8 +176,8 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             if (!string.IsNullOrWhiteSpace(request.Description))
             {
-                if (request.Description.Length > 1000)
-                    throw new BadHttpRequestException("Description cannot exceed 1000 characters.");
+                if (request.Description.Length > 10000000)
+                    throw new BadHttpRequestException("Description cannot exceed 10.000.000 characters.");
                 eventToUpdate.Description = request.Description;
             }
 
