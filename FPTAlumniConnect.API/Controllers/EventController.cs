@@ -214,6 +214,14 @@ namespace FPTAlumniConnect.API.Controllers
                 }
                 return Ok(new { status = "success", message = "Update successful" });
             }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (NotFoundException ex)
             {
                 return NotFound(new
