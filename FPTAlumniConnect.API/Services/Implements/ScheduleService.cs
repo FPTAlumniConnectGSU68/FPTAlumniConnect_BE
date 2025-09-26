@@ -13,54 +13,80 @@ namespace FPTAlumniConnect.API.Services.Implements
     public class ScheduleService : BaseService<ScheduleService>, IScheduleService
     {
         private readonly IMentorshipService _mentorshipService;
+        private readonly IScheduleSettingsService _settingsService;
+
         public ScheduleService(
             IUnitOfWork<AlumniConnectContext> unitOfWork,
             ILogger<ScheduleService> logger,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            IMentorshipService mentorshipService)
+            IMentorshipService mentorshipService,
+            IScheduleSettingsService settingsService)
             : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
             _mentorshipService = mentorshipService;
+            _settingsService = settingsService;
         }
 
         // Accept mentorship and create a new schedule
         public async Task<int> AcceptMentorShip(ScheduleInfo request)
         {
-            // Validate mentorship ID in the request
+            // Validate mentorship ID
             if (!request.MentorShipId.HasValue || request.MentorShipId.Value == 0)
                 throw new BadHttpRequestException("MentorShipId is required.");
-
-            // Validate mentorship existence
             var mentorship = await EnsureMentorshipExists(request.MentorShipId.Value);
 
-            // Ensure mentor ID is provided and valid
+            // Validate mentor ID
             if (!request.MentorId.HasValue || request.MentorId.Value == 0)
                 throw new BadHttpRequestException("MentorId is required.");
             await EnsureUserExists(request.MentorId.Value);
 
+            // Validate StartTime
+            if (!request.StartTime.HasValue)
+                throw new BadHttpRequestException("StartTime is required.");
+
+            if (request.StartTime.Value < TimeHelper.NowInVietnam())
+                throw new BadHttpRequestException("StartTime cannot be in the past.");
+
+            // Validate EndTime
+            if (request.EndTime.HasValue && request.EndTime.Value < request.StartTime.Value)
+                throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
+
+            // Check max schedules per day
+            var date = request.StartTime.Value.Date;
+            var scheduleRepo = _unitOfWork.GetRepository<Schedule>();
+
+            int countForDay = await scheduleRepo.CountAsync(s =>
+                s.MentorShipId == request.MentorShipId &&
+                s.StartTime.Date == date);
+
+            var maxPerDay = _settingsService.GetMaxPerDay();
+            if (countForDay >= maxPerDay)
+                throw new BadHttpRequestException(
+                    $"You can only create up to {maxPerDay} schedules for this mentorship on the same day."
+                );
+
             // Create new schedule
             var newSchedule = _mapper.Map<Schedule>(request);
-            await _unitOfWork.GetRepository<Schedule>().InsertAsync(newSchedule);
+            await scheduleRepo.InsertAsync(newSchedule);
 
             // Update mentorship status
             mentorship.Status = "Active";
             mentorship.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
             _unitOfWork.GetRepository<Mentorship>().UpdateAsync(mentorship);
 
-            // Commit both operations
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessful)
+            // Commit
+            if (await _unitOfWork.CommitAsync() <= 0)
                 throw new BadHttpRequestException("Failed to create schedule or update mentorship status.");
 
             return newSchedule.ScheduleId;
         }
 
-        // Create a new schedule
         public async Task<int> CreateNewSchedule(ScheduleInfo request)
         {
             await EnsureMentorshipExists(request.MentorShipId ?? 0);
             await EnsureUserExists(request.MentorId ?? 0);
+
             if (request.StartTime.HasValue && request.StartTime.Value < TimeHelper.NowInVietnam())
                 throw new BadHttpRequestException("StartTime cannot be in the past.");
 
@@ -74,23 +100,24 @@ namespace FPTAlumniConnect.API.Services.Implements
             var date = request.StartTime.Value.Date;
             var scheduleRepo = _unitOfWork.GetRepository<Schedule>();
 
-            var countForDay = await scheduleRepo
-                .CountAsync(s => s.MentorShipId == request.MentorShipId &&
-                                 s.StartTime.Date == date);
+            int countForDay = await scheduleRepo.CountAsync(s =>
+                s.MentorShipId == request.MentorShipId &&
+                s.StartTime.Date == date);
 
-            if (countForDay >= 3)
-                throw new BadHttpRequestException("You can only create up to 3 schedules for this mentorship on the same day.");
+            var maxPerDay = _settingsService.GetMaxPerDay();
+            if (countForDay >= maxPerDay)
+                throw new BadHttpRequestException(
+                    $"You can only create up to {maxPerDay} schedules for this mentorship on the same day."
+                );
 
             var newSchedule = _mapper.Map<Schedule>(request);
             await scheduleRepo.InsertAsync(newSchedule);
 
-            bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessful)
+            if (await _unitOfWork.CommitAsync() <= 0)
                 throw new BadHttpRequestException("CreateFailed");
 
             return newSchedule.ScheduleId;
         }
-
 
         // Get schedule details by ID
         public async Task<ScheduleReponse> GetScheduleById(int id)

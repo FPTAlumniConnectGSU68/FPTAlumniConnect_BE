@@ -1,23 +1,26 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier;
+using FPTAlumniConnect.BusinessTier.Configurations;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
     public class MentorshipService : BaseService<MentorshipService>, IMentorshipService
     {
+        private readonly IMentorshipSettingsService _settingsService;
         public MentorshipService(IUnitOfWork<AlumniConnectContext> unitOfWork, ILogger<MentorshipService> logger, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor) : base(unitOfWork, logger, mapper, httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor, IMentorshipSettingsService settingsService) : base(unitOfWork, logger, mapper, httpContextAccessor)
         {
+            _settingsService = settingsService;
         }
 
-        // Create new mentorship record
         public async Task<int> CreateNewMentorship(MentorshipInfo request)
         {
             await EnsureAlumniExists(request.AumniId);
@@ -25,13 +28,17 @@ namespace FPTAlumniConnect.API.Services.Implements
             var today = TimeHelper.NowInVietnam().Date;
             var repo = _unitOfWork.GetRepository<Mentorship>();
 
-            bool existsToday = await repo.AnyAsync(m =>
+            int mentorshipsToday = await repo.CountAsync(m =>
                 m.AumniId == request.AumniId &&
                 m.CreatedAt.HasValue &&
                 m.CreatedAt.Value.Date == today);
 
-            if (existsToday)
-                throw new BadHttpRequestException("Only one mentorship can be created per alumnus each day.");
+            var maxPerDay = _settingsService.GetMaxPerDay();
+
+            if (mentorshipsToday >= maxPerDay)
+                throw new BadHttpRequestException(
+                    $"Each alumnus can only create up to {maxPerDay} mentorship(s) per day."
+                );
 
             var newMentorship = _mapper.Map<Mentorship>(request);
             newMentorship.CreatedAt = TimeHelper.NowInVietnam();
@@ -43,7 +50,6 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             return newMentorship.Id;
         }
-
 
         // Get mentorship by ID
         public async Task<MentorshipReponse> GetMentorshipById(int id)

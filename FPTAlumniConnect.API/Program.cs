@@ -2,6 +2,10 @@ using FPTAlumniConnect.API.Extensions;
 using FPTAlumniConnect.API.Middlewares;
 using FPTAlumniConnect.API.Services;
 using FPTAlumniConnect.API.Services.Implements;
+using FPTAlumniConnect.BusinessTier.Configurations;
+using FPTAlumniConnect.BusinessTier.Payload.JobPost;
+using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
+using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 using Polly;
 using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
@@ -59,6 +63,10 @@ builder.Services.AddSwaggerGen();
 // Configure MentorshipCleanupOptions
 builder.Services.Configure<MentorshipCleanupOptions>(builder.Configuration.GetSection("MentorshipCleanup"));
 builder.Services.Configure<JobPostCleanupOptions>(builder.Configuration.GetSection("JobPostCleanup"));
+builder.Services.Configure<MentorshipSettings>(builder.Configuration.GetSection("MentorshipSettings"));
+builder.Services.Configure<ScheduleSettings>(builder.Configuration.GetSection("ScheduleSettings"));
+builder.Services.Configure<MentorshipCleanupSettings>(builder.Configuration.GetSection("MentorshipCleanup"));
+builder.Services.Configure<JobPostCleanupSettings>(builder.Configuration.GetSection("JobPostCleanup"));
 
 builder.Services.AddControllers()
     .AddJsonOptions(opts =>

@@ -32,6 +32,15 @@ namespace FPTAlumniConnect.API.Controllers
                     data = response
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch mentorship");
@@ -52,6 +61,15 @@ namespace FPTAlumniConnect.API.Controllers
                     status = "success",
                     message = "Request successful",
                     data = response
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
                 });
             }
             catch (Exception ex)
@@ -85,6 +103,15 @@ namespace FPTAlumniConnect.API.Controllers
                     data = new { id }
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create mentorship");
@@ -105,6 +132,15 @@ namespace FPTAlumniConnect.API.Controllers
                     status = "success",
                     message = "Request successful",
                     data = response
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
                 });
             }
             catch (Exception ex)
@@ -129,6 +165,15 @@ namespace FPTAlumniConnect.API.Controllers
                     data = response
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch mentorship count");
@@ -149,6 +194,15 @@ namespace FPTAlumniConnect.API.Controllers
                     status = "success",
                     message = "Request successful",
                     data = response
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
                 });
             }
             catch (Exception ex)
@@ -182,6 +236,15 @@ namespace FPTAlumniConnect.API.Controllers
 
                 return Ok(new { status = "success", message = "Update successful" });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update mentorship");
@@ -205,6 +268,15 @@ namespace FPTAlumniConnect.API.Controllers
                 await _mentorshipService.CancelRequest(id, request.Message);
                 return Ok(new { status = "success", message = "Request cancelled successfully" });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Failed to cancel mentorship request {id}");
@@ -227,6 +299,15 @@ namespace FPTAlumniConnect.API.Controllers
                     status = "success",
                     message = "Request successful",
                     data = response
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
                 });
             }
             catch (Exception ex)
