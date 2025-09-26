@@ -350,6 +350,16 @@ namespace FPTAlumniConnect.API.Controllers
                     message = "Mentor rated successfully"
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Invalid request");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message,
+                    errors = new[] { ex.Message }
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to rate mentor");
