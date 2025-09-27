@@ -34,8 +34,8 @@ namespace FPTAlumniConnect.API.Controllers
         {
             var response = new
             {
-                MentorshipCleanup = new { _mentorshipCleanup.Interval },
-                JobPostCleanup = new { _jobPostCleanup.Interval },
+                MentorshipCleanup = new { _mentorshipCleanup.Interval.TotalHours },
+                JobPostCleanup = new { _jobPostCleanup.Interval.TotalHours },
                 MentorshipSettings = new { _mentorshipSettings.MaxPerDay },
                 ScheduleSettings = new { _scheduleSettings.MaxPerDay }
             };

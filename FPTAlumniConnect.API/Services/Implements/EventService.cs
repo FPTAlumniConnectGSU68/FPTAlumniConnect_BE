@@ -133,14 +133,13 @@ namespace FPTAlumniConnect.API.Services.Implements
             );
         }
 
-
         public async Task<bool> UpdateEventInfo(int id, EventInfo request)
         {
             var include = new Func<IQueryable<Event>, IIncludableQueryable<Event, object>>(q => q.Include(e => e.EventTimeLines));
 
             var eventToUpdate = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
                 predicate: x => x.EventId == id,
-                include: include) ?? throw new BadHttpRequestException("EventNotFound");
+                include: include) ?? throw new BadHttpRequestException("Event not found.");
 
             if (request.StartDate.HasValue)
             {
@@ -155,7 +154,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             {
                 _ = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                     predicate: x => x.UserId == request.OrganizerId.Value)
-                    ?? throw new BadHttpRequestException("UserNotFound");
+                    ?? throw new BadHttpRequestException("Organizer not found.");
                 eventToUpdate.OrganizerId = request.OrganizerId.Value;
             }
 
@@ -163,7 +162,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             {
                 _ = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
                     predicate: x => x.MajorId == request.MajorId.Value)
-                    ?? throw new BadHttpRequestException("MajorNotFound");
+                    ?? throw new BadHttpRequestException("Major not found.");
                 eventToUpdate.MajorId = request.MajorId.Value;
             }
 
@@ -177,7 +176,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             if (!string.IsNullOrWhiteSpace(request.Description))
             {
                 if (request.Description.Length > 10000000)
-                    throw new BadHttpRequestException("Description cannot exceed 10.000.000 characters.");
+                    throw new BadHttpRequestException("Description cannot exceed 10,000,000 characters.");
                 eventToUpdate.Description = request.Description;
             }
 
@@ -207,15 +206,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             TimeSpan ParseTimeSpanOrThrow(string input, string field)
             {
                 if (TimeSpan.TryParse(input, out var ts) && ts >= TimeSpan.Zero && ts.TotalHours < 24) return ts;
-                throw new BadHttpRequestException($"Invalid {field} format or value.");
+                throw new BadHttpRequestException($"Invalid {field} format or value. Must be a valid time (HH:mm:ss) and less than 24 hours.");
             }
 
-            DateTime GetNextDateTimeForTime(Event e, TimeSpan timeOfDay, DateTime minAllowed)
+            DateTime GetDateTimeForTime(Event e, DateTime day, TimeSpan timeOfDay, string field)
             {
-                var candidate = minAllowed.Date.Add(timeOfDay);
-                while (candidate < minAllowed) candidate = candidate.AddDays(1);
+                var candidate = day.Date.Add(timeOfDay);
                 if (candidate < e.StartDate || candidate > e.EndDate)
-                    throw new BadHttpRequestException($"Time {timeOfDay} out of event range.");
+                    throw new BadHttpRequestException($"{field} on day {day:yyyy-MM-dd} is outside event range ({e.StartDate:yyyy-MM-dd} to {e.EndDate:yyyy-MM-dd}).");
                 return candidate;
             }
 
@@ -226,21 +224,28 @@ namespace FPTAlumniConnect.API.Services.Implements
 
                 foreach (var tl in request.TimeLines)
                 {
+                    // Validate Day
+                    DateTime day = tl.Day ?? eventToUpdate.StartDate;
+                    if (day < eventToUpdate.StartDate.Date || day > eventToUpdate.EndDate.Date)
+                        throw new BadHttpRequestException($"Timeline day {day:yyyy-MM-dd} must be within event range ({eventToUpdate.StartDate:yyyy-MM-dd} to {eventToUpdate.EndDate:yyyy-MM-dd}).");
+
                     if (tl.EventTimeLineId.HasValue)
                     {
                         var entity = existing.FirstOrDefault(x => x.EventTimeLineId == tl.EventTimeLineId.Value)
-                            ?? throw new BadHttpRequestException("TimeLineNotFound");
+                            ?? throw new BadHttpRequestException($"Timeline with ID {tl.EventTimeLineId.Value} not found.");
 
                         entity.Title = string.IsNullOrEmpty(tl.Title) ? entity.Title : tl.Title;
                         entity.Description = string.IsNullOrEmpty(tl.Description) ? entity.Description : tl.Description;
                         entity.Speaker = string.IsNullOrEmpty(tl.Speaker) ? entity.Speaker : tl.Speaker;
+                        entity.Day = day;
 
                         var startTs = !string.IsNullOrWhiteSpace(tl.StartTime) ? ParseTimeSpanOrThrow(tl.StartTime!, "StartTime") : entity.StartTime;
                         var endTs = !string.IsNullOrWhiteSpace(tl.EndTime) ? ParseTimeSpanOrThrow(tl.EndTime!, "EndTime") : entity.EndTime;
 
-                        var startDt = GetNextDateTimeForTime(eventToUpdate, startTs, eventToUpdate.StartDate);
-                        var endDt = GetNextDateTimeForTime(eventToUpdate, endTs, startDt);
-                        if (endDt < startDt) throw new BadHttpRequestException("EndTime earlier than StartTime.");
+                        var startDt = GetDateTimeForTime(eventToUpdate, day, startTs, "StartTime");
+                        var endDt = GetDateTimeForTime(eventToUpdate, day, endTs, "EndTime");
+                        if (endDt < startDt)
+                            throw new BadHttpRequestException($"EndTime ({endDt:HH:mm:ss}) cannot be earlier than StartTime ({startDt:HH:mm:ss}) on day {day:yyyy-MM-dd}.");
 
                         entity.StartTime = startTs;
                         entity.EndTime = endTs;
@@ -249,14 +254,15 @@ namespace FPTAlumniConnect.API.Services.Implements
                     else
                     {
                         if (string.IsNullOrWhiteSpace(tl.StartTime) || string.IsNullOrWhiteSpace(tl.EndTime))
-                            throw new BadHttpRequestException("StartTime and EndTime required for new timeline.");
+                            throw new BadHttpRequestException("StartTime and EndTime are required for new timeline.");
 
                         var startTs = ParseTimeSpanOrThrow(tl.StartTime!, "StartTime");
                         var endTs = ParseTimeSpanOrThrow(tl.EndTime!, "EndTime");
 
-                        var startDt = GetNextDateTimeForTime(eventToUpdate, startTs, eventToUpdate.StartDate);
-                        var endDt = GetNextDateTimeForTime(eventToUpdate, endTs, startDt);
-                        if (endDt < startDt) throw new BadHttpRequestException("EndTime earlier than StartTime.");
+                        var startDt = GetDateTimeForTime(eventToUpdate, day, startTs, "StartTime");
+                        var endDt = GetDateTimeForTime(eventToUpdate, day, endTs, "EndTime");
+                        if (endDt < startDt)
+                            throw new BadHttpRequestException($"EndTime ({endDt:HH:mm:ss}) cannot be earlier than StartTime ({startDt:HH:mm:ss}) on day {day:yyyy-MM-dd}.");
 
                         var newTl = new EventTimeLine
                         {
@@ -264,7 +270,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                             Title = tl.Title,
                             Description = tl.Description,
                             Speaker = tl.Speaker,
-                            Day = tl.Day,
+                            Day = day,
                             StartTime = startTs,
                             EndTime = endTs
                         };
