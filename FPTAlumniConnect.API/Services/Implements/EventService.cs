@@ -557,10 +557,15 @@ namespace FPTAlumniConnect.API.Services.Implements
                 var scaledStart = eventStartTime.AddHours(offsetStart * scaleFactor);
                 var scaledEnd = eventStartTime.AddHours(offsetEnd * scaleFactor);
 
+                if ((scaledEnd - scaledStart).TotalHours > 6)
+                {
+                    scaledEnd = scaledStart.AddHours(3); 
+                }
+
                 suggestions.Add(new SuggestedTimelineDto
                 {
                     Title = template.Title,
-                    Day = scaledStart.Date, 
+                    Day = scaledStart.Date,
                     StartTime = scaledStart,
                     EndTime = scaledEnd,
                     Description = template.Description,
