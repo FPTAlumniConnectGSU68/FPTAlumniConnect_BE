@@ -127,7 +127,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 predicate: predicate,
                 include: q => q.Include(uje => uje.Event)
                                .ThenInclude(e => e.UserJoinEvents),
-                orderBy: q => q.OrderByDescending(uje => uje.Event.StartDate),
+                orderBy: q => q.OrderByDescending(uje => uje.Event.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size
             );
@@ -548,14 +548,21 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Adjust timelines based on event duration
             var scaleFactor = eventDurationHours / 4.5; // 4.5 is total hours in our template
+
             foreach (var template in baseTemplates)
             {
+                var offsetStart = (template.StartTime - eventStartTime).TotalHours;
+                var offsetEnd = (template.EndTime - eventStartTime).TotalHours;
+
+                var scaledStart = eventStartTime.AddHours(offsetStart * scaleFactor);
+                var scaledEnd = eventStartTime.AddHours(offsetEnd * scaleFactor);
+
                 suggestions.Add(new SuggestedTimelineDto
                 {
                     Title = template.Title,
-                    Day = template.Day,
-                    StartTime = eventStartTime.AddHours(template.StartTime.Hour * scaleFactor),
-                    EndTime = eventStartTime.AddHours(template.EndTime.Hour * scaleFactor),
+                    Day = scaledStart.Date, 
+                    StartTime = scaledStart,
+                    EndTime = scaledEnd,
                     Description = template.Description,
                     Speaker = template.Speaker
                 });
