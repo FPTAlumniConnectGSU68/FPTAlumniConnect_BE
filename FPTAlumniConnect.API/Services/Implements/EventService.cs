@@ -139,22 +139,22 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             var eventToUpdate = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
                 predicate: x => x.EventId == id,
-                include: include) ?? throw new BadHttpRequestException("Event not found.");
+                include: include) ?? throw new BadHttpRequestException("Không tìm thấy sự kiện.");
 
             if (request.StartDate.HasValue)
             {
                 if (request.StartDate.Value.Date < TimeHelper.NowInVietnam().Date)
-                    throw new BadHttpRequestException("StartDate cannot be earlier than today.");
+                    throw new BadHttpRequestException("Ngày bắt đầu không thể sớm hơn ngày hôm nay.");
             }
 
             if (request.StartDate.HasValue && request.EndDate.HasValue && request.EndDate < request.StartDate)
-                throw new BadHttpRequestException("EndDate cannot be earlier than StartDate.");
+                throw new BadHttpRequestException("Ngày kết thúc không thể sớm hơn ngày bắt đầu.");
 
             if (request.OrganizerId.HasValue)
             {
                 _ = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
                     predicate: x => x.UserId == request.OrganizerId.Value)
-                    ?? throw new BadHttpRequestException("Organizer not found.");
+                    ?? throw new BadHttpRequestException("Không tìm thấy người tổ chức.");
                 eventToUpdate.OrganizerId = request.OrganizerId.Value;
             }
 
@@ -162,35 +162,35 @@ namespace FPTAlumniConnect.API.Services.Implements
             {
                 _ = await _unitOfWork.GetRepository<MajorCode>().SingleOrDefaultAsync(
                     predicate: x => x.MajorId == request.MajorId.Value)
-                    ?? throw new BadHttpRequestException("Major not found.");
+                    ?? throw new BadHttpRequestException("Không tìm thấy ngành.");
                 eventToUpdate.MajorId = request.MajorId.Value;
             }
 
             if (!string.IsNullOrWhiteSpace(request.EventName))
             {
                 if (request.EventName.Length is < 3 or > 100)
-                    throw new BadHttpRequestException("Event name must be 3–100 characters.");
+                    throw new BadHttpRequestException("Tên sự kiện phải từ 3–100 ký tự.");
                 eventToUpdate.EventName = request.EventName;
             }
 
             if (!string.IsNullOrWhiteSpace(request.Description))
             {
                 if (request.Description.Length > 10000000)
-                    throw new BadHttpRequestException("Description cannot exceed 10,000,000 characters.");
+                    throw new BadHttpRequestException("Mô tả không thể vượt quá 10,000,000 ký tự.");
                 eventToUpdate.Description = request.Description;
             }
 
             if (!string.IsNullOrWhiteSpace(request.Speaker))
             {
                 if (request.Speaker.Length > 200)
-                    throw new BadHttpRequestException("Speaker cannot exceed 200 characters.");
+                    throw new BadHttpRequestException("Tên diễn giả không thể vượt quá 200 ký tự.");
                 eventToUpdate.Speaker = request.Speaker;
             }
 
             if (!string.IsNullOrWhiteSpace(request.Location))
             {
                 if (request.Location.Length > 200)
-                    throw new BadHttpRequestException("Location cannot exceed 200 characters.");
+                    throw new BadHttpRequestException("Địa điểm không thể vượt quá 200 ký tự.");
                 eventToUpdate.Location = request.Location;
             }
 
@@ -206,14 +206,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             TimeSpan ParseTimeSpanOrThrow(string input, string field)
             {
                 if (TimeSpan.TryParse(input, out var ts) && ts >= TimeSpan.Zero && ts.TotalHours < 24) return ts;
-                throw new BadHttpRequestException($"Invalid {field} format or value. Must be a valid time (HH:mm:ss) and less than 24 hours.");
+                throw new BadHttpRequestException($"{field} không hợp lệ. Phải có định dạng HH:mm:ss và nhỏ hơn 24 giờ.");
             }
 
             DateTime GetDateTimeForTime(Event e, DateTime day, TimeSpan timeOfDay, string field)
             {
                 var candidate = day.Date.Add(timeOfDay);
                 if (candidate < e.StartDate || candidate > e.EndDate)
-                    throw new BadHttpRequestException($"{field} on day {day:yyyy-MM-dd} is outside event range ({e.StartDate:yyyy-MM-dd} to {e.EndDate:yyyy-MM-dd}).");
+                    throw new BadHttpRequestException($"{field} trong ngày {day:yyyy-MM-dd} nằm ngoài phạm vi sự kiện ({e.StartDate:yyyy-MM-dd} đến {e.EndDate:yyyy-MM-dd}).");
                 return candidate;
             }
 
@@ -224,28 +224,28 @@ namespace FPTAlumniConnect.API.Services.Implements
 
                 foreach (var tl in request.TimeLines)
                 {
-                    // Validate Day
+                    // Validate Ngày
                     DateTime day = tl.Day ?? eventToUpdate.StartDate;
                     if (day < eventToUpdate.StartDate.Date || day > eventToUpdate.EndDate.Date)
-                        throw new BadHttpRequestException($"Timeline day {day:yyyy-MM-dd} must be within event range ({eventToUpdate.StartDate:yyyy-MM-dd} to {eventToUpdate.EndDate:yyyy-MM-dd}).");
+                        throw new BadHttpRequestException($"Ngày timeline {day:yyyy-MM-dd} phải nằm trong phạm vi sự kiện ({eventToUpdate.StartDate:yyyy-MM-dd} đến {eventToUpdate.EndDate:yyyy-MM-dd}).");
 
                     if (tl.EventTimeLineId.HasValue)
                     {
                         var entity = existing.FirstOrDefault(x => x.EventTimeLineId == tl.EventTimeLineId.Value)
-                            ?? throw new BadHttpRequestException($"Timeline with ID {tl.EventTimeLineId.Value} not found.");
+                            ?? throw new BadHttpRequestException($"Không tìm thấy timeline với ID {tl.EventTimeLineId.Value}.");
 
                         entity.Title = string.IsNullOrEmpty(tl.Title) ? entity.Title : tl.Title;
                         entity.Description = string.IsNullOrEmpty(tl.Description) ? entity.Description : tl.Description;
                         entity.Speaker = string.IsNullOrEmpty(tl.Speaker) ? entity.Speaker : tl.Speaker;
                         entity.Day = day;
 
-                        var startTs = !string.IsNullOrWhiteSpace(tl.StartTime) ? ParseTimeSpanOrThrow(tl.StartTime!, "StartTime") : entity.StartTime;
-                        var endTs = !string.IsNullOrWhiteSpace(tl.EndTime) ? ParseTimeSpanOrThrow(tl.EndTime!, "EndTime") : entity.EndTime;
+                        var startTs = !string.IsNullOrWhiteSpace(tl.StartTime) ? ParseTimeSpanOrThrow(tl.StartTime!, "Giờ bắt đầu") : entity.StartTime;
+                        var endTs = !string.IsNullOrWhiteSpace(tl.EndTime) ? ParseTimeSpanOrThrow(tl.EndTime!, "Giờ kết thúc") : entity.EndTime;
 
-                        var startDt = GetDateTimeForTime(eventToUpdate, day, startTs, "StartTime");
-                        var endDt = GetDateTimeForTime(eventToUpdate, day, endTs, "EndTime");
+                        var startDt = GetDateTimeForTime(eventToUpdate, day, startTs, "Giờ bắt đầu");
+                        var endDt = GetDateTimeForTime(eventToUpdate, day, endTs, "Giờ kết thúc");
                         if (endDt < startDt)
-                            throw new BadHttpRequestException($"EndTime ({endDt:HH:mm:ss}) cannot be earlier than StartTime ({startDt:HH:mm:ss}) on day {day:yyyy-MM-dd}.");
+                            throw new BadHttpRequestException($"Giờ kết thúc ({endDt:HH:mm:ss}) không thể sớm hơn Giờ bắt đầu ({startDt:HH:mm:ss}) trong ngày {day:yyyy-MM-dd}.");
 
                         entity.StartTime = startTs;
                         entity.EndTime = endTs;
@@ -254,15 +254,15 @@ namespace FPTAlumniConnect.API.Services.Implements
                     else
                     {
                         if (string.IsNullOrWhiteSpace(tl.StartTime) || string.IsNullOrWhiteSpace(tl.EndTime))
-                            throw new BadHttpRequestException("StartTime and EndTime are required for new timeline.");
+                            throw new BadHttpRequestException("Giờ bắt đầu và Giờ kết thúc là bắt buộc cho timeline mới.");
 
-                        var startTs = ParseTimeSpanOrThrow(tl.StartTime!, "StartTime");
-                        var endTs = ParseTimeSpanOrThrow(tl.EndTime!, "EndTime");
+                        var startTs = ParseTimeSpanOrThrow(tl.StartTime!, "Giờ bắt đầu");
+                        var endTs = ParseTimeSpanOrThrow(tl.EndTime!, "Giờ kết thúc");
 
-                        var startDt = GetDateTimeForTime(eventToUpdate, day, startTs, "StartTime");
-                        var endDt = GetDateTimeForTime(eventToUpdate, day, endTs, "EndTime");
+                        var startDt = GetDateTimeForTime(eventToUpdate, day, startTs, "Giờ bắt đầu");
+                        var endDt = GetDateTimeForTime(eventToUpdate, day, endTs, "Giờ kết thúc");
                         if (endDt < startDt)
-                            throw new BadHttpRequestException($"EndTime ({endDt:HH:mm:ss}) cannot be earlier than StartTime ({startDt:HH:mm:ss}) on day {day:yyyy-MM-dd}.");
+                            throw new BadHttpRequestException($"Giờ kết thúc ({endDt:HH:mm:ss}) không thể sớm hơn Giờ bắt đầu ({startDt:HH:mm:ss}) trong ngày {day:yyyy-MM-dd}.");
 
                         var newTl = new EventTimeLine
                         {
@@ -293,6 +293,8 @@ namespace FPTAlumniConnect.API.Services.Implements
             _unitOfWork.GetRepository<Event>().UpdateAsync(eventToUpdate);
             return await _unitOfWork.CommitAsync() > 0;
         }
+
+
 
 
         public async Task<IPaginate<GetEventResponse>> ViewAllEvent(EventFilter filter, PagingModel pagingModel)
@@ -559,7 +561,12 @@ namespace FPTAlumniConnect.API.Services.Implements
 
                 if ((scaledEnd - scaledStart).TotalHours > 6)
                 {
-                    scaledEnd = scaledStart.AddHours(3); 
+                    scaledEnd = scaledStart.AddHours(3);
+                }
+
+                if (scaledStart.Date != scaledEnd.Date)
+                {
+                    scaledEnd = scaledStart.Date.AddDays(1).AddTicks(-1);
                 }
 
                 suggestions.Add(new SuggestedTimelineDto
