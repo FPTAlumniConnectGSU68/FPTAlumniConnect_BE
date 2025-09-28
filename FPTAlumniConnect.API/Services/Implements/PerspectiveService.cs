@@ -81,25 +81,30 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<bool> IsContentAppropriate(string content)
         {
-            // Kiểm duyệt văn bản
             var analyzeOptions = new AnalyzeTextOptions(content)
             {
-                Categories = { TextCategory.Hate, TextCategory.SelfHarm, TextCategory.Violence }
+                Categories =
+        {
+            TextCategory.Hate,
+            TextCategory.SelfHarm,
+            TextCategory.Violence,
+            TextCategory.Sexual,
+        }
             };
 
             var response = await _client.AnalyzeTextAsync(analyzeOptions);
 
-            // Kiểm tra kết quả phân tích
             foreach (var categoryResult in response.Value.CategoriesAnalysis)
             {
-                // Nếu có bất kỳ danh mục nào đánh giá nội dung không phù hợp
-                if (categoryResult.Severity >= 2) // Tùy thuộc vào ngưỡng bạn muốn kiểm tra, có thể chỉnh lên 3
+                // Severity từ 0 (không có) đến 4 (rất nghiêm trọng)
+                if (categoryResult.Severity >= 3) // Ngưỡng nghiêm ngặt hơn
                 {
-                    return false; // Nội dung không phù hợp
+                    // Có thể log chi tiết categoryResult.Category và Severity để debug
+                    return false;
                 }
             }
 
-            return true; // Nội dung phù hợp
+            return true;
         }
     }
 }
