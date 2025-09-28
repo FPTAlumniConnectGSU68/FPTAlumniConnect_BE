@@ -1,4 +1,8 @@
-﻿using FPTAlumniConnect.BusinessTier.Configurations;
+﻿using FPTAlumniConnect.API.Services;
+using FPTAlumniConnect.API.Services.Implements;
+using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier.Configurations;
+using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
@@ -9,43 +13,65 @@ namespace FPTAlumniConnect.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class SettingsController : ControllerBase
+    public class SettingsController : BaseController<SettingsController>
     {
         private readonly MentorshipCleanupSettings _mentorshipCleanup;
         private readonly JobPostCleanupSettings _jobPostCleanup;
         private readonly MentorshipSettings _mentorshipSettings;
         private readonly ScheduleSettings _scheduleSettings;
+        private readonly MentorshipCleanupService _mentorshipCleanupService;
+        private readonly JobPostCleanupService _jobPostCleanupService;
 
         public SettingsController(
+            ILogger<SettingsController> logger,
             IOptions<MentorshipCleanupSettings> mentorshipCleanup,
             IOptions<JobPostCleanupSettings> jobPostCleanup,
             IOptions<MentorshipSettings> mentorshipSettings,
-            IOptions<ScheduleSettings> scheduleSettings)
+            IOptions<ScheduleSettings> scheduleSettings,
+            JobPostCleanupService jobPostCleanupService,
+            MentorshipCleanupService mentorshipCleanupService) : base(logger)
         {
-            _mentorshipCleanup = mentorshipCleanup.Value;
-            _jobPostCleanup = jobPostCleanup.Value;
-            _mentorshipSettings = mentorshipSettings.Value;
-            _scheduleSettings = scheduleSettings.Value;
+            _mentorshipCleanup = mentorshipCleanup?.Value ?? throw new ArgumentNullException(nameof(mentorshipCleanup));
+            _jobPostCleanup = jobPostCleanup?.Value ?? throw new ArgumentNullException(nameof(jobPostCleanup));
+            _mentorshipSettings = mentorshipSettings?.Value ?? throw new ArgumentNullException(nameof(mentorshipSettings));
+            _scheduleSettings = scheduleSettings?.Value ?? throw new ArgumentNullException(nameof(scheduleSettings));
+            _jobPostCleanupService = jobPostCleanupService ?? throw new ArgumentNullException(nameof(jobPostCleanupService));
+            _mentorshipCleanupService = mentorshipCleanupService ?? throw new ArgumentNullException(nameof(mentorshipCleanupService));
         }
 
-        [HttpGet]
+        [HttpGet(ApiEndPointConstant.Settings.SettingsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public IActionResult GetAllSettings()
         {
-            var response = new
+            try
             {
-                MentorshipCleanup = new { _mentorshipCleanup.Interval.TotalHours },
-                JobPostCleanup = new { _jobPostCleanup.Interval.TotalHours },
-                MentorshipSettings = new { _mentorshipSettings.MaxPerDay },
-                ScheduleSettings = new { _scheduleSettings.MaxPerDay }
-            };
+                var jobPostInterval = _jobPostCleanupService.GetInterval();
+                var mentorshipInterval = _mentorshipCleanupService.GetInterval();
+                var response = new
+                {
+                    MentorshipCleanup = new { IntervalInHours = mentorshipInterval.TotalHours },
+                    JobPostCleanup = new { IntervalInHours = jobPostInterval.TotalHours },
+                    MentorshipSettings = new { MaxPerDay = _mentorshipSettings.MaxPerDay },
+                    ScheduleSettings = new { MaxPerDay = _scheduleSettings.MaxPerDay }
+                };
 
-            return Ok(new
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Settings retrieved successfully",
+                    data = response
+                });
+            }
+            catch (Exception ex)
             {
-                status = "success",
-                message = "Settings retrieved successfully",
-                data = response
-            });
+                _logger.LogError(ex, "Failed to fetch settings");
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
+            }
         }
     }
 }
