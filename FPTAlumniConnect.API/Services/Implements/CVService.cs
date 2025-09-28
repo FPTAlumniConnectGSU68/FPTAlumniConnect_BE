@@ -7,7 +7,11 @@ using FPTAlumniConnect.DataTier.Enums;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
+using Humanizer;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
+using System.Linq;
 
 namespace FPTAlumniConnect.API.Services.Implements
 {
@@ -238,7 +242,9 @@ namespace FPTAlumniConnect.API.Services.Implements
             // Update Employment Histories
             if (request.EmploymentHistories != null)
             {
-                var existingHistories = cv.EmploymentHistories.ToList();
+                // Get existing employment histories
+                var existingHistories = await _unitOfWork.GetRepository<EmploymentHistory>()
+                    .GetListAsync(predicate: x => x.CvId == id) ?? new List<EmploymentHistory>();
                 var newHistories = request.EmploymentHistories ?? new List<EmploymentHistoryInfo>();
 
                 // Helper function to check if two employment histories match
@@ -252,44 +258,17 @@ namespace FPTAlumniConnect.API.Services.Implements
                            existing.IsCurrentJob == newHistory.IsCurrentJob;
                 }
 
-                // Update or reuse existing employment histories
-                var matchedIndices = new HashSet<int>();
-                for (int i = 0; i < newHistories.Count && i < existingHistories.Count; i++)
-                {
-                    var newHistory = newHistories[i];
-                    var existingHistory = existingHistories[i];
+                // Create a list to track processed existing histories
+                var processedExistingIds = new HashSet<int>();
 
-                    // If they match, skip update; otherwise, update the existing record
-                    if (!HistoriesMatch(existingHistory, newHistory))
-                    {
-                        var employmentHistoryInfo = new EmploymentHistoryInfo
-                        {
-                            CvId = id,
-                            CompanyName = newHistory.CompanyName,
-                            PrimaryDuties = newHistory.PrimaryDuties,
-                            JobLevel = newHistory.JobLevel,
-                            StartDate = newHistory.StartDate,
-                            EndDate = newHistory.EndDate,
-                            IsCurrentJob = newHistory.IsCurrentJob
-                        };
-                        await _employmentHistoryService.UpdateEmploymentHistory(existingHistory.EmploymentHistoryId, employmentHistoryInfo);
-                    }
-                    matchedIndices.Add(i);
-                }
-
-                // Delete extra existing employment histories
-                for (int i = 0; i < existingHistories.Count; i++)
+                // Update or create employment histories
+                foreach (var newHistory in newHistories)
                 {
-                    if (!matchedIndices.Contains(i))
-                    {
-                        await _employmentHistoryService.DeleteEmploymentHistory(existingHistories[i].EmploymentHistoryId);
-                    }
-                }
+                    // Find matching existing history
+                    var matchingExisting = existingHistories.FirstOrDefault(e =>
+                        !processedExistingIds.Contains(e.EmploymentHistoryId) &&
+                        HistoriesMatch(e, newHistory));
 
-                // Create new employment histories if there are more in the request
-                for (int i = existingHistories.Count; i < newHistories.Count; i++)
-                {
-                    var newHistory = newHistories[i];
                     var employmentHistoryInfo = new EmploymentHistoryInfo
                     {
                         CvId = id,
@@ -300,7 +279,32 @@ namespace FPTAlumniConnect.API.Services.Implements
                         EndDate = newHistory.EndDate,
                         IsCurrentJob = newHistory.IsCurrentJob
                     };
-                    await _employmentHistoryService.CreateEmploymentHistory(employmentHistoryInfo);
+
+                    if (matchingExisting != null)
+                    {
+                        // Update existing history if it doesn't match exactly
+                        if (!HistoriesMatch(matchingExisting, newHistory))
+                        {
+                            await _employmentHistoryService.UpdateEmploymentHistory(
+                                matchingExisting.EmploymentHistoryId,
+                                employmentHistoryInfo);
+                        }
+                        processedExistingIds.Add(matchingExisting.EmploymentHistoryId);
+                    }
+                    else
+                    {
+                        // Create new history
+                        await _employmentHistoryService.CreateEmploymentHistory(employmentHistoryInfo);
+                    }
+                }
+
+                // Delete unprocessed existing histories
+                foreach (var existing in existingHistories)
+                {
+                    if (!processedExistingIds.Contains(existing.EmploymentHistoryId))
+                    {
+                        await _employmentHistoryService.DeleteEmploymentHistory(existing.EmploymentHistoryId);
+                    }
                 }
             }
             else

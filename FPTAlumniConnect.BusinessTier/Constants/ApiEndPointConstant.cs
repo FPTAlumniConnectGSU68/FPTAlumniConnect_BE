@@ -240,5 +240,15 @@
         {
             public const string IntervalEndPoint = "api/JobPostCleanup/interval";
         }
+
+        public static class Settings
+        {
+            public const string SettingsEndPoint = "";
+        }
+
+        public static class ScheduleSettings
+        {
+            public const string MaxPerDayEndPoint = "max-per-day";
+        }
     }
 }
