@@ -50,8 +50,8 @@ namespace FPTAlumniConnect.API.Controllers
                 var mentorshipInterval = _mentorshipCleanupService.GetInterval();
                 var response = new
                 {
-                    MentorshipCleanup = new { Interval = mentorshipInterval.TotalHours },
-                    JobPostCleanup = new { Interval = jobPostInterval.TotalHours },
+                    MentorshipCleanup = new { TotalHours = mentorshipInterval.TotalHours },
+                    JobPostCleanup = new { TotalHours = jobPostInterval.TotalHours },
                     MentorshipSettings = new { MaxPerDay = _mentorshipSettings.MaxPerDay },
                     ScheduleSettings = new { MaxPerDay = _scheduleSettings.MaxPerDay }
                 };
