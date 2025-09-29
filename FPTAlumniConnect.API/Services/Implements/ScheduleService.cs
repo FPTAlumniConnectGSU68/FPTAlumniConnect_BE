@@ -52,6 +52,26 @@ namespace FPTAlumniConnect.API.Services.Implements
             if (request.EndTime.HasValue && request.EndTime.Value < request.StartTime.Value)
                 throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
 
+            // Check overlapping schedules for this mentor
+            if (request.EndTime.HasValue)
+            {
+                var scheduleCheck = _unitOfWork.GetRepository<Schedule>();
+
+                bool hasOverlap = await scheduleCheck.AnyAsync(s =>
+                    s.MentorId == request.MentorId.Value &&
+                    s.Status == "Active" && 
+                    s.StartTime < request.EndTime.Value &&
+                    s.EndTime > request.StartTime.Value
+                );
+
+                if (hasOverlap)
+                    throw new BadHttpRequestException("The selected time overlaps with an existing schedule.");
+            }
+            else
+            {
+                throw new BadHttpRequestException("EndTime is required to check overlapping schedules.");
+            }
+
             // Check max schedules per day
             var date = request.StartTime.Value.Date;
             var scheduleRepo = _unitOfWork.GetRepository<Schedule>();
@@ -87,6 +107,9 @@ namespace FPTAlumniConnect.API.Services.Implements
             await EnsureMentorshipExists(request.MentorShipId ?? 0);
             await EnsureUserExists(request.MentorId ?? 0);
 
+            if (!request.StartTime.HasValue)
+                throw new BadHttpRequestException("StartTime is required.");
+
             if (request.StartTime.HasValue && request.StartTime.Value < TimeHelper.NowInVietnam())
                 throw new BadHttpRequestException("StartTime cannot be in the past.");
 
@@ -94,8 +117,24 @@ namespace FPTAlumniConnect.API.Services.Implements
                 request.EndTime.Value < request.StartTime.Value)
                 throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
 
-            if (!request.StartTime.HasValue)
-                throw new BadHttpRequestException("StartTime is required.");
+            if (request.EndTime.HasValue)
+            {
+                var scheduleCheck = _unitOfWork.GetRepository<Schedule>();
+
+                bool hasOverlap = await scheduleCheck.AnyAsync(s =>
+                    s.MentorId == request.MentorId.Value &&
+                    s.Status == "Active" &&
+                    s.StartTime < request.EndTime.Value &&
+                    s.EndTime > request.StartTime.Value
+                );
+
+                if (hasOverlap)
+                    throw new BadHttpRequestException("The selected time overlaps with an existing schedule.");
+            }
+            else
+            {
+                throw new BadHttpRequestException("EndTime is required to check overlapping schedules.");
+            }
 
             var date = request.StartTime.Value.Date;
             var scheduleRepo = _unitOfWork.GetRepository<Schedule>();
