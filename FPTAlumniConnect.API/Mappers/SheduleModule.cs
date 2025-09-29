@@ -23,7 +23,15 @@ namespace FPTAlumniConnect.API.Mappers
                     src => src.MentorShip != null
                         ? src.MentorShip.AumniId
                         : null
-                ));
+                ))
+                .ForMember(dest => dest.RequestMessage, opt => opt.MapFrom(
+                    src => src.MentorShip.RequestMessage != null
+                        ? src.MentorShip.RequestMessage
+                        : null))
+                .ForMember(dest => dest.ResultMessage, opt => opt.MapFrom(
+                    src => src.MentorShip.ResultMessage != null
+                        ? src.MentorShip.ResultMessage
+                        : null));
 
             CreateMap<ScheduleInfo, Schedule>();
         }

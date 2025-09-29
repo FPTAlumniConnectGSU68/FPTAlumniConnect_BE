@@ -47,6 +47,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             // Map request to entity
             var entity = _mapper.Map<RecruiterInfo>(request);
             entity.CreatedAt = TimeHelper.NowInVietnam();
+            entity.UpdatedAt = TimeHelper.NowInVietnam();
 
             // Insert into database
             await _unitOfWork.GetRepository<RecruiterInfo>().InsertAsync(entity);

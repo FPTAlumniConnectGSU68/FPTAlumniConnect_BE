@@ -107,23 +107,23 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             // Add Employment Histories
-            if (request.EmploymentHistories != null && request.EmploymentHistories.Any())
-            {
-                foreach (var history in request.EmploymentHistories)
-                {
-                    var employmentHistoryInfo = new EmploymentHistoryInfo
-                    {
-                        CvId = newCV.Id,
-                        CompanyName = history.CompanyName,
-                        PrimaryDuties = history.PrimaryDuties,
-                        JobLevel = history.JobLevel,
-                        StartDate = history.StartDate,
-                        EndDate = history.EndDate,
-                        IsCurrentJob = history.IsCurrentJob
-                    };
-                    await _employmentHistoryService.CreateEmploymentHistory(employmentHistoryInfo);
-                }
-            }
+            //if (request.EmploymentHistories != null && request.EmploymentHistories.Any())
+            //{
+            //    foreach (var history in request.EmploymentHistories)
+            //    {
+            //        var employmentHistoryInfo = new EmploymentHistoryInfo
+            //        {
+            //            CvId = newCV.Id,
+            //            CompanyName = history.CompanyName,
+            //            PrimaryDuties = history.PrimaryDuties,
+            //            JobLevel = history.JobLevel,
+            //            StartDate = history.StartDate,
+            //            EndDate = history.EndDate,
+            //            IsCurrentJob = history.IsCurrentJob
+            //        };
+            //        await _employmentHistoryService.CreateEmploymentHistory(employmentHistoryInfo);
+            //    }
+            //}
 
             return newCV.Id;
         }
