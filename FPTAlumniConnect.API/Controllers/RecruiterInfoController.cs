@@ -127,6 +127,49 @@ namespace FPTAlumniConnect.API.Controllers
             }
         }
 
+        [HttpPatch(ApiEndPointConstant.RecruiterInfo.RecruiterInfoUserUpdateEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateRecruiterInfoByUser([FromBody] RecruiterInfoInfo request)
+        {
+            if (request == null || request.UserId == 0)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { "Request body is null or UserId is invalid" }
+                });
+            }
+
+            try
+            {
+                var isSuccessful = await _recruiterService.UpdateRecruiterInfoByUser(request);
+                if (!isSuccessful)
+                {
+                    return Ok(new { status = "error", message = "Update failed" });
+                }
+
+                return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Bad request while updating recruiter info for UserId: {UserId}", request.UserId);
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { ex.Message }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update recruiter info for UserId: {UserId}", request.UserId);
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
         [HttpGet(ApiEndPointConstant.RecruiterInfo.RecruiterInfosEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
