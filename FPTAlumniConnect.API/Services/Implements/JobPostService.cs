@@ -96,8 +96,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             var jobPost = await _unitOfWork.GetRepository<JobPost>()
                 .SingleOrDefaultAsync(
-                    predicate: x => x.JobPostId == id,
-                    include: q => q.Include(j => j.JobPostSkills))
+                    predicate: x => x.JobPostId == id)
                 ?? throw new BadHttpRequestException("JobPostNotFound");
 
             jobPost.JobTitle = request.JobTitle ?? jobPost.JobTitle;
