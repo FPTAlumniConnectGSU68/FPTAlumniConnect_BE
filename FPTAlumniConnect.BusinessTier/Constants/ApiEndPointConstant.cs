@@ -209,7 +209,8 @@
             public const string RecruiterInfosEndPoint = "/api/recruiter-info";
             public const string RecruiterInfoEndPoint = "/api/recruiter-info/{id}";
             public const string RecruiterInfoUserEndPoint = "/api/recruiter-info/user/{id}";
-            public const string RecruiterInfoStatusEndPoint = "/api/recruiter-info/status/{id}"; 
+            public const string RecruiterInfoStatusEndPoint = "/api/recruiter-info/status/{id}";
+            public const string RecruiterInfoUserUpdateEndPoint = "/api/recruiter-info/user";
         }
 
         public static class CvSkill

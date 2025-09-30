@@ -152,6 +152,61 @@ namespace FPTAlumniConnect.API.Services.Implements
             return isSuccess;
         }
 
+        public async Task<bool> UpdateRecruiterInfoByUser(RecruiterInfoInfo request)
+        {
+            var entity = await _unitOfWork.GetRepository<RecruiterInfo>().SingleOrDefaultAsync(
+                predicate: x => x.UserId == request.UserId)
+                ?? throw new BadHttpRequestException(ErrorMessages.RecruiterInfoNotFound);
+
+            // Store original values for notification check
+            var originalCompanyName = entity.CompanyName;
+            var originalCompanyEmail = entity.CompanyEmail;
+            var originalStatus = entity.Status;
+
+            // Update fields if provided
+            entity.CompanyName = request.CompanyName ?? entity.CompanyName;
+            entity.CompanyEmail = request.CompanyEmail ?? entity.CompanyEmail;
+            entity.CompanyPhone = request.CompanyPhone ?? entity.CompanyPhone;
+            entity.CompanyLogoUrl = request.CompanyLogoUrl ?? entity.CompanyLogoUrl;
+            entity.CompanyCertificateUrl = request.CompanyCertificateUrl ?? entity.CompanyCertificateUrl;
+            entity.Status = request.Status ?? entity.Status;
+            entity.UpdatedAt = TimeHelper.NowInVietnam();
+
+            // Update in database
+            _unitOfWork.GetRepository<RecruiterInfo>().UpdateAsync(entity);
+            bool isSuccess = await _unitOfWork.CommitAsync() > 0;
+
+            // Send notification if any key fields changed
+            if (isSuccess && (
+                !string.Equals(originalCompanyName, entity.CompanyName, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(originalCompanyEmail, entity.CompanyEmail, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(originalStatus, entity.Status, StringComparison.OrdinalIgnoreCase)))
+            {
+                var user = await _userService.GetUserById(entity.UserId);
+                string message = user != null
+                    ? $"Thông tin nhà tuyển dụng của {user.FirstName} đã được cập nhật."
+                    : $"Thông tin nhà tuyển dụng của bạn đã được cập nhật.";
+
+                var notificationPayload = new NotificationPayload
+                {
+                    UserId = entity.UserId,
+                    Message = message,
+                    IsRead = false
+                };
+
+                try
+                {
+                    await _notificationService.SendNotificationAsync(notificationPayload);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send notification for updated recruiter info for UserId {UserId}", entity.UserId);
+                }
+            }
+
+            return isSuccess;
+        }
+
         // Get all recruiter info with filter & pagination
         public async Task<IPaginate<RecruiterInfoResponse>> ViewAllRecruiters(RecruiterInfoFilter filter, PagingModel paging)
         {
