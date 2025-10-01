@@ -37,7 +37,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             if (mentorshipsToday >= maxPerDay)
                 throw new BadHttpRequestException(
-                    $"Each alumnus can only create up to {maxPerDay} mentorship(s) per day."
+                    $"Mỗi cựu sinh viên chỉ có thể tạo tối đa {maxPerDay} yêu cầu cố vấn mỗi ngày."
                 );
 
             var newMentorship = _mapper.Map<Mentorship>(request);

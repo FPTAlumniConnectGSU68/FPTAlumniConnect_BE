@@ -43,14 +43,14 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Validate StartTime
             if (!request.StartTime.HasValue)
-                throw new BadHttpRequestException("StartTime is required.");
+                throw new BadHttpRequestException("Thời gian bắt đầu còn trống");
 
             if (request.StartTime.Value < TimeHelper.NowInVietnam())
-                throw new BadHttpRequestException("StartTime cannot be in the past.");
+                throw new BadHttpRequestException("Thời gian bắt đầu không được ở quá khứ");
 
             // Validate EndTime
             if (request.EndTime.HasValue && request.EndTime.Value < request.StartTime.Value)
-                throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
+                throw new BadHttpRequestException("Thời gian kết thúc không thể sớm hơn thời gian bắt đầu");
 
             // Check overlapping schedules for this mentor
             if (request.EndTime.HasValue)
@@ -65,11 +65,11 @@ namespace FPTAlumniConnect.API.Services.Implements
                 );
 
                 if (hasOverlap)
-                    throw new BadHttpRequestException("The selected time overlaps with an existing schedule.");
+                    throw new BadHttpRequestException("Thời gian được chọn trùng với một lịch trình hiện có.");
             }
             else
             {
-                throw new BadHttpRequestException("EndTime is required to check overlapping schedules.");
+                throw new BadHttpRequestException("Thời gian kết thúc còn trống");
             }
 
             // Check max schedules per day
@@ -83,7 +83,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             var maxPerDay = _settingsService.GetMaxPerDay();
             if (countForDay >= maxPerDay)
                 throw new BadHttpRequestException(
-                    $"You can only create up to {maxPerDay} schedules for this mentorship on the same day."
+                    $"Bạn chỉ có thể tạo tối đa {maxPerDay} lịch trình cho 1 yêu cầu cố vấn trong 1 ngày."
                 );
 
             // Create new schedule
@@ -108,14 +108,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             await EnsureUserExists(request.MentorId ?? 0);
 
             if (!request.StartTime.HasValue)
-                throw new BadHttpRequestException("StartTime is required.");
+                throw new BadHttpRequestException("Thời gian bắt đầu còn trống");
 
             if (request.StartTime.HasValue && request.StartTime.Value < TimeHelper.NowInVietnam())
-                throw new BadHttpRequestException("StartTime cannot be in the past.");
+                throw new BadHttpRequestException("Thời gian bắt đầu không được ở quá khứ");
 
             if (request.StartTime.HasValue && request.EndTime.HasValue &&
                 request.EndTime.Value < request.StartTime.Value)
-                throw new BadHttpRequestException("EndTime cannot be earlier than StartTime.");
+                throw new BadHttpRequestException("Thời gian kết thúc không thể sớm hơn thời gian bắt đầu");
 
             if (request.EndTime.HasValue)
             {
@@ -129,11 +129,11 @@ namespace FPTAlumniConnect.API.Services.Implements
                 );
 
                 if (hasOverlap)
-                    throw new BadHttpRequestException("The selected time overlaps with an existing schedule.");
+                    throw new BadHttpRequestException("Thời gian được chọn trùng với một lịch trình hiện có.");
             }
             else
             {
-                throw new BadHttpRequestException("EndTime is required to check overlapping schedules.");
+                throw new BadHttpRequestException("Thời gian kết thúc còn trống");
             }
 
             var date = request.StartTime.Value.Date;
@@ -146,7 +146,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             var maxPerDay = _settingsService.GetMaxPerDay();
             if (countForDay >= maxPerDay)
                 throw new BadHttpRequestException(
-                    $"You can only create up to {maxPerDay} schedules for this mentorship on the same day."
+                    $"Bạn chỉ có thể tạo tối đa {maxPerDay} lịch trình cho 1 yêu cần cố vấn trong 1 ngày."
                 );
 
             var newSchedule = _mapper.Map<Schedule>(request);
