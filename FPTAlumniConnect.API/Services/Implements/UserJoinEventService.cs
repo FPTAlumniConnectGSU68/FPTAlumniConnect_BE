@@ -34,7 +34,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             bool alreadyJoined = await _unitOfWork.GetRepository<UserJoinEvent>().AnyAsync(
                 x => x.UserId == request.UserId && x.EventId == request.EventId);
             if (alreadyJoined)
-                throw new ConflictException("This user already joined this event!");
+                throw new ConflictException("Đăng ký thành công!");
 
             // Create record
             UserJoinEvent newJoinEvent = _mapper.Map<UserJoinEvent>(request);
@@ -102,7 +102,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             if (!string.IsNullOrWhiteSpace(request.Content) &&
                 !await _perspectiveService.IsContentAppropriate(request.Content))
             {
-                throw new BadHttpRequestException("Comment contains inappropriate content.");
+                throw new BadHttpRequestException("Nội dung có chứ từ không phù hợp.");
             }
 
             target.Content = string.IsNullOrWhiteSpace(request.Content) ? target.Content : request.Content;
