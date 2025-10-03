@@ -1,4 +1,5 @@
 ﻿using FPTAlumniConnect.API.Exceptions;
+using FPTAlumniConnect.API.Services.Implements;
 using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
@@ -57,7 +58,7 @@ namespace FPTAlumniConnect.API.Controllers
                     (int)eventDuration
                 );
                 // 5. Kiểm tra validation timeline
-                if (timelineSuggestions != null && timelineSuggestions.Any(t => t.EndTime > request.EndDate.Value))
+                if (timelineSuggestions != null)
                 {
                     return StatusCode(201, new
                     {
@@ -213,6 +214,14 @@ namespace FPTAlumniConnect.API.Controllers
                 }
                 return Ok(new { status = "success", message = "Update successful" });
             }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (NotFoundException ex)
             {
                 return NotFound(new
@@ -338,6 +347,50 @@ namespace FPTAlumniConnect.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to suggest best time for new event");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Event.CountEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountAllEvents()
+        {
+            try
+            {
+                var response = await _eventService.CountAllEvents();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch event count");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Event.CountMonthEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountEventsByMonth(int month, int year)
+        {
+            try
+            {
+                var response = await _eventService.CountEventsByMonth(month, year);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch event count by month");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }

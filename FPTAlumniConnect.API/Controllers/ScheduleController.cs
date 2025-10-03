@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Services.Implements;
+using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
@@ -82,6 +83,40 @@ namespace FPTAlumniConnect.API.Controllers
                 });
             }
         }
+
+        [HttpPatch(ApiEndPointConstant.Schedule.FailScheduleEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> FailSchedule(int id, [FromBody] FailScheduleRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Message))
+            {
+                return BadRequest(new { status = "error", message = "Failure reason is required" });
+            }
+
+            try
+            {
+                var result = await _scheduleService.FailSchedule(id, request.Message);
+                if (!result)
+                {
+                    return BadRequest(new { status = "error", message = "Fail schedule operation failed" });
+                }
+
+                return Ok(new { status = "success", message = "Schedule marked as failed" });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Invalid request for FailSchedule");
+                return BadRequest(new { status = "error", message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to mark schedule as failed");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
 
         [HttpGet(ApiEndPointConstant.Schedule.ScheduleMentorEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
@@ -170,6 +205,50 @@ namespace FPTAlumniConnect.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch schedule");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Schedule.CountEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountAllSchedules()
+        {
+            try
+            {
+                var response = await _scheduleService.CountAllSchedules();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch schedule count");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Schedule.CountMonthEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountSchedulesByMonth(int month, int year)
+        {
+            try
+            {
+                var response = await _scheduleService.CountSchedulesByMonth(month,year);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch schedule count by month");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
@@ -269,6 +348,16 @@ namespace FPTAlumniConnect.API.Controllers
                 {
                     status = "success",
                     message = "Mentor rated successfully"
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Invalid request");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message,
+                    errors = new[] { ex.Message }
                 });
             }
             catch (Exception ex)

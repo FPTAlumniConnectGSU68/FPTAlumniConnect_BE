@@ -63,6 +63,14 @@ namespace FPTAlumniConnect.API.Controllers
                     data = new { id }
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create comment");
@@ -116,6 +124,14 @@ namespace FPTAlumniConnect.API.Controllers
                 }
 
                 return Ok(new { status = "success", message = "Update successful" });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
             }
             catch (Exception ex)
             {

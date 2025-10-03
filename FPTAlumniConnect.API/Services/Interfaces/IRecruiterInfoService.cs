@@ -8,6 +8,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
     {
         Task<int> CreateNewRecruiterInfo(RecruiterInfoInfo request);
         Task<bool> UpdateRecruiterInfo(int id, RecruiterInfoInfo request);
+        Task<bool> UpdateRecruiterInfoByUser(RecruiterInfoInfo request);
 
         Task<IPaginate<RecruiterInfoResponse>> ViewAllRecruiters(RecruiterInfoFilter filter, PagingModel paging);
 
@@ -16,5 +17,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<RecruiterInfoResponse> GetRecruiterInfoById(int id);
 
         Task<bool> DeleteRecruiterInfo(int id);
+
+        Task<bool> UpdateRecruiterStatus(int id, string status);
     }
 }

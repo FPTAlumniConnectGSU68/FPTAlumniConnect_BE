@@ -28,6 +28,7 @@ namespace FPTAlumniConnect.API.Mappers
                 .ForMember(dest => dest.EventName, opt => opt.MapFrom(src => src.Event.EventName))
                 .ForMember(dest => dest.Img, opt => opt.MapFrom(src => src.Event.Img))
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Event.Description))
+                .ForMember(dest => dest.Speaker, opt => opt.MapFrom(src => src.Event.Speaker))
                 .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.Event.StartDate))
                 .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.Event.EndDate))
                 .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Event.Location))

@@ -17,6 +17,9 @@ public class ScheduleReponse
 
     public string? Content { get; set; }
 
+    public string? RequestMessage { get; set; }
+    public string? ResultMessage { get; set; }
+
     public string Status { get; set; } = null!;
 
     public int? Rating { get; set; }

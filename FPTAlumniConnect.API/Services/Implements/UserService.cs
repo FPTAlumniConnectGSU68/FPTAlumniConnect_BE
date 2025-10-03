@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 using FPTAlumniConnect.BusinessTier.Payload.User;
@@ -93,7 +94,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                     RoleName = user.Role?.Name ?? "No Role Assigned",  // Safely access Role.Name
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    IsMentor = user.IsMentor
+                    MentorStatus = user.MentorStatus
                 }
             };
 
@@ -173,7 +174,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Secure password hashing (Assume HashPassword is a helper method)
             newUser.PasswordHash = request.Password; // Replace with actual hashing method
-            newUser.CreatedAt = DateTime.UtcNow;
+            newUser.CreatedAt = TimeHelper.NowInVietnam();
             newUser.CreatedBy = "System";
 
             // Insert new user into the database
@@ -223,8 +224,8 @@ namespace FPTAlumniConnect.API.Services.Implements
             user.Email = string.IsNullOrEmpty(request.Email) ? user.Email : request.Email;
             user.LastName = string.IsNullOrEmpty(request.LastName) ? user.LastName : request.LastName;
             user.ProfilePicture = string.IsNullOrEmpty(request.ProfilePicture) ? user.ProfilePicture : request.ProfilePicture;
-            user.IsMentor = request.IsMentor;
-            user.UpdatedAt = DateTime.Now;
+            user.MentorStatus = request.MentorStatus;
+            user.UpdatedAt = TimeHelper.NowInVietnam();
             user.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             // Perform the update in the repository
@@ -234,6 +235,29 @@ namespace FPTAlumniConnect.API.Services.Implements
             bool isSuccesful = await _unitOfWork.CommitAsync() > 0;
 
             return isSuccesful;
+        }
+
+        public async Task<bool> UpdateUserMentorStatus(int id, string isMentor)
+        {
+            _logger.LogInformation("Updating mentor status for user ID: {UserId}, IsMentor: {IsMentor}", id, isMentor);
+
+            if (id <= 0)
+                throw new BadHttpRequestException("Invalid user ID. User ID must be greater than 0.");
+
+            var user = await _unitOfWork.GetRepository<User>()
+                .SingleOrDefaultAsync(predicate: x => x.UserId == id)
+                ?? throw new BadHttpRequestException("User not found.");
+
+            if (isMentor != "Pending" && isMentor != "Active" && isMentor != "Suspended")
+                throw new BadHttpRequestException("Invalid mentor status. Must be 'Active', 'Pending', or 'Suspended'.");
+
+            // Update IsMentor field
+            user.MentorStatus = isMentor;
+            user.UpdatedAt = TimeHelper.NowInVietnam();
+            user.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+
+            _unitOfWork.GetRepository<User>().UpdateAsync(user);
+            return await _unitOfWork.CommitAsync() > 0;
         }
 
         public async Task<IPaginate<GetUserResponse>> ViewAllUser(UserFilter filter, PagingModel pagingModel)
@@ -259,7 +283,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             Func<IQueryable<User>, IIncludableQueryable<User, object>> include = q => q.Include(u => u.Role).Include(u => u.Major);
             IPaginate<GetMentorResponse> mentorList = await _unitOfWork.GetRepository<User>().GetPagingListAsync(
                 selector: x => _mapper.Map<GetMentorResponse>(x),
-                predicate: x => x.IsMentor == true,
+                predicate: x => x.MentorStatus.Equals("Active"),
                 filter: filter,
                 include: include,
                 page: pagingModel.page,
@@ -280,7 +304,80 @@ namespace FPTAlumniConnect.API.Services.Implements
                   throw new BadHttpRequestException("MentorNotFound");
             double? averageRating = schedules.Average(s => s.Rating);
 
-            return averageRating ?? 0;
+            return Math.Round(averageRating ?? 0,2);
+        }
+
+        public async Task<int> CountAllUsers()
+        {
+            ICollection<GetUserResponse> users = await _unitOfWork.GetRepository<User>().GetListAsync(
+                selector: x => _mapper.Map<GetUserResponse>(x));
+                int count = users.Count();
+                return count;
+        }
+
+        //public async Task<CountByMonthResponse> CountUsersByMonth(int month, int year)
+        //{
+        //    ICollection<GetUserResponse> users = await _unitOfWork.GetRepository<User>().GetListAsync(
+        //        selector: x => _mapper.Map<GetUserResponse>(x),
+        //            predicate: x => x.CreatedAt.HasValue
+        //            && x.CreatedAt.Value.Year == year
+        //            && x.CreatedAt.Value.Month == month);
+        //    CountByMonthResponse count = new CountByMonthResponse
+        //    {
+        //        Month = month,
+        //        Year = year,
+        //        Count = users.Count()
+        //    };
+        //    return count;
+        //}
+        public async Task<ICollection<CountByMonthResponse>> CountUsersByMonth(int? month, int? year)
+        {
+            int targetYear = (year == null || year == 0) ? TimeHelper.NowInVietnam().Year : year.Value;
+            int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
+            int endMonth = (targetYear == TimeHelper.NowInVietnam().Year) ? TimeHelper.NowInVietnam().Month : 12;
+            var result = new List<CountByMonthResponse>();
+            for (int m = startMonth; m <= endMonth; m++)
+            {
+                var users = await _unitOfWork.GetRepository<User>().GetListAsync(
+                    selector: x => _mapper.Map<GetUserResponse>(x),
+                    predicate: x => x.CreatedAt.HasValue
+                                    && x.CreatedAt.Value.Year == targetYear
+                                    && x.CreatedAt.Value.Month == m
+                );
+                result.Add(new CountByMonthResponse
+                {
+                    Month = m,
+                    Year = targetYear,
+                    Count = users.Count()
+                });
+            }
+            return result;
+        }
+
+        public async Task<ICollection<CountByRoleResponse>> CountUsersByRole(int? month, int? year, int role)
+        {
+            int targetYear = (year == null || year == 0) ? TimeHelper.NowInVietnam().Year : year.Value;
+            int startMonth = (month.HasValue && month > 0 && month <= 12) ? month.Value : 1;
+            int endMonth = (targetYear == TimeHelper.NowInVietnam().Year) ? TimeHelper.NowInVietnam().Month : 12;
+            var result = new List<CountByRoleResponse>();
+            for (int m = startMonth; m <= endMonth; m++)
+            {
+                var users = await _unitOfWork.GetRepository<User>().GetListAsync(
+                    selector: x => _mapper.Map<GetUserResponse>(x),
+                    predicate: x => x.CreatedAt.HasValue
+                                    && x.CreatedAt.Value.Year == targetYear
+                                    && x.CreatedAt.Value.Month == m
+                                    && x.RoleId == role
+                );
+                result.Add(new CountByRoleResponse
+                {
+                    Month = m,
+                    Year = targetYear,
+                    Role = role,
+                    Count = users.Count()
+                });
+            }
+            return result;
         }
 
         public async Task<GoogleUserResponse> VerifyGoogleTokenAsync(string token)
@@ -340,7 +437,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                     GoogleId = uid,
                     FirstName = googleUser.FirstName,
                     LastName = googleUser.LastName,
-                    CreatedAt = DateTime.UtcNow,
+                    CreatedAt = TimeHelper.NowInVietnam(),
                     PasswordHash = "Google",
                     CreatedBy = "System",
                     RoleId = 2
@@ -374,6 +471,61 @@ namespace FPTAlumniConnect.API.Services.Implements
             };
         }
 
+        public async Task<CreateRecruiterResponse> CreateRecruiter(CreateRecruiterRequest request)
+        {
+            _logger.LogInformation("Creating new recruiter with email: {Email}", request.Email);
 
+            // Check if email already exists
+            var existingUser = await _unitOfWork.GetRepository<User>().SingleOrDefaultAsync(
+                predicate: x => x.Email.Equals(request.Email)
+            );
+            if (existingUser != null)
+                throw new BadHttpRequestException($"Email {request.Email} already registered.");
+
+            try
+            {
+                // Create new User
+                var newUser = _mapper.Map<User>(request);
+                newUser.PasswordHash = request.Password; // Replace with actual hashing method
+                newUser.RoleId = 4; // Set RoleId to 4 (Recruiter)
+                newUser.CreatedAt = TimeHelper.NowInVietnam();
+                newUser.CreatedBy = "System";
+                newUser.EmailVerified = false; // Default value for non-nullable field
+
+                await _unitOfWork.GetRepository<User>().InsertAsync(newUser);
+                await _unitOfWork.CommitAsync();
+                // Create RecruiterInfo
+                var recruiterInfo = _mapper.Map<RecruiterInfo>(request);
+                recruiterInfo.UserId = newUser.UserId;
+                recruiterInfo.CreatedAt = TimeHelper.NowInVietnam();
+
+                await _unitOfWork.GetRepository<RecruiterInfo>().InsertAsync(recruiterInfo);
+
+                // Commit all changes (single transaction handled by DbContext)
+                bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+                if (!isSuccessful)
+                    throw new BadHttpRequestException($"Failed to create recruiter with email {request.Email}.");
+
+                _logger.LogInformation("Successfully created recruiter with user ID: {UserId} and recruiter info ID: {RecruiterInfoId}",
+                    newUser.UserId, recruiterInfo.RecruiterInfoId);
+
+                // Return response
+                return new CreateRecruiterResponse
+                {
+                    UserId = newUser.UserId,
+                    Email = newUser.Email,
+                    FirstName = newUser.FirstName,
+                    LastName = newUser.LastName,
+                    RecruiterInfoId = recruiterInfo.RecruiterInfoId,
+                    CompanyName = recruiterInfo.CompanyName,
+                    CreatedAt = newUser.CreatedAt.Value
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating recruiter for email: {Email}", request.Email);
+                throw;
+            }
+        }
     }
 }

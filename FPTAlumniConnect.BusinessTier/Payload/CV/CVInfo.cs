@@ -1,6 +1,6 @@
-﻿using FPTAlumniConnect.DataTier.Models;
+﻿using FPTAlumniConnect.BusinessTier.Payload.EmploymentHistory;
+using FPTAlumniConnect.DataTier.Models;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 
 namespace FPTAlumniConnect.BusinessTier.Payload.CV
 {
@@ -22,15 +22,7 @@ namespace FPTAlumniConnect.BusinessTier.Payload.CV
 
         public string? City { get; set; }
 
-        public string? Company { get; set; }
-
-        public string? PrimaryDuties { get; set; }
-
-        public string? JobLevel { get; set; }
-
-        public DateTime? StartAt { get; set; }
-
-        public DateTime? EndAt { get; set; }
+        public List<EmploymentHistoryInfo>? EmploymentHistories { get; set; } // List of employment history entries
 
         public string? Language { get; set; }
 
@@ -50,9 +42,15 @@ namespace FPTAlumniConnect.BusinessTier.Payload.CV
 
         public string? AdditionalContent { get; set; }
 
+        // New fields for school/university history
+        public string? SchoolName { get; set; } // Name of the school or university
+        public string? Degree { get; set; } // Degree earned (e.g., Bachelor, Master)
+        public string? FieldOfStudy { get; set; } // Field of study or major
+        public int? GraduationYear { get; set; } // Year of graduation
+        public string? EducationDescription { get; set; } // Additional details about education
+
         public string? Status { get; set; }
 
-        // New field to handle multiple CV skills
         public List<int>? SkillIds { get; set; } // List of Skill IDs to associate with the CV
     }
 }

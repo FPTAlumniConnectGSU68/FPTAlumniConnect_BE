@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Services.Implements;
+using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Post;
@@ -142,6 +143,50 @@ namespace FPTAlumniConnect.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch top users");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Post.CountEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountAllPosts()
+        {
+            try
+            {
+                var response = await _postService.CountAllPosts();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch post count");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Post.CountMonthEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountPostsByMonth(int month, int year)
+        {
+            try
+            {
+                var response = await _postService.CountPostsByMonth(month,year);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch post count by month");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }

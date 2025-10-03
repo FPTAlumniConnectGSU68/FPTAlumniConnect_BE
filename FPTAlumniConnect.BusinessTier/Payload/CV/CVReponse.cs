@@ -1,4 +1,8 @@
-﻿namespace FPTAlumniConnect.BusinessTier.Payload.CV
+﻿using FPTAlumniConnect.BusinessTier.Payload.EmploymentHistory;
+using FPTAlumniConnect.DataTier.Models;
+using System.Collections.Generic;
+
+namespace FPTAlumniConnect.BusinessTier.Payload.CV
 {
     public class CVResponse
     {
@@ -20,15 +24,7 @@
 
         public string? City { get; set; }
 
-        public string? Company { get; set; }
-
-        public string? PrimaryDuties { get; set; }
-
-        public string? JobLevel { get; set; }
-
-        public DateTime? StartAt { get; set; }
-
-        public DateTime? EndAt { get; set; }
+        public List<EmploymentHistoryResponse>? EmploymentHistories { get; set; } // List of employment history entries
 
         public string? Language { get; set; }
 
@@ -44,31 +40,26 @@
 
         public string? Position { get; set; }
 
-        /// <summary>
-        /// Foreign key to MajorCode
-        /// </summary>
         public int? MajorId { get; set; }
 
-        /// <summary>
-        /// Name of the major, from MajorCode table
-        /// </summary>
         public string? MajorName { get; set; }
 
         public string? AdditionalContent { get; set; }
 
-        /// <summary>
-        /// Status of the CV (e.g. Draft, Published)
-        /// </summary>
-        public string? Status { get; set; }
+        // New fields for school/university history
+        public string? SchoolName { get; set; } // Name of the school or university
+        public string? Degree { get; set; } // Degree earned (e.g., Bachelor, Master)
+        public string? FieldOfStudy { get; set; } // Field of study or major
+        public int? GraduationYear { get; set; } // Year of graduation
+        public string? EducationDescription { get; set; } // Additional details about education
 
-        /// <summary>
-        /// List of associated skill IDs
-        /// </summary>
+        public string? Status { get; set; }
+        public DateTime? StartAt { get; set; }
+
+        public DateTime? EndAt { get; set; }
+
         public List<int>? SkillIds { get; set; }
 
-        /// <summary>
-        /// List of associated skill names
-        /// </summary>
         public List<string>? SkillNames { get; set; }
     }
 }

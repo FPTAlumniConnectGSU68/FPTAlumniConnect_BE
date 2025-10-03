@@ -18,15 +18,22 @@
         {
             public const string UsersEndPoint = ApiEndpoint + "/users";
             public const string MentorsEndPoint = ApiEndpoint + "/mentors";
+            public const string CountEndPoint = UsersEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
+            public const string CountRoleEndPoint = CountEndPoint + "/role";
             public const string MentorRatingEndPoint = ApiEndpoint + "/mentors/{id}";
             public const string UserEndPoint = UsersEndPoint + "/{id}";
             public const string UserLoginEndPoint = UsersEndPoint + "/login";
+            public const string MentorStatusEndPoint = UsersEndPoint + "/mentor-status/{id}";
+            public const string RecruitersEndPoint = UsersEndPoint + "/recruiters";
         }
         public static class Post
         {
             public const string PostsEndPoint = ApiEndpoint + "/posts";
             public const string PostEndPoint = PostsEndPoint + "/{id}";
             public const string TopUsersEndPoint = PostsEndPoint + "/top-users";
+            public const string CountEndPoint = PostsEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
         }
         public static class PostReport
         {
@@ -45,6 +52,9 @@
             public const string MentorshipAlumniIdEndPoint = MentorshipsEndPoint + "/alumni/{id}";
             public const string MentorshipStatisticsEndPoint = MentorshipsEndPoint + "/statistics";
             public const string MentorshipAutoCancelEndPoint = MentorshipsEndPoint + "/autocancel";
+            public const string CountEndPoint = MentorshipsEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
+            public const string CancelRequestEndPoint = MentorshipsEndPoint + "/cancel/{id}";
         }
         public static class Schedule
         {
@@ -53,7 +63,10 @@
             public const string ScheduleMentorEndPoint = "/api/schedules/mentor/{id}";
             public const string AcceptMentorshipEndPoint = "/api/schedules/mentorship/accept";
             public const string CompleteScheduleEndPoint = "/api/schedules/complete/{id}";
+            public const string FailScheduleEndPoint = "/api/schedules/fail/{id}";
             public const string ScheduleRateMentorEndPoint = "api/schedules/rate/{scheduleId}";
+            public const string CountEndPoint = SchedulesEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
         }
         public static class CV
         {
@@ -82,8 +95,10 @@
             public const string EventPopularityEndPoint = EventsEndPoint + "/popularity";
             public const string EventSimilarEndPoint = EventsEndPoint + "/similar/{eventId}";
             public const string EventConflictEndPoint = EventsEndPoint + "/conflict";
-            public const string SuggestBestTimeForNewEventEndPoint = EventsEndPoint + "/suggest";
-            public const string EventCountByStatusEndPoint = EventsEndPoint + "/count";
+            public const string SuggestBestTimeForNewEventEndPoint = EventsEndPoint + "/suggest";           
+            public const string CountEndPoint = EventsEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
+            public const string EventCountByStatusEndPoint = CountEndPoint + "/status";
             public const string EventDetailEndPoint = EventsEndPoint + "/detail/{id}";
         }
         public static class UserJoinEvent
@@ -91,6 +106,11 @@
             public const string UserJoinEventsEndPoint = ApiEndpoint + "/user-join-events";
             public const string UserJoinEventEndPoint = UserJoinEventsEndPoint + "/{id}";
             public const string ViewAllUserJoinEventsEndPoint = UserJoinEventsEndPoint + "/view-all";
+            public const string GetTotalParticipantsEndPoint = UserJoinEventsEndPoint + "/event/participants/total/{eventId}";
+            public const string GetTotalParticipantsByRoleEndPoint = UserJoinEventsEndPoint + "/event/participants/by-role/{eventId}";
+            public const string GetTotalParticipantsByDayEndPoint = UserJoinEventsEndPoint + "/event/participants/by-day/{eventId}";
+            public const string GetEvaluationsEndPoint = UserJoinEventsEndPoint + "/event/evaluations/{eventId}";
+            public const string CheckUserParticipationEndPoint = UserJoinEventsEndPoint + "/event/check-user/{eventId}/{userId}";
         }
         public static class EducationHistory
         {
@@ -124,6 +144,8 @@
             public const string JobPostsEndPoint = ApiEndpoint + "/jobposts";
             public const string JobPostEndPoint = JobPostsEndPoint + "/{id}";
             public const string SearchJobPostsEndPoint = JobPostsEndPoint + "/search";
+            public const string CountEndPoint = JobPostsEndPoint + "/count";
+            public const string CountMonthEndPoint = CountEndPoint + "/month";
         }
         public static class JobApplication
         {
@@ -159,6 +181,7 @@
         {
             public const string PhoBertEndpoint = ApiEndpoint + "/phobert";
             public const string FindBestMatchingCVEndpoint = PhoBertEndpoint + "/find-best-matching-cv";
+            public const string RecommendJobsEndPoint = PhoBertEndpoint + "/recommend-jobs/{cvId}";
         }
         public static class Education
         {
@@ -183,9 +206,11 @@
 
         public static class RecruiterInfo
         {
-            public const string RecruiterInfosEndPoint = ApiEndpoint + "/recruiterinfos";
-            public const string RecruiterInfoEndPoint = RecruiterInfosEndPoint + "/{id}";
-            public const string RecruiterInfoUserEndPoint = RecruiterInfosEndPoint + "/user/{id}";
+            public const string RecruiterInfosEndPoint = "/api/recruiter-info";
+            public const string RecruiterInfoEndPoint = "/api/recruiter-info/{id}";
+            public const string RecruiterInfoUserEndPoint = "/api/recruiter-info/user/{id}";
+            public const string RecruiterInfoStatusEndPoint = "/api/recruiter-info/status/{id}";
+            public const string RecruiterInfoUserUpdateEndPoint = "/api/recruiter-info/user";
         }
 
         public static class CvSkill
@@ -198,6 +223,33 @@
         {
             public const string JobPostSkillsEndPoint = ApiEndpoint + "/jobpostskills";
             public const string JobPostSkillEndPoint = JobPostSkillsEndPoint + "/{jobPostId}/{skillId}";
+        }
+
+        public static class EmploymentHistory
+        {
+            public const string EmploymentHistoriesEndPoint = "employment-histories";
+            public const string EmploymentHistoryEndPoint = "employment-histories/{id}";
+            public const string EmploymentHistoriesByCvEndPoint = "cvs/employment-histories/{cvId}";
+        }
+
+        public static class MentorshipCleanup
+        {
+            public const string IntervalEndPoint = "api/MentorshipCleanup/interval";
+        }
+
+        public static class JobPostCleanup
+        {
+            public const string IntervalEndPoint = "api/JobPostCleanup/interval";
+        }
+
+        public static class Settings
+        {
+            public const string SettingsEndPoint = "";
+        }
+
+        public static class ScheduleSettings
+        {
+            public const string MaxPerDayEndPoint = "max-per-day";
         }
     }
 }

@@ -21,7 +21,7 @@
 
         public string? GoogleId { get; set; }
 
-        public bool? IsMentor { get; set; }
+        public string? MentorStatus { get; set; }
 
         public double Rating { get; set; }
     }

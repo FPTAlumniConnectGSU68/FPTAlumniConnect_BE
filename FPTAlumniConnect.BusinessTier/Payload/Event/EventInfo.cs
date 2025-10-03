@@ -8,6 +8,8 @@
 
         public string? Description { get; set; }
 
+        public string? Speaker { get; set; }
+
         public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
@@ -28,8 +30,8 @@
         public int? EventTimeLineId { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
-
-        // client sends "09:00" or "09:00:00" etc.
+        public string? Speaker { get; set; }
+        public DateTime? Day { get; set; }
         public string? StartTime { get; set; }
         public string? EndTime { get; set; }
     }

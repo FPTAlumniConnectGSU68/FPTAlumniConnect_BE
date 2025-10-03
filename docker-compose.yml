@@ -1,6 +1,31 @@
-version: '3.8'
-
 services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
+    depends_on:
+      - api
+    networks:
+      - fptalumni-network
+    restart: unless-stopped
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - fptalumni-network
+    entrypoint: sh -c "trap exit TERM; while :; do sleep 6h & wait $${!}; certbot renew; docker kill -s HUP nginx; done"
+
   # SQL Server Database
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -38,11 +63,12 @@ services:
     ports:
       - "5000:80"
       - "5001:443"
+    container_name: api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__SQLServerDatabase=Server=sqlserver;Database=AlumniConnect;User ID=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
     depends_on:
-      - sqlserver
+      - db-init
     networks:
       - fptalumni-network
     restart: unless-stopped
@@ -50,6 +76,7 @@ services:
 volumes:
   sqlserver_data:
 
+
 networks:
   fptalumni-network:
-    driver: bridge 
+    driver: bridge

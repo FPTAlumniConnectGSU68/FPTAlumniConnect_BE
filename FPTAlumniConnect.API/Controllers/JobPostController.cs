@@ -4,6 +4,7 @@ using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using FPTAlumniConnect.API.Services.Implements;
 
 namespace FPTAlumniConnect.API.Controllers
 {
@@ -52,18 +53,19 @@ namespace FPTAlumniConnect.API.Controllers
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateNewJobPost([FromBody] JobPostInfo request)
         {
-            if (request == null)
+            if (request == null || request.UserId <= 0)
             {
                 return BadRequest(new
                 {
                     status = "error",
                     message = "Bad request",
-                    errors = new[] { "Request body is null or malformed" }
+                    errors = new[] { request == null ? "Request body is null or malformed" : "Invalid user ID" }
                 });
             }
+
             try
             {
-                var id = await _jobPostService.CreateNewJobPost(request);
+                var id = await _jobPostService.CreateNewJobPost(request.UserId.Value, request);
                 return StatusCode(201, new
                 {
                     status = "success",
@@ -71,15 +73,24 @@ namespace FPTAlumniConnect.API.Controllers
                     data = new { id }
                 });
             }
-            catch (BadHttpRequestException badEx)
+            catch (BadHttpRequestException ex)
             {
-                _logger.LogError(badEx, "Bad request");
-                return BadRequest(new { status = "error", message = badEx.Message });
+                _logger.LogWarning(ex, "Failed to create job post for user ID: {UserId}", request.UserId);
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = "Bad request",
+                    errors = new[] { ex.Message }
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create job post");
-                return StatusCode(500, new { status = "error", message = "Internal server error" });
+                _logger.LogError(ex, "Failed to create job post for user ID: {UserId}", request.UserId);
+                return StatusCode(500, new
+                {
+                    status = "error",
+                    message = "Internal server error"
+                });
             }
         }
 
@@ -148,14 +159,58 @@ namespace FPTAlumniConnect.API.Controllers
             }
         }
 
+        [HttpGet(ApiEndPointConstant.JobPost.CountEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountAllJobPosts()
+        {
+            try
+            {
+                var response = await _jobPostService.CountAllJobPosts();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch job post count");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.JobPost.CountMonthEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountJobPostsByMonth(int month, int year)
+        {
+            try
+            {
+                var response = await _jobPostService.CountJobPostsByMonth(month,year);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch job post count by month");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
         [HttpGet(ApiEndPointConstant.JobPost.SearchJobPostsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SearchJobPosts(
-    [FromQuery] string keyword,
-    [FromQuery] int? minSalary = null,
-    [FromQuery] int? maxSalary = null)
+            [FromQuery] string keyword,
+            [FromQuery] int? minSalary = null,
+            [FromQuery] int? maxSalary = null)
         {
             try
             {

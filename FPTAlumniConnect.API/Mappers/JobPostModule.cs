@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using FPTAlumniConnect.BusinessTier.Payload.JobPost;
 using FPTAlumniConnect.DataTier.Models;
-using FPTAlumniConnect.BusinessTier.Payload;
 
 namespace FPTAlumniConnect.API.Mappers
 {
@@ -9,21 +8,24 @@ namespace FPTAlumniConnect.API.Mappers
     {
         public JobPostModule()
         {
-            // Mapping JobPost → JobPostResponse
+            // JobPost → JobPostResponse
             CreateMap<JobPost, JobPostResponse>()
                 .ForMember(dest => dest.MajorName, opt => opt.MapFrom(src => src.Major != null ? src.Major.MajorName : null))
                 .ForMember(dest => dest.Skills,
                     opt => opt.MapFrom(src => src.JobPostSkills != null
                         ? src.JobPostSkills.Select(jps => new SkillResponse
                         {
-                            SkillId = jps.Skill.SkillId,
-                            Name = jps.Skill.Name
+                            SkillId = jps.Skill != null ? jps.Skill.SkillId : 0,
+                            Name = jps.Skill != null ? jps.Skill.Name ?? string.Empty : string.Empty
                         }).ToList()
-                        : new List<SkillResponse>()));
+                        : new List<SkillResponse>()))
+                .ForMember(dest => dest.RecruiterInfoId, opt => opt.MapFrom(src => src.User != null && src.User.RecruiterInfos != null ? src.User.RecruiterInfos.RecruiterInfoId : (int?)null))
+                .ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.User != null && src.User.RecruiterInfos != null ? src.User.RecruiterInfos.CompanyName : null))
+                .ForMember(dest => dest.CompanyLogoUrl, opt => opt.MapFrom(src => src.User != null && src.User.RecruiterInfos != null ? src.User.RecruiterInfos.CompanyLogoUrl : null));
 
-            // Mapping JobPostInfo → JobPost (for Create/Update)
+            // JobPostInfo → JobPost
             CreateMap<JobPostInfo, JobPost>()
-                .ForMember(dest => dest.JobPostSkills, opt => opt.Ignore()); // handled manually in service
+                .ForMember(dest => dest.JobPostSkills, opt => opt.Ignore());
         }
     }
 }

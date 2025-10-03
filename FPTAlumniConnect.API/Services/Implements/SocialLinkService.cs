@@ -34,7 +34,7 @@ namespace FPTAlumniConnect.API.Services.Implements
 
             // Create and insert new link
             var newLink = _mapper.Map<SoicalLink>(request);
-            newLink.CreatedAt = DateTime.UtcNow;
+            newLink.CreatedAt = TimeHelper.NowInVietnam();
             newLink.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<SoicalLink>().InsertAsync(newLink);
@@ -111,7 +111,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 link.Link = request.Link;
             }
 
-            link.UpdatedAt = DateTime.UtcNow;
+            link.UpdatedAt = TimeHelper.NowInVietnam();
             link.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<SoicalLink>().UpdateAsync(link);
@@ -152,7 +152,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 ?? throw new BadHttpRequestException("SocialLinkNotFound");
 
             //link.IsApproved = true;
-            link.UpdatedAt = DateTime.UtcNow;
+            link.UpdatedAt = TimeHelper.NowInVietnam();
 
             _unitOfWork.GetRepository<SoicalLink>().UpdateAsync(link);
             return await _unitOfWork.CommitAsync() > 0;
@@ -165,7 +165,7 @@ namespace FPTAlumniConnect.API.Services.Implements
                 ?? throw new BadHttpRequestException("SocialLinkNotFound");
 
             //link.ReportedCount += 1;
-            link.UpdatedAt = DateTime.UtcNow;
+            link.UpdatedAt = TimeHelper.NowInVietnam();
 
             _unitOfWork.GetRepository<SoicalLink>().UpdateAsync(link);
             return await _unitOfWork.CommitAsync() > 0;

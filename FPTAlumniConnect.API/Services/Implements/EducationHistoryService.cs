@@ -32,7 +32,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             // Validate ReceivedAt is not a future date
-            if (request.ReceivedAt.HasValue && request.ReceivedAt.Value > DateTime.UtcNow)
+            if (request.ReceivedAt.HasValue && request.ReceivedAt.Value > TimeHelper.NowInVietnam())
             {
                 throw new BadHttpRequestException("ReceivedAt cannot be in the future.");
             }
@@ -87,14 +87,14 @@ namespace FPTAlumniConnect.API.Services.Implements
             // Update ReceivedAt with validation
             if (request.ReceivedAt.HasValue)
             {
-                if (request.ReceivedAt.Value > DateTime.UtcNow)
+                if (request.ReceivedAt.Value > TimeHelper.NowInVietnam())
                 {
                     throw new BadHttpRequestException("ReceivedAt cannot be a future date.");
                 }
                 educationHistory.ReceivedAt = request.ReceivedAt.Value;
             }
 
-            educationHistory.UpdatedAt = DateTime.Now;
+            educationHistory.UpdatedAt = TimeHelper.NowInVietnam();
             educationHistory.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<EducationHistory>().UpdateAsync(educationHistory);

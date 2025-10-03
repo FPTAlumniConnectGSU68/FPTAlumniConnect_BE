@@ -1,5 +1,7 @@
-﻿using FPTAlumniConnect.BusinessTier.Payload;
+﻿using FPTAlumniConnect.BusinessTier;
+using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.User;
+using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Paginate;
 
 namespace FPTAlumniConnect.API.Services.Interfaces
@@ -10,6 +12,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<IPaginate<GetUserResponse>> ViewAllUser(UserFilter filter, PagingModel pagingModel);
         //Task<LoginResponse> LoginUser(LoginFirebaseRequest request);
         Task<bool> UpdateUserInfo(int id, UserInfo request);
+        Task<bool> UpdateUserMentorStatus(int id, string isMentor);
         Task<GetUserResponse> GetUserById(int id);
         //Task<LoginResponse> LoginUser(LoginFirebaseRequest request);
         Task<LoginResponse> Login(LoginRequest loginRequest);
@@ -17,5 +20,10 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<LoginResponse> LoginWithGoogle(LoginGoogleRequest request);
         Task<IPaginate<GetMentorResponse>> ViewAllMentor(MentorFilter filter, PagingModel pagingModel);
         Task<double> GetAverageRatingByMentorId(int id);
+        Task<int> CountAllUsers();
+        //Task<CountByMonthResponse> CountUsersByMonth(int month, int year);
+        Task<ICollection<CountByMonthResponse>> CountUsersByMonth(int? month, int? year);
+        Task<ICollection<CountByRoleResponse>> CountUsersByRole(int? month, int? year, int role);
+        Task<CreateRecruiterResponse> CreateRecruiter(CreateRecruiterRequest request);
     }
 }

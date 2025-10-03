@@ -21,15 +21,7 @@ public partial class Cv
 
     public string City { get; set; } = null!;
 
-    public string Company { get; set; } = null!;
-
-    public string PrimaryDuties { get; set; } = null!;
-
-    public string JobLevel { get; set; } = null!;
-
-    public DateTime? StartAt { get; set; }
-
-    public DateTime? EndAt { get; set; }
+    public string? Location { get; set; }
 
     public string Language { get; set; } = null!;
 
@@ -60,6 +52,13 @@ public partial class Cv
 
     public CVStatus Status { get; set; }
 
+    // New fields for school/university history
+    public string? SchoolName { get; set; } // Name of the school or university
+    public string? Degree { get; set; } // Degree earned (e.g., Bachelor, Master)
+    public string? FieldOfStudy { get; set; } // Field of study or major
+    public int? GraduationYear { get; set; } // Year of graduation
+    public string? EducationDescription { get; set; } // Additional details about education
+
     // Quan hệ
     public virtual User? User { get; set; }
 
@@ -70,4 +69,5 @@ public partial class Cv
     public virtual ICollection<CvSkill> CvSkills { get; set; } = new List<CvSkill>();
 
     public virtual MajorCode? Major { get; set; }  // FK tới MajorCode
+    public virtual ICollection<EmploymentHistory> EmploymentHistories { get; set; } = new List<EmploymentHistory>();
 }

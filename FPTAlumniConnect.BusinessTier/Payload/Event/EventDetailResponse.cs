@@ -12,6 +12,7 @@ namespace FPTAlumniConnect.BusinessTier.Payload.Event
         public string EventName { get; set; } = null!;
         public string? Img { get; set; }
         public string? Description { get; set; }
+        public string? Speaker { get; set; }
         public string? Status { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
@@ -27,7 +28,7 @@ namespace FPTAlumniConnect.BusinessTier.Payload.Event
         public string? MajorName { get; set; }
 
         public double? AverageRating { get; set; }
-        public int? UserJoinEventId { get; set; }
+        public int? Total { get; set; }
 
         public List<EventTimeLineResponse> EventTimeLines { get; set; } = new();
     }
@@ -37,6 +38,8 @@ namespace FPTAlumniConnect.BusinessTier.Payload.Event
         public int EventTimeLineId { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
+        public string? Speaker { get; set; }
+        public DateTime? Day { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
     }

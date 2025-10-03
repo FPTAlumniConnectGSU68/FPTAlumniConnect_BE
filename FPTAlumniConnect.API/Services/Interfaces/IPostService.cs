@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.BusinessTier.Payload;
+﻿using FPTAlumniConnect.BusinessTier;
+using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Post;
 using FPTAlumniConnect.DataTier.Paginate;
 
@@ -11,5 +12,7 @@ namespace FPTAlumniConnect.API.Services.Interfaces
         Task<bool> UpdatePostInfo(int id, PostInfo request);
         Task<PostReponse> GetPostById(int id);
         Task<IEnumerable<object>> GetTopUsersByNumberOfPosts(int topN = 10);
+        Task<int> CountAllPosts();
+        Task<ICollection<CountByMonthResponse>> CountPostsByMonth(int? month, int? year);
     }
 }

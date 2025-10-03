@@ -4,6 +4,8 @@
     {
         public int UserId { get; set; }
 
+        public string? Status { get; set; }
+
         public string? CompanyName { get; set; }
 
         public string? CompanyEmail { get; set; }

@@ -18,6 +18,8 @@ public partial class Event
 
     public string? Location { get; set; }
 
+    public string? Speaker { get; set; } // Added field for Speaker
+
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
@@ -25,10 +27,16 @@ public partial class Event
     public string? CreatedBy { get; set; }
 
     public string? UpdatedBy { get; set; }
+
     public int? OrganizerId { get; set; }
+
     public virtual User? Organizer { get; set; }
+
     public int? MajorId { get; set; }
+
     public virtual MajorCode? Major { get; set; }
+
     public virtual ICollection<UserJoinEvent> UserJoinEvents { get; set; } = new List<UserJoinEvent>();
+
     public virtual ICollection<EventTimeLine> EventTimeLines { get; set; } = new List<EventTimeLine>();
 }

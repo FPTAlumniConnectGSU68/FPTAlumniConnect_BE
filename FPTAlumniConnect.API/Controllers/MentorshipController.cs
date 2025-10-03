@@ -1,4 +1,5 @@
-﻿using FPTAlumniConnect.API.Services.Interfaces;
+﻿using FPTAlumniConnect.API.Services.Implements;
+using FPTAlumniConnect.API.Services.Interfaces;
 using FPTAlumniConnect.BusinessTier.Constants;
 using FPTAlumniConnect.BusinessTier.Payload;
 using FPTAlumniConnect.BusinessTier.Payload.Mentorship;
@@ -31,6 +32,15 @@ namespace FPTAlumniConnect.API.Controllers
                     data = response
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch mentorship");
@@ -51,6 +61,15 @@ namespace FPTAlumniConnect.API.Controllers
                     status = "success",
                     message = "Request successful",
                     data = response
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
                 });
             }
             catch (Exception ex)
@@ -84,6 +103,15 @@ namespace FPTAlumniConnect.API.Controllers
                     data = new { id }
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create mentorship");
@@ -106,9 +134,80 @@ namespace FPTAlumniConnect.API.Controllers
                     data = response
                 });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch mentorship");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Mentorship.CountEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountAllMentorships()
+        {
+            try
+            {
+                var response = await _mentorshipService.CountAllMentorships();
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch mentorship count");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+        [HttpGet(ApiEndPointConstant.Mentorship.CountMonthEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CountMentorshipsByMonth(int month, int year)
+        {
+            try
+            {
+                var response = await _mentorshipService.CountMentorshipsByMonth(month,year);
+                return Ok(new
+                {
+                    status = "success",
+                    message = "Request successful",
+                    data = response
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch mentorship count by month");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
@@ -137,12 +236,55 @@ namespace FPTAlumniConnect.API.Controllers
 
                 return Ok(new { status = "success", message = "Update successful" });
             }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update mentorship");
                 return StatusCode(500, new { status = "error", message = "Internal server error" });
             }
         }
+
+        [HttpPatch(ApiEndPointConstant.Mentorship.CancelRequestEndPoint)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(object), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CancelMentorshipRequest(int id, [FromBody] CancelMentorshipRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Message))
+            {
+                return BadRequest(new { status = "error", message = "Cancel message is required" });
+            }
+
+            try
+            {
+                await _mentorshipService.CancelRequest(id, request.Message);
+                return Ok(new { status = "success", message = "Request cancelled successfully" });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to cancel mentorship request {id}");
+                return StatusCode(500, new { status = "error", message = "Internal server error" });
+            }
+        }
+
+
 
         [HttpGet(ApiEndPointConstant.Mentorship.MentorshipStatisticsEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
@@ -157,6 +299,15 @@ namespace FPTAlumniConnect.API.Controllers
                     status = "success",
                     message = "Request successful",
                     data = response
+                });
+            }
+            catch (BadHttpRequestException ex)
+            {
+                _logger.LogError(ex, "Bad request in mentorship controller");
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
                 });
             }
             catch (Exception ex)

@@ -66,6 +66,7 @@ public partial class AlumniConnectContext : DbContext
     public DbSet<Education> Educations { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public virtual DbSet<EventTimeLine> EventTimeLines { get; set; }
+    public virtual DbSet<EmploymentHistory> EmploymentHistories { get; set; }
     //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     //    => optionsBuilder.UseSqlServer("Server=(local);Database=AlumniConnect;Integrated Security=True;TrustServerCertificate=True;");
 
@@ -131,15 +132,6 @@ public partial class AlumniConnectContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.Phone).HasMaxLength(255);
             entity.Property(e => e.City).HasMaxLength(255);
-            entity.Property(e => e.Company).HasMaxLength(255);
-            entity.Property(e => e.PrimaryDuties).HasMaxLength(255);
-            entity.Property(e => e.JobLevel).HasMaxLength(255);
-            entity.Property(e => e.StartAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.EndAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
             entity.Property(e => e.Language).HasMaxLength(255);
             entity.Property(e => e.LanguageLevel).HasMaxLength(255);
             entity.Property(e => e.MinSalary).HasDefaultValueSql("((0))");
@@ -150,6 +142,9 @@ public partial class AlumniConnectContext : DbContext
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+
+            entity.Property(e => e.EducationDescription).HasColumnType("nvarchar(max)");
+
             entity.Property(e => e.UpdatedBy).HasMaxLength(255);
             entity.Property(e => e.UserId).HasColumnName("UserID");
 
@@ -165,6 +160,12 @@ public partial class AlumniConnectContext : DbContext
             .WithOne(cs => cs.Cv)
             .HasForeignKey(cs => cs.CvId)
             .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.EmploymentHistories)
+            .WithOne(eh => eh.Cv)
+            .HasForeignKey(eh => eh.CvId)
+            .OnDelete(DeleteBehavior.Cascade); // One-to-many with EmploymentHistory, cascade delete
+
         });
 
         modelBuilder.Entity<CvSkill>()
@@ -204,6 +205,8 @@ public partial class AlumniConnectContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+            entity.Property(e => e.Description)
+                .HasColumnType("nvarchar(max)");
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.EventName).HasMaxLength(255);
@@ -303,6 +306,7 @@ public partial class AlumniConnectContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+            entity.Property(e => e.JobDescription).HasColumnType("nvarchar(max)");
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.JobTitle).HasMaxLength(255);
@@ -419,7 +423,7 @@ public partial class AlumniConnectContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.Content).HasMaxLength(255);
+            entity.Property(e => e.Content).HasColumnType("nvarchar(max)");
             entity.Property(e => e.Title).HasMaxLength(255);
             entity.Property(e => e.CreatedBy).HasMaxLength(255);
             entity.Property(e => e.IsPrivate).HasDefaultValueSql("((0))");
@@ -589,9 +593,9 @@ public partial class AlumniConnectContext : DbContext
                 .HasMaxLength(20)
                 .IsRequired(false);
             entity.Property(e => e.GoogleId).HasColumnName("GoogleID");
-            entity.Property(e => e.IsMentor)
-                .HasDefaultValueSql("((0))")
-                .HasColumnName("isMentor");
+            entity.Property(e => e.MentorStatus)
+                .HasMaxLength(50) 
+                .HasColumnName("MentorStatus");
             entity.Property(e => e.LastName).HasMaxLength(255);
             entity.Property(e => e.RoleId).HasColumnName("RoleID");
             entity.Property(e => e.UpdatedAt)
@@ -688,9 +692,25 @@ public partial class AlumniConnectContext : DbContext
             entity.HasKey(e => e.RecruiterInfoId);
             entity.ToTable("RecruiterInfo");
 
+            entity.Property(e => e.RecruiterInfoId).HasColumnName("RecruiterInfoID");
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.CompanyName).HasMaxLength(255);
+            entity.Property(e => e.CompanyEmail).HasMaxLength(255);
+            entity.Property(e => e.CompanyPhone).HasMaxLength(50);
+            entity.Property(e => e.CompanyLogoUrl).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.CompanyCertificateUrl).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("GETDATE()");
+
             entity.HasOne(r => r.User)
-            .WithOne(u => u.RecruiterInfos)
-            .HasForeignKey<RecruiterInfo>(r => r.UserId);
+                .WithOne(u => u.RecruiterInfos)
+                .HasForeignKey<RecruiterInfo>(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade); 
         });
 
         modelBuilder.Entity<JobPostSkill>(entity =>
@@ -709,6 +729,47 @@ public partial class AlumniConnectContext : DbContext
                 .WithMany(s => s.JobPostSkills)
                 .HasForeignKey(e => e.SkillId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<EmploymentHistory>(entity =>
+        {
+            // Configure primary key
+            entity.HasKey(e => e.EmploymentHistoryId); // Set EmploymentHistoryId as the primary key
+
+            // Configure required fields
+            entity.Property(e => e.CompanyName)
+                  .HasMaxLength(255)
+                  .IsRequired(); // CompanyName is required and maps to nvarchar(max)
+
+            entity.Property(e => e.PrimaryDuties)
+                  .HasMaxLength(255)
+                  .IsRequired(); // PrimaryDuties is required and maps to nvarchar(max)
+
+            entity.Property(e => e.JobLevel)
+                  .HasMaxLength(255)
+                  .IsRequired(); // JobLevel is required and maps to nvarchar(max)
+
+            // Configure optional fields
+            entity.Property(e => e.StartDate)
+                  .HasColumnType("datetime"); // StartDate is optional and maps to datetime
+
+            entity.Property(e => e.EndDate)
+                  .HasColumnType("datetime"); // EndDate is optional and maps to datetime
+
+            // Configure boolean field
+            entity.Property(e => e.IsCurrentJob)
+                  .HasColumnType("bit")
+                  .IsRequired(); // IsCurrentJob is required and maps to bit
+
+            // Configure foreign key relationship with Cv
+            entity.HasOne(e => e.Cv)
+                  .WithMany(c => c.EmploymentHistories)
+                  .HasForeignKey(e => e.CvId)
+                  .OnDelete(DeleteBehavior.Cascade); 
+
+            // Configure indexes for performance
+            entity.HasIndex(e => e.CvId); // Index for queries filtering by CvId
+            entity.HasIndex(e => e.IsCurrentJob); // Index for queries filtering by IsCurrentJob
         });
 
         OnModelCreatingPartial(modelBuilder);

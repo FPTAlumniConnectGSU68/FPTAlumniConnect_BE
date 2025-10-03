@@ -29,7 +29,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             MajorCode newMajorCode = _mapper.Map<MajorCode>(request);
-            newMajorCode.CreatedAt = DateTime.Now;
+            newMajorCode.CreatedAt = TimeHelper.NowInVietnam();
             newMajorCode.CreatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             await _unitOfWork.GetRepository<MajorCode>().InsertAsync(newMajorCode);
@@ -67,7 +67,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             majorCode.MajorName = request.MajorName; // Cập nhật tên chuyên ngành
-            majorCode.UpdatedAt = DateTime.Now;
+            majorCode.UpdatedAt = TimeHelper.NowInVietnam();
             majorCode.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
             _unitOfWork.GetRepository<MajorCode>().UpdateAsync(majorCode);
@@ -80,7 +80,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             var response = await _unitOfWork.GetRepository<MajorCode>().GetPagingListAsync(
                 selector: x => _mapper.Map<MajorCodeReponse>(x),
                 filter: filter,
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size
             );

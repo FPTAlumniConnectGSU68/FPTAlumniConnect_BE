@@ -18,17 +18,119 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<int> CreateTimeLine(TimeLineInfo request)
         {
-            Event Event = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
-                predicate: x => x.EventId.Equals(request.EventId)) ??
-                throw new BadHttpRequestException("EventNotFound");
+            // Validate request
+            if (request == null)
+                throw new BadHttpRequestException("Request cannot be null.");
 
-            var newT = _mapper.Map<EventTimeLine>(request);
-            await _unitOfWork.GetRepository<EventTimeLine>().InsertAsync(newT);
+            // Fetch event
+            var eventEntity = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
+                predicate: x => x.EventId.Equals(request.EventId))
+                ?? throw new BadHttpRequestException("EventNotFound");
 
+            // Validate Title and Description
+            if (!string.IsNullOrWhiteSpace(request.Title))
+            {
+                if (request.Title.Length < 3 || request.Title.Length > 100)
+                    throw new BadHttpRequestException("Title must be between 3 and 100 characters.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Description))
+            {
+                if (request.Description.Length > 1000)
+                    throw new BadHttpRequestException("Description cannot exceed 1000 characters.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Speaker))
+            {
+                if (request.Speaker.Length > 200)
+                    throw new BadHttpRequestException("Speaker cannot exceed 200 characters.");
+            }
+            // Additional validation for Day can be added if needed
+            if (request.Day.HasValue)
+            {
+                if (request.Day.Value.Date < eventEntity.StartDate.Date || request.Day.Value.Date > eventEntity.EndDate.Date)
+                    throw new BadHttpRequestException("Timeline Day must be within the event's StartDate and EndDate.");
+            }
+
+            // Validate and parse StartTime and EndTime
+            if (string.IsNullOrWhiteSpace(request.StartTime) || string.IsNullOrWhiteSpace(request.EndTime))
+                throw new BadHttpRequestException("StartTime and EndTime are required and must be non-empty strings.");
+
+            var startTs = ParseTimeSpanOrThrow(request.StartTime, "StartTime");
+            var endTs = ParseTimeSpanOrThrow(request.EndTime, "EndTime");
+
+            // Resolve DateTime for StartTime and EndTime, ensuring within event range
+            var startDt = GetNextDateTimeForTime(eventEntity, startTs, eventEntity.StartDate);
+            var endDt = GetNextDateTimeForTime(eventEntity, endTs, startDt);
+
+            if (endDt < startDt)
+                throw new BadHttpRequestException("Timeline EndTime cannot be earlier than StartTime.");
+
+            // Map to EventTimeLine after validation
+            var newTimeline = new EventTimeLine
+            {
+                EventId = request.EventId,
+                Title = request.Title,
+                Description = request.Description,
+                Speaker = request.Speaker,
+                Day = startDt,
+                StartTime = startTs,
+                EndTime = endTs
+            };
+
+            // Insert timeline
+            await _unitOfWork.GetRepository<EventTimeLine>().InsertAsync(newTimeline);
+
+            // Commit changes
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
-            if (!isSuccessful) throw new BadHttpRequestException("CreateFailed");
+            if (!isSuccessful)
+                throw new BadHttpRequestException("Failed to create timeline due to database error.");
 
-            return newT.EventTimeLineId;
+            return newTimeline.EventTimeLineId;
+        }
+
+        // Helper functions (reused from UpdateEventInfo)
+        private TimeSpan ParseTimeSpanOrThrow(string input, string fieldName)
+        {
+            if (TimeSpan.TryParse(input, out var ts))
+            {
+                ValidateTimeSpan(ts, fieldName);
+                return ts;
+            }
+
+            var formats = new[] { "h\\:mm", "hh\\:mm", "hh\\:mm\\:ss", "h\\:mm\\:ss" };
+            foreach (var format in formats)
+            {
+                if (TimeSpan.TryParseExact(input, format, null, out ts))
+                {
+                    ValidateTimeSpan(ts, fieldName);
+                    return ts;
+                }
+            }
+
+            throw new BadHttpRequestException($"Invalid {fieldName} format: '{input}'. Expected formats: 'HH:mm' or 'HH:mm:ss'.");
+        }
+
+        private void ValidateTimeSpan(TimeSpan ts, string fieldName)
+        {
+            if (ts < TimeSpan.Zero)
+                throw new BadHttpRequestException($"{fieldName} cannot be negative.");
+
+            if (ts.TotalHours >= 24)
+                throw new BadHttpRequestException($"{fieldName} must be less than 24 hours (use format for time-of-day).");
+        }
+
+        private DateTime GetNextDateTimeForTime(Event e, TimeSpan timeOfDay, DateTime minAllowed)
+        {
+            var candidate = minAllowed.Date.Add(timeOfDay);
+
+            while (candidate < minAllowed)
+                candidate = candidate.AddDays(1);
+
+            if (candidate < e.StartDate || candidate > e.EndDate)
+                throw new BadHttpRequestException($"Timeline time {timeOfDay} (resolved to {candidate:u}) is outside event range [{e.StartDate:u} - {e.EndDate:u}].");
+
+            return candidate;
         }
         public async Task<TimeLineReponse> GetTimeLineById(int id)
         {
@@ -42,42 +144,84 @@ namespace FPTAlumniConnect.API.Services.Implements
 
         public async Task<bool> UpdateTimeLine(int id, TimeLineInfo request)
         {
-            // Lấy timeline từ cơ sở dữ liệu
-            EventTimeLine timeLine = await _unitOfWork.GetRepository<EventTimeLine>().SingleOrDefaultAsync(
+            // Validate request
+            if (request == null)
+                throw new BadHttpRequestException("Request cannot be null.");
+
+            // Fetch timeline
+            var timeLine = await _unitOfWork.GetRepository<EventTimeLine>().SingleOrDefaultAsync(
                 predicate: x => x.EventTimeLineId.Equals(id))
                 ?? throw new BadHttpRequestException("TimeLineNotFound");
 
-            // Cập nhật các thuộc tính nếu có giá trị mới
-            if (!string.IsNullOrEmpty(request.Title)) // Cập nhật tên
+            // Fetch associated event to validate time range
+            var eventEntity = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
+                predicate: x => x.EventId.Equals(timeLine.EventId))
+                ?? throw new BadHttpRequestException("EventNotFound");
+
+            // Validate Title and Description
+            if (!string.IsNullOrWhiteSpace(request.Title))
             {
+                if (request.Title.Length < 3 || request.Title.Length > 100)
+                    throw new BadHttpRequestException("Title must be between 3 and 100 characters.");
                 timeLine.Title = request.Title;
             }
 
-            if (!string.IsNullOrEmpty(request.Description))
+            if (!string.IsNullOrWhiteSpace(request.Description))
             {
+                if (request.Description.Length > 1000)
+                    throw new BadHttpRequestException("Description cannot exceed 1000 characters.");
                 timeLine.Description = request.Description;
             }
 
-            // Chuyển đổi StartTime và EndTime từ DateTime sang TimeSpan
-            if (request.StartTime != default(DateTime))
+            // Validate and parse StartTime and EndTime if provided
+            TimeSpan startTs = timeLine.StartTime;
+            TimeSpan endTs = timeLine.EndTime;
+
+            if (!string.IsNullOrWhiteSpace(request.StartTime))
             {
-                timeLine.StartTime = request.StartTime.TimeOfDay; // Chuyển đổi sang TimeSpan
+                startTs = ParseTimeSpanOrThrow(request.StartTime, "StartTime");
             }
 
-            if (request.EndTime != default(DateTime))
+            if (!string.IsNullOrWhiteSpace(request.EndTime))
             {
-                timeLine.EndTime = request.EndTime.TimeOfDay; // Chuyển đổi sang TimeSpan
+                endTs = ParseTimeSpanOrThrow(request.EndTime, "EndTime");
             }
 
-            // Kiểm tra điều kiện StartTime phải trước EndTime
-            if (timeLine.StartTime >= timeLine.EndTime)
+            // Resolve DateTime for StartTime and EndTime, ensuring within event range
+            var startDt = GetNextDateTimeForTime(eventEntity, startTs, eventEntity.StartDate);
+            var endDt = GetNextDateTimeForTime(eventEntity, endTs, startDt);
+
+            if (endDt < startDt)
+                throw new BadHttpRequestException($"Timeline EndTime (resolved to {endDt:u}) cannot be earlier than StartTime (resolved to {startDt:u}).");
+
+            // Update TimeSpan values
+            timeLine.StartTime = startTs;
+            timeLine.EndTime = endTs;
+
+            // Update EventId if provided and valid
+            if (request.EventId != 0 && request.EventId != timeLine.EventId)
             {
-                throw new BadHttpRequestException("StartTime must be earlier than EndTime");
+                var newEvent = await _unitOfWork.GetRepository<Event>().SingleOrDefaultAsync(
+                    predicate: x => x.EventId.Equals(request.EventId))
+                    ?? throw new BadHttpRequestException("New EventNotFound");
+
+                // Re-validate times against new event's date range
+                startDt = GetNextDateTimeForTime(newEvent, startTs, newEvent.StartDate);
+                endDt = GetNextDateTimeForTime(newEvent, endTs, startDt);
+
+                if (endDt < startDt)
+                    throw new BadHttpRequestException($"Timeline EndTime (resolved to {endDt:u}) cannot be earlier than StartTime (resolved to {startDt:u}) for new event.");
+
+                timeLine.EventId = request.EventId;
             }
 
-            // Cập nhật timeline trong cơ sở dữ liệu
+            // Update timeline
             _unitOfWork.GetRepository<EventTimeLine>().UpdateAsync(timeLine);
+
+            // Commit changes
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
+            if (!isSuccessful)
+                throw new BadHttpRequestException("Failed to update timeline due to database error.");
 
             return isSuccessful;
         }

@@ -111,7 +111,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             we.UserId = request.UserId;
 
             // Optional: track update metadata
-            // we.UpdatedAt = DateTime.Now;
+            // we.UpdatedAt = TimeHelper.NowInVietnam();
             // we.UpdatedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name;
         }
     }

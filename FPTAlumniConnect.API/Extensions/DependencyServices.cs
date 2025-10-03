@@ -1,6 +1,9 @@
-﻿using FPTAlumniConnect.API.Services.Implements;
+﻿using FPTAlumniConnect.API.Services;
+using FPTAlumniConnect.API.Services.Implements;
 using FPTAlumniConnect.API.Services.Implements.FPTAlumniConnect.API.Services.Implements;
 using FPTAlumniConnect.API.Services.Interfaces;
+using FPTAlumniConnect.BusinessTier.Configurations;
+using FPTAlumniConnect.BusinessTier.Payload.Schedule;
 using FPTAlumniConnect.DataTier.Models;
 using FPTAlumniConnect.DataTier.Repository.Implement;
 using FPTAlumniConnect.DataTier.Repository.Interfaces;
@@ -8,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StringUpdateApi.Services;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Text;
 
@@ -93,6 +97,27 @@ namespace FPTAlumniConnect.API.Extensions
             services.AddScoped<ICvSkillService, CvSkillService>();
             services.AddScoped<IJobPostSkillService, JobPostSkillService>();
 
+            services.AddScoped<IEmploymentHistoryService, EmploymentHistoryService>();
+
+            services.AddHostedService<JobPostCleanupService>();
+            services.AddSingleton<JobPostCleanupService>();
+
+            services.AddSingleton<MentorshipCleanupService>();
+            services.AddHostedService<MentorshipCleanupService>();
+
+            services.AddSingleton<ITimeService, TimeService>();
+
+            services.AddSingleton<VersionService>();
+            services.AddSingleton<StringCounterService>();
+
+            services.AddScoped<IMentorshipSettingsService, MentorshipSettingsService>();
+            // Use singleton so runtime updates persist
+            services.AddSingleton(resolver =>
+                resolver.GetRequiredService<Microsoft.Extensions.Options.IOptions<MentorshipSettings>>().Value);
+
+            services.AddSingleton(resolver =>
+                resolver.GetRequiredService<Microsoft.Extensions.Options.IOptions<ScheduleSettings>>().Value);
+            services.AddSingleton<IScheduleSettingsService, ScheduleSettingsService>();
             return services;
         }
 

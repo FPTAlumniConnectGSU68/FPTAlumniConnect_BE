@@ -9,6 +9,11 @@
     public string? City { get; set; }
     public string? Requirements { get; set; }
     public string? Benefits { get; set; }
+
+    public int? RecruitmentQuantity { get; set; }
+    public string? WorkType { get; set; }
+    public string? WorkHours { get; set; }
+
     public DateTime? Time { get; set; }
     public string? Status { get; set; }
     public string? Email { get; set; }

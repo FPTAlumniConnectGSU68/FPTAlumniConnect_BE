@@ -39,8 +39,8 @@ namespace FPTAlumniConnect.API.Services.Implements
                 throw new BadHttpRequestException("CV-Skill association already exists");
 
             CvSkill newCvSkill = _mapper.Map<CvSkill>(request);
-            newCvSkill.CreatedAt = DateTime.Now;
-            newCvSkill.UpdatedAt = DateTime.Now;
+            newCvSkill.CreatedAt = TimeHelper.NowInVietnam();
+            newCvSkill.UpdatedAt = TimeHelper.NowInVietnam();
 
             await _unitOfWork.GetRepository<CvSkill>().InsertAsync(newCvSkill);
 
@@ -94,7 +94,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             }
 
             _mapper.Map(request, cvSkill);
-            cvSkill.UpdatedAt = DateTime.Now;
+            cvSkill.UpdatedAt = TimeHelper.NowInVietnam();
 
             _unitOfWork.GetRepository<CvSkill>().UpdateAsync(cvSkill);
             bool isSuccessful = await _unitOfWork.CommitAsync() > 0;
