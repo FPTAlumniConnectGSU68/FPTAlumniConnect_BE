@@ -39,9 +39,14 @@ namespace FPTAlumniConnect.API.Mappers
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Event.Status))
                 .ForMember(dest => dest.CreatedBy, opt => opt.MapFrom(src => src.Event.CreatedBy))
                 .ForMember(dest => dest.AverageRating,
-                    opt => opt.MapFrom(src => src.Event.UserJoinEvents.Any()
-                        ? src.Event.UserJoinEvents.Average(u => u.Rating ?? 0)
-                        : (double?)null))
+                    opt => opt.MapFrom(src =>
+                        src.Event.UserJoinEvents != null && src.Event.UserJoinEvents.Any(u => u.Rating.HasValue)
+                            ? Math.Round(
+                                src.Event.UserJoinEvents
+                                   .Where(u => u.Rating.HasValue)
+                                   .Average(u => u.Rating.Value),
+                                1)
+                            : (double?)null))
                 .ForMember(dest => dest.UserJoinEventCount,
                     opt => opt.MapFrom(src => src.Event.UserJoinEvents.Count));
 
