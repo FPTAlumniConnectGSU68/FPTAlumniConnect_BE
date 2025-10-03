@@ -80,7 +80,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             var response = await _unitOfWork.GetRepository<MajorCode>().GetPagingListAsync(
                 selector: x => _mapper.Map<MajorCodeReponse>(x),
                 filter: filter,
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size
             );
