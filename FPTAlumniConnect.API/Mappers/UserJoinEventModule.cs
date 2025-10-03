@@ -17,7 +17,7 @@ namespace FPTAlumniConnect.API.Mappers
                                    .Where(u => u.Rating.HasValue)
                                    .Average(u => u.Rating.Value),
                                 1)
-                            : (double?)null));
+                            : (double?)null))
 
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName))
                 .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.User.ProfilePicture))
