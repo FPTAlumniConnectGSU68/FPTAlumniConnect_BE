@@ -93,7 +93,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             IPaginate<SkillResponse> response = await _unitOfWork.GetRepository<Skill>().GetPagingListAsync(
                 selector: x => _mapper.Map<SkillResponse>(x),
                 filter: filter,
-                orderBy: x => x.OrderBy(x => x.CreatedAt),
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: pagingModel.page,
                 size: pagingModel.size
             );

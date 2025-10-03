@@ -213,6 +213,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             var response = await _unitOfWork.GetRepository<RecruiterInfo>().GetPagingListAsync(
                 selector: x => _mapper.Map<RecruiterInfoResponse>(x),
                 filter: filter,
+                orderBy: x => x.OrderByDescending(x => x.CreatedAt),
                 page: paging.page,
                 size: paging.size
             );
