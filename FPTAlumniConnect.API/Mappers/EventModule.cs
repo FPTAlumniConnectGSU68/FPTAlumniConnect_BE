@@ -69,6 +69,7 @@ namespace FPTAlumniConnect.API.Mappers
                 ))
                 .ForMember(dest => dest.MajorName, opt => opt.MapFrom(src => src.Major != null ? src.Major.MajorName : null))
                 .ForMember(dest => dest.EventTimeLines, opt => opt.MapFrom(src => src.EventTimeLines));
+                
             // EventTimeLine -> EventTimeLineResponse
             CreateMap<EventTimeLine, EventTimeLineResponse>();
         }
