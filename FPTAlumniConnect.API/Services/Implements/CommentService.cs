@@ -70,7 +70,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             // Check content appropriateness using perspective API
             if (!await _perspectiveService.IsContentAppropriate(request.Content))
             {
-                throw new BadHttpRequestException("Comment contains inappropriate content.");
+                throw new BadHttpRequestException("Nội dung có chứ từ không phù hợp.");
             }
 
             // Map to entity and insert into database
