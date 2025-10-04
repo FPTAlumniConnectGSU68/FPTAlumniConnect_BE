@@ -83,7 +83,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             var maxPerDay = _settingsService.GetMaxPerDay();
             if (countForDay >= maxPerDay)
                 throw new BadHttpRequestException(
-                    $"Bạn chỉ có thể tạo tối đa {maxPerDay} lịch trình cho 1 yêu cầu cố vấn trong 1 ngày."
+                    $"Bạn chỉ có thể tạo tối đa {maxPerDay} lịch trình trong 1 ngày."
                 );
 
             // Create new schedule
@@ -146,7 +146,7 @@ namespace FPTAlumniConnect.API.Services.Implements
             var maxPerDay = _settingsService.GetMaxPerDay();
             if (countForDay >= maxPerDay)
                 throw new BadHttpRequestException(
-                    $"Bạn chỉ có thể tạo tối đa {maxPerDay} lịch trình cho 1 yêu cần cố vấn trong 1 ngày."
+                    $"Bạn chỉ có thể tạo tối đa {maxPerDay} lịch trình trong 1 ngày."
                 );
 
             var newSchedule = _mapper.Map<Schedule>(request);
