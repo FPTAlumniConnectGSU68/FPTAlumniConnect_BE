@@ -130,7 +130,7 @@ namespace FPTAlumniConnect.API.Controllers
             }
         }
 
-        [HttpPatch(ApiEndPointConstant.MajorCode.MajorCodeEndPoint)]
+        [HttpPut(ApiEndPointConstant.MajorCode.MajorCodeEndPoint)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateMajorCodeInfo(int id, [FromBody] MajorCodeInfo request)
